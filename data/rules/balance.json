@@ -1,0 +1,25 @@
+{
+  "_doc": "Global balance constants. Money is in billions (B) of the scenario's reference currency.",
+  "economy": {
+    "devBase": 400, "devGrowth": 1.06,
+    "refDev": 80,
+    "defaultTax": 0.22, "minTax": 0.05, "maxTax": 0.6,
+    "civilShare": 0.78,
+    "debtInterestYear": 0.05,
+    "taxEfficiencyStabilityWeight": 0.4,
+    "highTaxStabilityPenalty": 2.5,
+    "negativeTreasuryStabilityPenalty": 1.5
+  },
+  "population": { "growthYear": 0.008, "manpowerShare": 0.006, "manpowerRegenMonth": 0.04 },
+  "combat": {
+    "width": { "plains": 12, "hills": 9, "mountains": 6, "forest": 8, "desert": 12, "tundra": 7 },
+    "defenderTerrain": { "plains": 1.0, "hills": 1.25, "mountains": 1.6, "forest": 1.3, "desert": 1.05, "tundra": 1.15 },
+    "fortBonus": 0.15,
+    "damage": 0.045, "orgDamage": 0.11, "breakOrg": 0.18,
+    "orgRecoveryDay": 0.04, "reinforceMonth": 0.25,
+    "straitAttackPenalty": 0.6
+  },
+  "siege": { "baseDays": 18, "fortDays": 12, "devDays": 0.12 },
+  "war": { "truceDays": 1825, "battleScoreScale": 25, "maxBattleScore": 30, "exhaustionDays": 540 },
+  "ai": { "thinkEveryDays": 7, "baseWarChance": 0.005, "powerRatioForWar": 1.8, "targetArmyShare": 0.85 }
+}

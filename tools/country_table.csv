@@ -1,0 +1,184 @@
+# Approximate modern (c. 2025) figures used to seed the "Modern World" scenario.
+# pop_m = population in millions, gdp_b = nominal GDP in billions USD, both rounded estimates.
+# gov: republic | federal_republic | parliamentary | const_monarchy | abs_monarchy | one_party | military | theocracy
+# Capital coordinates are approximate (lat, lon). Countries not listed get area-based fallbacks.
+iso3,pop_m,gdp_b,gov,cap_lat,cap_lon,capital
+USA,340,29000,federal_republic,38.9,-77.04,Washington
+CHN,1410,18500,one_party,39.9,116.4,Beijing
+IND,1450,3900,parliamentary,28.61,77.21,New Delhi
+JPN,124,4100,const_monarchy,35.68,139.69,Tokyo
+DEU,84,4700,parliamentary,52.52,13.4,Berlin
+GBR,69,3600,const_monarchy,51.51,-0.13,London
+FRA,68,3100,republic,48.86,2.35,Paris
+ITA,59,2300,parliamentary,41.9,12.5,Rome
+BRA,212,2200,federal_republic,-15.79,-47.88,Brasilia
+CAN,41,2200,const_monarchy,45.42,-75.7,Ottawa
+RUS,144,2100,republic,55.76,37.62,Moscow
+KOR,52,1750,republic,37.57,126.98,Seoul
+AUS,27,1800,const_monarchy,-35.28,149.13,Canberra
+ESP,48,1700,const_monarchy,40.42,-3.7,Madrid
+MEX,131,1850,federal_republic,19.43,-99.13,Mexico City
+IDN,282,1400,republic,-6.21,106.85,Jakarta
+TUR,86,1300,republic,39.93,32.86,Ankara
+NLD,18,1150,const_monarchy,52.37,4.9,Amsterdam
+SAU,35,1100,abs_monarchy,24.71,46.68,Riyadh
+CHE,9,900,federal_republic,46.95,7.45,Bern
+POL,37,860,parliamentary,52.23,21.01,Warsaw
+TWN,23,780,republic,25.03,121.57,Taipei
+BEL,12,650,const_monarchy,50.85,4.35,Brussels
+SWE,10.5,600,const_monarchy,59.33,18.07,Stockholm
+ARG,46,640,federal_republic,-34.6,-58.38,Buenos Aires
+IRL,5.3,550,parliamentary,53.35,-6.26,Dublin
+ISR,10,540,parliamentary,31.77,35.21,Jerusalem
+THA,72,530,const_monarchy,13.76,100.5,Bangkok
+AUT,9.1,520,parliamentary,48.21,16.37,Vienna
+ARE,10,540,abs_monarchy,24.45,54.38,Abu Dhabi
+NOR,5.6,500,const_monarchy,59.91,10.75,Oslo
+SGP,6,550,parliamentary,1.29,103.85,Singapore
+PHL,116,470,republic,14.6,120.98,Manila
+VNM,101,470,one_party,21.03,105.85,Hanoi
+IRN,91,430,theocracy,35.69,51.39,Tehran
+BGD,173,450,parliamentary,23.81,90.41,Dhaka
+DNK,6,410,const_monarchy,55.68,12.57,Copenhagen
+MYS,35,440,const_monarchy,3.14,101.69,Kuala Lumpur
+COL,53,420,republic,4.71,-74.07,Bogota
+ZAF,64,400,parliamentary,-25.75,28.19,Pretoria
+HKG,7.5,400,one_party,22.32,114.17,Hong Kong
+EGY,116,390,republic,30.04,31.24,Cairo
+PAK,251,370,parliamentary,33.69,73.04,Islamabad
+CHL,20,330,republic,-33.45,-70.67,Santiago
+ROU,19,380,republic,44.43,26.1,Bucharest
+CZE,10.9,340,parliamentary,50.08,14.44,Prague
+FIN,5.6,300,republic,60.17,24.94,Helsinki
+PRT,10.4,300,republic,38.72,-9.14,Lisbon
+NGA,230,250,federal_republic,9.06,7.49,Abuja
+KAZ,20,290,republic,51.17,71.43,Astana
+PER,34,290,republic,-12.05,-77.04,Lima
+IRQ,46,270,parliamentary,33.31,44.36,Baghdad
+GRC,10.4,250,parliamentary,37.98,23.73,Athens
+NZL,5.2,260,const_monarchy,-41.29,174.78,Wellington
+DZA,47,270,republic,36.75,3.06,Algiers
+QAT,3,220,abs_monarchy,25.29,51.53,Doha
+HUN,9.6,220,parliamentary,47.5,19.04,Budapest
+UKR,37,190,republic,50.45,30.52,Kyiv
+KWT,4.9,160,abs_monarchy,29.38,47.99,Kuwait City
+MAR,38,160,const_monarchy,34.02,-6.83,Rabat
+ETH,130,140,federal_republic,9.03,38.74,Addis Ababa
+SVK,5.4,140,parliamentary,48.15,17.11,Bratislava
+ECU,18,125,republic,-0.18,-78.47,Quito
+DOM,11.4,125,republic,18.49,-69.93,Santo Domingo
+KEN,56,120,republic,-1.29,36.82,Nairobi
+AGO,37,90,republic,-8.84,13.23,Luanda
+OMN,5.3,105,abs_monarchy,23.59,58.41,Muscat
+GTM,18,115,republic,14.63,-90.51,Guatemala City
+UZB,37,115,republic,41.3,69.24,Tashkent
+BGR,6.4,110,parliamentary,42.7,23.32,Sofia
+LKA,22,100,republic,6.93,79.85,Colombo
+VEN,28,100,republic,10.48,-66.9,Caracas
+CRI,5.2,95,republic,9.93,-84.08,San Jose
+LUX,0.67,95,const_monarchy,49.61,6.13,Luxembourg
+HRV,3.9,95,parliamentary,45.81,15.98,Zagreb
+PAN,4.5,90,republic,8.98,-79.52,Panama City
+CIV,32,90,republic,6.82,-5.28,Yamoussoukro
+URY,3.4,82,republic,-34.9,-56.16,Montevideo
+SRB,6.6,85,republic,44.79,20.45,Belgrade
+LTU,2.9,85,parliamentary,54.69,25.28,Vilnius
+TZA,69,80,republic,-6.16,35.75,Dodoma
+GHA,35,80,republic,5.6,-0.19,Accra
+MMR,55,65,military,19.76,96.08,Naypyidaw
+COD,110,70,republic,-4.32,15.31,Kinshasa
+AZE,10.2,75,republic,40.41,49.87,Baku
+BLR,9.1,75,republic,53.9,27.57,Minsk
+SVN,2.1,70,parliamentary,46.06,14.51,Ljubljana
+TKM,7.5,80,republic,37.96,58.33,Ashgabat
+JOR,11.5,55,const_monarchy,31.95,35.93,Amman
+UGA,50,55,republic,0.35,32.58,Kampala
+CMR,29,52,republic,3.85,11.5,Yaounde
+TUN,12.3,52,republic,36.81,10.18,Tunis
+BOL,12.5,50,republic,-16.5,-68.15,La Paz
+BHR,1.6,47,const_monarchy,26.23,50.59,Manama
+LBY,7.4,45,republic,32.89,13.19,Tripoli
+PRY,6.9,45,republic,-25.26,-57.58,Asuncion
+LVA,1.9,43,parliamentary,56.95,24.11,Riga
+NPL,30,43,federal_republic,27.72,85.32,Kathmandu
+EST,1.4,43,parliamentary,59.44,24.75,Tallinn
+SLV,6.3,35,republic,13.69,-89.22,San Salvador
+HND,10.8,36,republic,14.07,-87.19,Tegucigalpa
+KHM,17.6,45,const_monarchy,11.56,104.92,Phnom Penh
+ZWE,17,35,republic,-17.83,31.05,Harare
+CYP,1.3,35,republic,35.17,33.36,Nicosia
+SEN,18.5,32,republic,14.72,-17.47,Dakar
+ZMB,21,28,republic,-15.39,28.32,Lusaka
+ISL,0.39,33,parliamentary,64.15,-21.94,Reykjavik
+PNG,10.5,32,const_monarchy,-9.44,147.18,Port Moresby
+GEO,3.7,33,parliamentary,41.72,44.79,Tbilisi
+BIH,3.2,29,federal_republic,43.86,18.41,Sarajevo
+TTO,1.5,28,republic,10.66,-61.51,Port of Spain
+SDN,50,30,military,15.5,32.56,Khartoum
+AFG,42,17,theocracy,34.53,69.17,Kabul
+MOZ,34,22,republic,-25.97,32.57,Maputo
+ALB,2.7,27,parliamentary,41.33,19.82,Tirana
+BWA,2.5,20,republic,-24.65,25.91,Gaborone
+MLI,24,21,military,12.64,-8,Bamako
+BFA,23.5,21,military,12.37,-1.52,Ouagadougou
+GAB,2.5,21,military,0.39,9.45,Libreville
+JAM,2.8,20,const_monarchy,18.01,-76.8,Kingston
+NIC,7,19,republic,12.11,-86.24,Managua
+MNG,3.5,22,parliamentary,47.89,106.91,Ulaanbaatar
+ARM,3,25,parliamentary,40.18,44.51,Yerevan
+MKD,1.8,16,parliamentary,42,21.43,Skopje
+GIN,14.5,24,military,9.64,-13.58,Conakry
+MDG,31,17,republic,-18.88,47.51,Antananarivo
+BEN,14,21,republic,6.5,2.6,Porto-Novo
+NAM,3,13,republic,-22.56,17.08,Windhoek
+MLT,0.55,25,parliamentary,35.9,14.51,Valletta
+PRK,26,30,one_party,39.02,125.75,Pyongyang
+MDA,2.4,18,parliamentary,47.01,28.86,Chisinau
+TCD,20,15,military,12.13,15.06,N'Djamena
+NER,27,20,military,13.51,2.11,Niamey
+RWA,14,14,republic,-1.95,30.06,Kigali
+COG,6.3,15,republic,-4.27,15.27,Brazzaville
+KGZ,7.2,15,republic,42.87,74.59,Bishkek
+TJK,10.5,13,republic,38.56,68.79,Dushanbe
+LAO,7.7,15,one_party,17.98,102.63,Vientiane
+MWI,21.5,11,republic,-13.96,33.77,Lilongwe
+MRT,5,11,republic,18.08,-15.98,Nouakchott
+YEM,40,19,republic,15.35,44.21,Sanaa
+SYR,24,20,republic,33.51,36.29,Damascus
+LBN,5.8,20,parliamentary,33.89,35.5,Beirut
+MNE,0.62,8,parliamentary,42.44,19.26,Podgorica
+FJI,0.93,6,republic,-18.14,178.44,Suva
+SOM,19,12,federal_republic,2.05,45.32,Mogadishu
+HTI,11.8,25,republic,18.54,-72.34,Port-au-Prince
+CUB,10.9,100,one_party,23.11,-82.37,Havana
+SSD,11.5,5,republic,4.85,31.58,Juba
+ERI,3.7,3,one_party,15.32,38.93,Asmara
+CAF,5.5,3,republic,4.39,18.56,Bangui
+SLE,8.6,7,republic,8.48,-13.23,Freetown
+LBR,5.6,5,republic,6.3,-10.8,Monrovia
+TGO,9.5,10,republic,6.13,1.22,Lome
+BDI,14,3,republic,-3.38,29.36,Gitega
+LSO,2.3,2.5,const_monarchy,-29.31,27.48,Maseru
+SWZ,1.2,5,abs_monarchy,-26.31,31.14,Mbabane
+GMB,2.8,2.5,republic,13.45,-16.58,Banjul
+GNB,2.2,2,republic,11.86,-15.6,Bissau
+GNQ,1.9,12,republic,3.75,8.78,Malabo
+DJI,1.2,4,republic,11.59,43.15,Djibouti
+BTN,0.79,3,const_monarchy,27.47,89.64,Thimphu
+BRN,0.46,15,abs_monarchy,4.94,114.95,Bandar Seri Begawan
+TLS,1.4,2,republic,-8.56,125.57,Dili
+GUY,0.83,25,republic,6.8,-58.16,Georgetown
+SUR,0.63,4,republic,5.85,-55.2,Paramaribo
+BLZ,0.42,3,const_monarchy,17.25,-88.77,Belmopan
+BHS,0.41,15,const_monarchy,25.05,-77.35,Nassau
+SLB,0.74,1.7,const_monarchy,-9.43,159.95,Honiara
+VUT,0.33,1.1,republic,-17.73,168.32,Port Vila
+NCL,0.27,10,republic,-22.27,166.44,Noumea
+PSE,5.5,17,republic,31.9,35.2,Ramallah
+XKX,1.6,11,parliamentary,42.66,21.17,Pristina
+ESH,0.6,1,republic,27.15,-13.2,Laayoune
+CPV,0.53,2.6,republic,14.93,-23.51,Praia
+COM,0.87,1.4,republic,-11.7,43.26,Moroni
+MUS,1.26,15,republic,-20.16,57.5,Port Louis
+STP,0.23,0.7,republic,0.34,6.73,Sao Tome
+MDV,0.53,7,republic,4.18,73.51,Male

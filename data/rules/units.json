@@ -1,0 +1,18 @@
+{
+  "_doc": "Land unit types. cost/upkeep in billions (B) at price level 1.0; speed in km/day; days = training time. terrain = attack multiplier by terrain.",
+  "infantry": {
+    "name": "Infantry Division", "short": "INF", "men": 10000, "cost": 0.8, "upkeep": 0.12, "days": 45,
+    "attack": 1.0, "defense": 1.5, "speed": 24, "width": 1, "toughness": 1.0,
+    "terrain": { "plains": 1.0, "hills": 1.0, "mountains": 1.0, "forest": 1.0, "desert": 0.9, "tundra": 0.9 }
+  },
+  "artillery": {
+    "name": "Artillery Brigade", "short": "ART", "men": 5000, "cost": 1.1, "upkeep": 0.15, "days": 60,
+    "attack": 2.0, "defense": 0.9, "speed": 20, "width": 1, "toughness": 0.6,
+    "terrain": { "plains": 1.0, "hills": 0.9, "mountains": 0.7, "forest": 0.8, "desert": 1.0, "tundra": 0.8 }
+  },
+  "armor": {
+    "name": "Armored Division", "short": "ARM", "men": 8000, "cost": 2.4, "upkeep": 0.3, "days": 90,
+    "attack": 2.8, "defense": 1.8, "speed": 40, "width": 1, "toughness": 1.6,
+    "terrain": { "plains": 1.2, "hills": 0.8, "mountains": 0.45, "forest": 0.6, "desert": 1.15, "tundra": 0.7 }
+  }
+}

@@ -1,0 +1,485 @@
+// A running game session: owns the renderer, the simulation loop, input and the HUD.
+// The loop only works when something changes: paused and idle, it schedules no frames.
+import { h, mount } from './dom.js';
+import { MapRenderer } from '../map/renderer.js';
+import { buildIndex, pickProvince } from '../map/picking.js';
+import { MAP_MODES, MODE_LEGENDS } from '../map/modes.js';
+import { tick } from '../core/sim.js';
+import { formatDate, civilFromDays, dateString } from '../core/calendar.js';
+import { saveGame } from '../core/game.js';
+import { orderMove } from '../core/military.js';
+import { computeLedgers } from '../core/economy.js';
+import { isAtWar } from '../core/relations.js';
+import { flagCanvas } from './flags.js';
+import { money, signedMoney, people, pct } from './format.js';
+import { writeSave, rotateAutosaves } from './storage.js';
+import { renderPanel, renderProvince, TABS } from './panels.js';
+import { saveDialog, peaceDialog, menuDialog, reportDialog } from './dialogs.js';
+
+export const SPEEDS = [0, 1, 3, 8, 20, 0]; // days per second; 5 = as fast as the frame budget allows
+
+export class Client {
+  constructor(root, data, game, opts) {
+    this.root = root; this.data = data; this.game = game; this.opts = opts;
+    this.mode = opts.mode; // 'pick' | 'play'
+    this.view = { hover: -1, selected: -1, selectedCountry: -1, selectedArmies: new Set(), highlight: null };
+    this.speed = 0; this.acc = 0; this.lastFrame = 0;
+    this.tab = 'country';
+    this.logSeen = game.state.logSeq || 0;
+    this.uiDirty = true; this.lastUi = 0;
+    this.index = buildIndex(game.map);
+    this.build();
+    this.renderer = new MapRenderer(this.canvas, game.map);
+    this.renderer.setProfile(data.settings.profile);
+    this.renderer.fit();
+    if (game.state.player >= 0) this.focusCountry(game.state.player, false);
+    this.bind();
+    this.lastMapVersion = game.state.mapVersion || 0;
+    this.lastRel = game.state.relVersion || 0;
+    this.lastMonth = civilFromDays(game.state.day).m;
+    this.frameReq = 0;
+    this.perf = { frames: 0, frameTimes: [], tickMs: 0, ticks: 0 };
+    this.requestFrame();
+  }
+
+  get state() { return this.game.state; }
+
+  destroy() {
+    cancelAnimationFrame(this.frameReq);
+    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('keydown', this.onKey);
+    this.root.innerHTML = '';
+  }
+
+  // ------------------------------------------------------------------ layout
+  build() {
+    this.canvas = h('canvas.map-canvas');
+    this.topbar = h('div.topbar');
+    this.tabsEl = h('div.tabs');
+    this.panelEl = h('div.panel');
+    this.sidebar = h('div.sidebar', this.tabsEl, this.panelEl);
+    this.provEl = h('div.prov-panel.hidden');
+    this.modesEl = h('div.modes');
+    this.legendEl = h('div.legend', { style: { display: 'none' } });
+    this.toastsEl = h('div.toasts');
+    this.hoverEl = h('div.hover-info', { style: { display: 'none' } });
+    this.bannerEl = h('div.pick-banner', { style: { display: 'none' } });
+    this.tooltip = h('div.tooltip', { style: { display: 'none' } });
+    this.el = h('div.game', this.canvas, this.topbar, this.sidebar, this.modesEl, this.legendEl, this.provEl, this.hoverEl, this.bannerEl, this.toastsEl, this.tooltip);
+    mount(this.root, this.el);
+    this.renderModes();
+  }
+
+  renderModes() {
+    mount(this.modesEl, MAP_MODES.map((m) => h('button' + (this.renderer?.mode === m.id || (!this.renderer && m.id === 'political') ? '.on' : ''),
+      { tip: `${m.tip}\nShortcut: ${m.key.toUpperCase()}`, on: { click: () => this.setMapMode(m.id) } }, m.name)));
+    const L = MODE_LEGENDS[this.renderer?.mode];
+    if (L) {
+      this.legendEl.style.display = '';
+      mount(this.legendEl, L.map(([n, c]) => h('div', h('i', { style: { background: c } }), n)));
+    } else this.legendEl.style.display = 'none';
+  }
+
+  setMapMode(id) {
+    this.renderer.mode = id;
+    this.renderer.invalidate();
+    this.renderModes();
+    this.requestFrame();
+  }
+
+  // ------------------------------------------------------------------ input
+  bind() {
+    const cv = this.canvas;
+    let down = null;
+    cv.addEventListener('contextmenu', (e) => e.preventDefault());
+    cv.addEventListener('pointerdown', (e) => {
+      cv.setPointerCapture(e.pointerId);
+      down = { x: e.clientX, y: e.clientY, button: e.button, drag: false, shift: e.shiftKey };
+    });
+    cv.addEventListener('pointermove', (e) => {
+      const r = cv.getBoundingClientRect();
+      const sx = e.clientX - r.left, sy = e.clientY - r.top;
+      if (down) {
+        const dx = e.clientX - down.x, dy = e.clientY - down.y;
+        if (!down.drag && Math.hypot(dx, dy) > 4) down.drag = true;
+        if (down.drag) {
+          this.renderer.pan(e.movementX, e.movementY);
+          cv.style.cursor = 'grabbing';
+          this.requestFrame();
+          return;
+        }
+      }
+      this.hoverAt(sx, sy);
+    });
+    cv.addEventListener('pointerup', (e) => {
+      const r = cv.getBoundingClientRect();
+      const sx = e.clientX - r.left, sy = e.clientY - r.top;
+      cv.style.cursor = 'default';
+      if (down && !down.drag) {
+        if (down.button === 0) this.click(sx, sy, e.shiftKey);
+        else if (down.button === 2) this.rightClick(sx, sy);
+      }
+      down = null;
+      this.requestFrame();
+    });
+    cv.addEventListener('pointerleave', () => { this.view.hover = -1; this.hoverEl.style.display = 'none'; this.requestFrame(); });
+    cv.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const r = cv.getBoundingClientRect();
+      this.renderer.zoomAt(e.clientX - r.left, e.clientY - r.top, Math.pow(1.0015, -e.deltaY));
+      this.requestFrame();
+    }, { passive: false });
+    this.onResize = () => { this.renderer.resize(); this.requestFrame(); };
+    window.addEventListener('resize', this.onResize);
+    this.onKey = (e) => this.key(e);
+    window.addEventListener('keydown', this.onKey);
+    // tooltips for any element with data-tip
+    this.el.addEventListener('mouseover', (e) => {
+      const t = e.target.closest('[data-tip]');
+      if (!t || !this.data.settings.tooltips) { this.tooltip.style.display = 'none'; return; }
+      this.tooltip.textContent = t.dataset.tip;
+      this.tooltip.style.display = '';
+      const r = t.getBoundingClientRect();
+      const tw = this.tooltip.offsetWidth, th = this.tooltip.offsetHeight;
+      let x = r.left, y = r.bottom + 6;
+      if (x + tw > window.innerWidth - 4) x = window.innerWidth - tw - 4;
+      if (y + th > window.innerHeight - 4) y = r.top - th - 6;
+      this.tooltip.style.left = x + 'px'; this.tooltip.style.top = y + 'px';
+    });
+    this.el.addEventListener('mouseout', (e) => { if (e.target.closest('[data-tip]')) this.tooltip.style.display = 'none'; });
+  }
+
+  key(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || document.querySelector('.dialog-wrap')) {
+      if (e.key === 'Escape') document.querySelector('.dialog-wrap')?.remove();
+      return;
+    }
+    const k = e.key.toLowerCase();
+    if (e.key === ' ') { e.preventDefault(); this.togglePause(); }
+    else if (/^[1-5]$/.test(e.key)) this.setSpeed(+e.key);
+    else if (e.key === 'Escape') { this.clearSelection(); }
+    else if (e.key === '+' || e.key === '=') { this.renderer.zoomAt(this.renderer.vw / 2, this.renderer.vh / 2, 1.25); }
+    else if (e.key === '-') { this.renderer.zoomAt(this.renderer.vw / 2, this.renderer.vh / 2, 0.8); }
+    else if (e.key.startsWith('Arrow')) {
+      const d = 80;
+      this.renderer.pan(e.key === 'ArrowLeft' ? d : e.key === 'ArrowRight' ? -d : 0, e.key === 'ArrowUp' ? d : e.key === 'ArrowDown' ? -d : 0);
+    } else if (e.ctrlKey && k === 's') { e.preventDefault(); this.quickSave(); }
+    else if (k === 'h') { this.renderer.fit(); }
+    else if (k === 'c' && this.state.player >= 0) this.focusCountry(this.state.player);
+    else {
+      const m = MAP_MODES.find((x) => x.key === k);
+      if (m && !e.ctrlKey && !e.metaKey) this.setMapMode(m.id);
+      const t = TABS.find((x) => x.key === k);
+      if (t && !e.ctrlKey && !e.metaKey && this.mode === 'play') this.setTab(t.id);
+    }
+    this.requestFrame();
+  }
+
+  hoverAt(sx, sy) {
+    const [wx, wy] = this.renderer.screenToWorld(sx, sy);
+    const p = pickProvince(this.game.map, this.index, wx, wy);
+    if (p !== this.view.hover) {
+      this.view.hover = p;
+      if (p >= 0) {
+        const s = this.state, own = s.prov.owner[p], ctl = s.prov.controller[p];
+        const C = s.countries;
+        this.hoverEl.textContent = `${this.game.map.name[p]} — ${C[own]?.name ?? 'Unclaimed'}` + (ctl !== own && ctl >= 0 ? ` (occupied by ${C[ctl].name})` : '');
+        this.hoverEl.style.display = '';
+      } else this.hoverEl.style.display = 'none';
+      this.requestFrame();
+    }
+  }
+
+  click(sx, sy, shift) {
+    const armyId = this.mode === 'play' ? this.renderer.armyAt(sx, sy) : 0;
+    if (armyId) {
+      const a = this.state.armies.find((x) => x.id === armyId);
+      if (!shift) this.view.selectedArmies.clear();
+      if (this.view.selectedArmies.has(armyId) && shift) this.view.selectedArmies.delete(armyId);
+      else this.view.selectedArmies.add(armyId);
+      if (a.owner === this.state.player) this.setTab('military');
+      this.view.selected = a.loc;
+      this.uiDirty = true;
+      return;
+    }
+    const [wx, wy] = this.renderer.screenToWorld(sx, sy);
+    const p = pickProvince(this.game.map, this.index, wx, wy);
+    if (p < 0) { this.clearSelection(); return; }
+    // in the military tab, clicking a province with your armies selected keeps them selected
+    if (!shift) this.view.selectedArmies.clear();
+    this.selectProvince(p);
+  }
+
+  rightClick(sx, sy) {
+    if (this.mode !== 'play' || !this.view.selectedArmies.size) return;
+    const [wx, wy] = this.renderer.screenToWorld(sx, sy);
+    const p = pickProvince(this.game.map, this.index, wx, wy);
+    if (p < 0) return;
+    const errs = [];
+    for (const id of this.view.selectedArmies) {
+      const a = this.state.armies.find((x) => x.id === id);
+      if (!a || a.owner !== this.state.player) continue;
+      const err = orderMove(this.state, this.game.map, this.game.rules, id, p);
+      if (err) errs.push(`${a.name}: ${err}`);
+    }
+    if (errs.length) this.toast(errs[0], true);
+    this.uiDirty = true;
+  }
+
+  selectProvince(p) {
+    this.view.selected = p;
+    this.view.selectedCountry = this.state.prov.owner[p];
+    if (this.renderer.mode === 'diplomacy') { this.renderer.focus = this.view.selectedCountry; this.renderer.invalidate(); }
+    this.uiDirty = true;
+    this.requestFrame();
+  }
+
+  clearSelection() {
+    this.view.selected = -1; this.view.selectedCountry = -1; this.view.selectedArmies.clear(); this.view.highlight = null;
+    if (this.renderer.mode === 'diplomacy') { this.renderer.focus = this.state.player; this.renderer.invalidate(); }
+    this.uiDirty = true;
+  }
+
+  focusCountry(c, select = true) {
+    const cap = this.state.countries[c].capital;
+    if (cap >= 0) this.renderer.centerOn(this.game.map.x[cap], this.game.map.y[cap], Math.max(this.renderer.cam.z, 1.1));
+    if (select && cap >= 0) this.selectProvince(cap);
+    this.requestFrame();
+  }
+
+  focusProvince(p) {
+    this.renderer.centerOn(this.game.map.x[p], this.game.map.y[p], Math.max(this.renderer.cam.z, 1.6));
+    this.selectProvince(p);
+  }
+
+  setTab(id) { this.tab = id; this.uiDirty = true; this.requestFrame(); }
+
+  // ------------------------------------------------------------------ simulation control
+  setSpeed(n) {
+    if (this.mode !== 'play' || this.state.gameOver) return;
+    this.speed = n; this.acc = 0; this.uiDirty = true; this.requestFrame();
+  }
+  togglePause() {
+    if (this.speed) { this.pausedSpeed = this.speed; this.setSpeed(0); } else this.setSpeed(this.pausedSpeed || 2);
+  }
+
+  startPlaying(countryIdx) {
+    const s = this.state;
+    s.player = countryIdx;
+    this.mode = 'play';
+    this.bannerEl.style.display = 'none';
+    this.renderer.focus = countryIdx;
+    this.renderer.invalidate();
+    if (countryIdx >= 0) this.focusCountry(countryIdx);
+    this.tab = 'country';
+    computeLedgers(s, this.game.map, this.game.rules);
+    this.uiDirty = true;
+    this.toast(countryIdx >= 0 ? `You lead ${s.countries[countryIdx].name}. Press Space to start time.` : 'Observer mode: the AI runs every country. Press Space to start time.');
+  }
+
+  requestFrame() {
+    if (!this.frameReq) this.frameReq = requestAnimationFrame((t) => { this.frameReq = 0; this.frame(t); });
+  }
+
+  frame(now) {
+    const dt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0;
+    this.lastFrame = now;
+    let ticked = 0;
+    if (this.speed > 0 && !this.state.gameOver) {
+      const t0 = performance.now();
+      const budget = this.data.settings.profile === 'low' ? 10 : 14;
+      if (this.speed === 5) {
+        while (performance.now() - t0 < budget) { this.doTick(); ticked++; }
+      } else {
+        this.acc += dt * SPEEDS[this.speed];
+        while (this.acc >= 1 && performance.now() - t0 < budget) { this.acc -= 1; this.doTick(); ticked++; }
+        if (this.acc > 3) this.acc = 3; // drop backlog rather than spiral
+      }
+      if (ticked) {
+        const ms = performance.now() - t0;
+        this.perf.tickMs = ms / ticked; this.perf.ticks += ticked;
+      }
+    }
+    if (ticked) this.afterTicks();
+    const s = this.state;
+    if ((s.mapVersion || 0) !== this.lastMapVersion || (s.relVersion || 0) !== this.lastRel) {
+      this.lastMapVersion = s.mapVersion || 0; this.lastRel = s.relVersion || 0;
+      this.renderer.invalidate();
+    }
+    if (this.renderer.mode === 'diplomacy' && this.renderer.focus < 0) this.renderer.focus = s.player;
+    if (this.renderer.mode === 'military' && this.renderer.focus !== s.player) { this.renderer.focus = s.player; this.renderer.invalidate(); }
+    const tr = performance.now();
+    this.renderer.draw(s, this.view);
+    this.perf.frames++;
+    this.perf.frameTimes.push(performance.now() - tr);
+    if (this.perf.frameTimes.length > 120) this.perf.frameTimes.shift();
+    if (this.uiDirty && performance.now() - this.lastUi > (ticked ? this.renderer.profile.uiMs : 0)) {
+      this.renderUi(); this.uiDirty = false; this.lastUi = performance.now();
+    }
+    // keep animating while time runs, the camera is settling, or UI waits for its slot
+    const settling = this.renderer.cacheCam && (this.renderer.cacheCam.z !== this.renderer.cam.z || this.renderer.cacheCam.cx !== this.renderer.cam.cx || this.renderer.cacheCam.cy !== this.renderer.cam.cy);
+    if (this.speed > 0 || settling || this.uiDirty) this.requestFrame();
+    else this.lastFrame = 0;
+  }
+
+  doTick() {
+    const { monthly } = tick(this.game);
+    if (monthly) {
+      const s = this.state;
+      const m = civilFromDays(s.day).m;
+      if (this.renderer.mode !== 'political') this.renderer.invalidate();
+      const every = s.settings.autosaveMonths;
+      if (every > 0 && this.mode === 'play' && (m - 1) % every === 0 && m !== this.lastMonth) this.autosave();
+      this.lastMonth = m;
+    } else if (this.renderer.mode === 'military' && this.state.day % 5 === 0) this.renderer.invalidate();
+  }
+
+  afterTicks() {
+    const s = this.state;
+    this.uiDirty = true;
+    // toasts for important new notifications concerning the player
+    for (const l of s.log) {
+      if (l.seq <= this.logSeen) continue;
+      if (l.important || (l.type === 'battle' && l.report)) this.toast(l.text, l.important, l.prov);
+    }
+    this.logSeen = s.logSeq || 0;
+    if (s.offers.some((o) => o.to === s.player && !o.notified)) {
+      for (const o of s.offers) if (o.to === s.player && !o.notified) { o.notified = true; this.toast(`${s.countries[o.from].name} offers peace. See the Diplomacy tab.`, true); if (this.speed) this.setSpeed(0); }
+    }
+    if (s.gameOver && !this.gameOverShown) {
+      this.gameOverShown = true; this.speed = 0;
+      this.toast(`Game over: ${s.gameOver.reason}`, true);
+    }
+    // drop selections of armies that no longer exist
+    for (const id of [...this.view.selectedArmies]) if (!s.armies.some((a) => a.id === id)) this.view.selectedArmies.delete(id);
+  }
+
+  autosave() {
+    const s = this.state;
+    const name = `autosave-${dateString(s.day)}`;
+    const err = writeSave(name, saveGame(this.game, { savedAt: Date.now(), label: name }), this.slotInfo());
+    if (err) this.toast(err, true);
+    rotateAutosaves(s.settings.autosaveKeep ?? 3);
+  }
+
+  slotInfo() {
+    const s = this.state;
+    return { savedAt: Date.now(), date: formatDate(s.day), country: s.player >= 0 ? s.countries[s.player].name : 'Observer', scenario: s.scenarioName };
+  }
+
+  quickSave() {
+    const err = writeSave('quicksave', saveGame(this.game, { savedAt: Date.now() }), this.slotInfo());
+    this.toast(err || 'Game saved to slot "quicksave".', !!err);
+  }
+
+  toast(text, bad = false, prov) {
+    const t = h('div.toast' + (bad ? '.bad' : ''), { on: { click: () => { if (prov != null && prov >= 0) this.focusProvince(prov); t.remove(); } } }, text);
+    this.toastsEl.append(t);
+    while (this.toastsEl.children.length > 5) this.toastsEl.firstChild.remove();
+    setTimeout(() => t.remove(), bad ? 9000 : 5000);
+  }
+
+  // ------------------------------------------------------------------ UI
+  renderUi() {
+    this.renderTop();
+    if (this.mode === 'pick') this.renderPick();
+    else {
+      mount(this.tabsEl, TABS.map((t) => h('button' + (this.tab === t.id ? '.on' : ''), { tip: `${t.tip}\nShortcut: ${t.key.toUpperCase()}`, on: { click: () => this.setTab(t.id) } }, t.name)));
+      renderPanel(this, this.panelEl);
+    }
+    renderProvince(this, this.provEl);
+  }
+
+  renderTop() {
+    const s = this.state, C = s.countries;
+    const me = s.player >= 0 ? C[s.player] : null;
+    const L = me?.ledger;
+    const speedBtns = [1, 2, 3, 4, 5].map((n) => h('button' + (this.speed === n ? '.on' : ''),
+      { tip: `Speed ${n}: ${n === 5 ? 'as fast as possible' : SPEEDS[n] + ' days/second'} (key ${n})`, on: { click: () => this.setSpeed(n) }, disabled: this.mode !== 'play' }, '›'.repeat(Math.min(n, 3)) + (n > 3 ? n : '')));
+    const wars = me ? s.wars.filter((w) => w.attackers.includes(me.idx) || w.defenders.includes(me.idx)).length : s.wars.length;
+    const ledgerTip = L ? [
+      `Monthly budget for ${me.name}`,
+      `GDP this month: ${money(L.gdpMonth)}${L.gdpLost > 0 ? ` (${money(L.gdpLost)} in occupied provinces, not taxable)` : ''}`,
+      `Tax revenue: ${money(L.taxRevenue)} = taxable GDP × tax ${pct(me.tax)} × efficiency ${pct(L.efficiency)}`,
+      L.requisition ? `Requisitions from occupied land: ${money(L.requisition)}` : null,
+      `Civil spending: −${money(L.civil)} (${pct(me.civilShare)} of tax revenue)`,
+      `Military upkeep: −${money(L.military)}`,
+      L.interest ? `Debt interest: −${money(L.interest)}` : null,
+      `Net: ${signedMoney(L.net)}`,
+    ].filter(Boolean).join('\n') : '';
+    mount(this.topbar,
+      me ? h('div.nation', { on: { click: () => { this.setTab('country'); this.focusCountry(me.idx); } }, tip: 'Your country. Click to centre on the capital (key C).' }, flagCanvas(me), me.name)
+        : h('div.nation', h('span.muted', this.mode === 'pick' ? 'Choose a country' : 'Observer')),
+      h('div.row', h('button', { tip: 'Pause / resume (Space)', on: { click: () => this.togglePause() }, disabled: this.mode !== 'play' }, this.speed ? '❚❚' : '▶'),
+        h('div.date', formatDate(s.day), this.speed ? '' : h('div.paused-flag', 'PAUSED')), h('div.speed', speedBtns)),
+      me && h('div.stat', { tip: 'Treasury. Negative means debt, which costs interest and lowers stability.' }, h('b', { className: me.treasury < 0 ? 'bad' : '' }, money(me.treasury)), h('span', 'Treasury')),
+      L && h('div.stat', { tip: ledgerTip }, h('b', { className: L.net < 0 ? 'bad' : 'good' }, signedMoney(L.net)), h('span', 'Monthly')),
+      me && h('div.stat', { tip: 'Stability 0–100: affects tax efficiency. Lowered by high taxes, low public spending, debt, war and occupation.' }, h('b', Math.round(me.stability)), h('span', 'Stability')),
+      me && h('div.stat.opt', { tip: `Available manpower for recruiting and reinforcement. Cap ${people(me.cache.maxManpower)}, regenerates monthly.` }, h('b', people(me.manpower)), h('span', 'Manpower')),
+      me && h('div.stat.opt', { tip: 'Population' }, h('b', people(me.cache.pop)), h('span', 'Population')),
+      h('div.stat', { tip: me ? 'Wars you are part of' : 'Wars in the world', className: wars ? 'bad' : '' }, h('b', wars), h('span', 'Wars')),
+      h('div.spacer'),
+      this.searchBox(),
+      h('button', { tip: 'Save the game (Ctrl+S quick-saves)', on: { click: () => saveDialog(this) }, disabled: this.mode !== 'play' }, 'Save'),
+      h('button', { on: { click: () => menuDialog(this) } }, 'Menu'));
+  }
+
+  searchBox() {
+    if (this._search) return this._search;
+    const map = this.game.map;
+    const results = h('div.results', { style: { display: 'none' } });
+    const input = h('input', { placeholder: 'Search country or province…', on: {
+      input: () => {
+        const q = input.value.trim().toLowerCase();
+        if (q.length < 2) { results.style.display = 'none'; return; }
+        const C = this.state.countries;
+        const cs = C.filter((c) => c.alive && c.name.toLowerCase().includes(q)).slice(0, 8);
+        const ps = map.ids.filter((i) => map.name[i].toLowerCase().includes(q)).slice(0, 12);
+        mount(results,
+          cs.map((c) => h('div', { on: { mousedown: () => { this.focusCountry(c.idx); results.style.display = 'none'; } } }, flagCanvas(c), ' ', h('b', c.name), h('span.muted', ' · country'))),
+          ps.map((i) => h('div', { on: { mousedown: () => { this.focusProvince(i); results.style.display = 'none'; } } }, map.name[i], h('span.muted', ` · ${C[this.state.prov.owner[i]]?.name ?? ''}`))),
+          !cs.length && !ps.length && h('div.muted', 'No matches'));
+        results.style.display = '';
+      },
+      blur: () => setTimeout(() => (results.style.display = 'none'), 150),
+      keydown: (e) => { if (e.key === 'Enter') results.querySelector('div')?.dispatchEvent(new Event('mousedown')); },
+    } });
+    this._search = h('div.search', input, results);
+    return this._search;
+  }
+
+  renderPick() {
+    const s = this.state, C = s.countries;
+    const sel = this.view.selectedCountry;
+    this.bannerEl.style.display = '';
+    if (sel >= 0) {
+      const c = C[sel];
+      mount(this.bannerEl, flagCanvas(c, true), h('div', h('b', c.name), h('div.muted', `${people(c.cache.pop)} people · GDP ${money(c.cache.gdp)}/yr · ${c.cache.provinces} provinces`)),
+        h('button.primary', { on: { click: () => this.startPlaying(sel) } }, `Play as ${c.name}`),
+        h('button', { on: { click: () => this.startPlaying(-1) }, tip: 'Watch the AI play every country.' }, 'Observe'));
+    } else {
+      mount(this.bannerEl, h('span', 'Click a country on the map or choose from the list.'),
+        h('button', { on: { click: () => this.startPlaying(-1) }, tip: 'Watch the AI play every country.' }, 'Observe'),
+        h('button', { on: { click: () => this.opts.onExit() } }, 'Back'));
+    }
+    mount(this.tabsEl, h('button.on', 'Choose your country'));
+    if (!this._pickList) {
+      const q = h('input', { placeholder: 'Filter…', style: { width: '100%', marginBottom: '0.5em' }, on: { input: () => draw() } });
+      const box = h('div');
+      const sorted = [...C].filter((c) => c.alive).sort((a, b) => b.cache.gdp - a.cache.gdp);
+      const draw = () => {
+        const f = q.value.trim().toLowerCase();
+        mount(box, h('table.t', h('tr', h('th', 'Country'), h('th.n', 'GDP/yr'), h('th.n', 'Pop.')),
+          sorted.filter((c) => !f || c.name.toLowerCase().includes(f)).map((c) => h('tr.click', { on: { click: () => this.focusCountry(c.idx) } },
+            h('td', flagCanvas(c), ' ', c.name), h('td.n', money(c.cache.gdp)), h('td.n', people(c.cache.pop))))));
+      };
+      draw();
+      this._pickList = h('div', h('p.muted', `${this.state.scenarioName}. Every country is playable.`), q, box);
+    }
+    mount(this.panelEl, this._pickList);
+  }
+
+  openPeace(war) { peaceDialog(this, war); }
+  openReport(id) { reportDialog(this, id); }
+  isAtWar() { return isAtWar(this.state, this.state.player); }
+}

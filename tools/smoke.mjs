@@ -1,0 +1,23 @@
+import fs from 'node:fs';
+import { decodeMap, makeRules, newGame } from '../src/core/game.js';
+import { tick } from '../src/core/sim.js';
+import { formatDate } from '../src/core/calendar.js';
+const rd = (p) => JSON.parse(fs.readFileSync(new URL('../' + p, import.meta.url)));
+let t = performance.now();
+const map = decodeMap(rd('data/map/world.json'));
+const rules = makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'));
+const scenario = rd('data/scenarios/modern_2026.json');
+const game = newGame({ map, scenario, rules, playerTag: null, seed: 'smoke' });
+console.log('load ms', (performance.now() - t).toFixed(0));
+const days = +(process.argv[2] || 365);
+t = performance.now();
+let worst = 0;
+for (let i = 0; i < days; i++) { tick(game); worst = Math.max(worst, game.profile.total); }
+const el = performance.now() - t;
+const s = game.state;
+console.log(formatDate(s.day), 'days', days, 'ms', el.toFixed(0), 'per day', (el / days).toFixed(2), 'worst', worst.toFixed(1));
+console.log('wars', s.wars.length, 'armies', s.armies.length, 'battles', s.battles.length, 'reports', s.reports.length, 'alive', s.countries.filter(c=>c.alive).length);
+for (const l of s.aiLog.slice(-12)) console.log(' AI', formatDate(l.day), s.countries[l.c].tag, l.text);
+for (const l of s.log.slice(-8)) console.log(' LOG', formatDate(l.day), l.text);
+const top = [...s.countries].sort((a, b) => b.cache.gdp - a.cache.gdp).slice(0, 6);
+for (const c of top) console.log(c.tag, 'treasury', c.treasury.toFixed(1), 'net', c.ledger?.net.toFixed(2), 'tax', c.tax.toFixed(2), 'civil', c.civilShare.toFixed(2), 'stab', c.stability.toFixed(0), 'mp', Math.round(c.manpower), 'armyP', c.cache.armyPower.toFixed(0));

@@ -1,0 +1,13 @@
+{
+ "scenarios": [
+  {
+   "id": "modern_2026",
+   "file": "modern_2026.json",
+   "name": "Modern World",
+   "era": "modern",
+   "startDate": "2026-01-01",
+   "description": "The world of the mid-2020s with present-day borders (Natural Earth, UN boundary view). Every recognised state and Taiwan is playable; overseas dependencies belong to their sovereign states.",
+   "approximations": "Population and GDP per country are rounded c. 2025 estimates; their spread across provinces, terrain, and starting armies are model estimates. No wars are active at start."
+  }
+ ]
+}

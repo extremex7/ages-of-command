@@ -10,7 +10,7 @@ export function validateRules(rules) {
     for (const t of TERRAINS) if (typeof u.terrain?.[t] !== 'number') errs.push(`unit "${k}": terrain.${t} must be a number`);
   }
   const b = rules.balance;
-  for (const s of ['economy', 'population', 'combat', 'siege', 'war', 'ai', 'industry']) if (!b?.[s]) errs.push(`balance: missing section "${s}"`);
+  for (const s of ['economy', 'population', 'combat', 'siege', 'war', 'ai', 'industry', 'government', 'diplomacy']) if (!b?.[s]) errs.push(`balance: missing section "${s}"`);
   if (errs.length) throw new Error('Invalid rules:\n' + errs.join('\n'));
 }
 

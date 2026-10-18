@@ -3,7 +3,7 @@
 import { parseDate } from './calendar.js';
 import { seedState } from './rng.js';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export function createState({ map, scenario, rules, playerTag = null, seed = 'aoc3', settings = {} }) {
   const N = map.count;
@@ -36,6 +36,8 @@ export function createState({ map, scenario, rules, playerTag = null, seed = 'ao
     wars: [],
     alliances: [],
     offers: [],
+    pendingEvents: [],
+    dip: { treaties: [], mods: [], refused: {}, modVer: 0 },
     recruit: [],
     construction: [],
     log: [],
@@ -143,7 +145,7 @@ export function refreshCountryCache(state, map, rules) {
     c.cache = {
       provinces: n[k], pop: pop[k], gdp: gdp[k], avgDev, occupied: occupied[k],
       priceLevel: (0.35 + 0.65 * Math.min(1.5, prod / refProd)) * (c.econ ? Math.max(0.5, Math.min(3, c.econ.cpi)) : 1),
-      maxManpower: pop[k] * rules.balance.population.manpowerShare,
+      maxManpower: pop[k] * rules.balance.population.manpowerShare * (c.govt?.fx?.manpower ?? 1),
       armyPower: armyStr[k],
     };
     if (n[k] === 0 && c.alive) c.alive = false;

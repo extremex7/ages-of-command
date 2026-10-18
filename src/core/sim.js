@@ -8,6 +8,10 @@ import { aiTick, aiPeace } from './ai.js';
 import { refreshCountryCache } from './state.js';
 import { processConstruction } from './industry.js';
 import { aiEconomy } from './ai.js';
+import { monthlyGovernment } from './government.js';
+import { monthlyDiplomacy } from './diplomacy.js';
+import { dailyEvents, currentWarScores } from './events.js';
+import { aiDiplomacy } from './ai_diplomacy.js';
 
 export function tick(game) {
   const { state, map, rules } = game;
@@ -21,14 +25,19 @@ export function tick(game) {
   processSieges(state, map, rules);
   dailyRecovery(state, rules);
   processConstruction(state, map, rules);
+  dailyEvents(state, map, rules);
   const t1 = typeof performance !== 'undefined' ? performance.now() : 0;
   aiTick(state, map, rules);
+  aiDiplomacy(state, map, rules);
   const t2 = typeof performance !== 'undefined' ? performance.now() : 0;
   const monthly = civilFromDays(state.day).d === 1;
   if (monthly) {
     monthlyEconomy(state, map, rules);
     monthlyMilitary(state, map, rules);
-    aiPeace(state, map, rules);
+    const warScores = currentWarScores(state, map, rules);
+    monthlyGovernment(state, map, rules, warScores);
+    monthlyDiplomacy(state, map, rules);
+    aiPeace(state, map, rules, warScores);
     aiEconomy(state, map, rules);
     refreshCountryCache(state, map, rules);
   }

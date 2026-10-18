@@ -4,6 +4,8 @@
 import { SAVE_VERSION, refreshCountryCache } from './state.js';
 import { touchRelations } from './relations.js';
 import { initEconomy } from './industry.js';
+import { initGovernment, newGovt, govEffects } from './government.js';
+import { initDiplomacy, TREATIES } from './diplomacy.js';
 
 const TYPED = { Int16Array, Uint8Array, Float32Array, Float64Array, Int32Array, Uint32Array };
 
@@ -21,7 +23,11 @@ function fromB64(type, b64) {
   return new TYPED[type](bytes.buffer);
 }
 
+// Keys of derived data that is rebuilt on load instead of saved.
+const DERIVED = new Set(['fx']);
+
 function replacer(key, v) {
+  if (DERIVED.has(key)) return undefined;
   if (ArrayBuffer.isView(v) && TYPED[v.constructor.name]) return { $ta: v.constructor.name, b: toB64(v) };
   return v;
 }
@@ -59,6 +65,18 @@ const MIGRATIONS = {
     s.construction = [];
     s.needsEconomy = true;
     s.version = 3;
+    return s;
+  },
+  // v3 → v4 (Milestone 4): governments, factions, treaties and events did not exist. They are
+  // installed from each country's government type and the scenario's diplomacy section.
+  3: (s) => {
+    s.pendingEvents = [];
+    s.dip = { treaties: [], mods: [], refused: {}, modVer: 0 };
+    for (const o of s.offers || []) o.kind = o.kind || 'peace';
+    for (const a of s.alliances || []) a.kind = a.kind || 'defense';
+    for (const c of s.countries) { if (c.econ) c.econ.partnerShare = 0; delete c.govt; }
+    s.needsPolitics = true;
+    s.version = 4;
     return s;
   },
 };
@@ -100,6 +118,12 @@ export function deserialize(text, map, rules, scenario = null) {
     delete s.needsEconomy;
     initEconomy(s, map, rules, scenario);
   }
+  if (s.needsPolitics) {
+    delete s.needsPolitics;
+    initGovernment(s, map, rules);
+    initDiplomacy(s, map, rules, scenario);
+    refreshCountryCache(s, map, rules);
+  }
   return s;
 }
 
@@ -130,4 +154,32 @@ export function validate(s, map, rules) {
     for (const t of Object.keys(a.units)) if (!rules.units[t]) delete a.units[t];
   }
   for (const w of s.wars) if (!Array.isArray(w.attackers) || !Array.isArray(w.defenders)) throw new Error('Malformed war');
+  if (!s.needsPolitics) validatePolitics(s, rules);
+}
+
+// Governments and treaties are checked against the loaded rules; anything a mod removed is
+// reset rather than rejected, so saves survive rule changes.
+function validatePolitics(s, rules) {
+  const P = rules.politics, C = s.countries.length;
+  if (!s.dip || !Array.isArray(s.dip.treaties)) throw new Error('Save is missing diplomacy');
+  s.dip.treaties = s.dip.treaties.filter((t) => TREATIES[t.type] && t.a < C && t.b < C && t.a >= 0 && t.b >= 0);
+  s.dip.mods = (s.dip.mods || []).filter((m) => m.a < C && m.b < C);
+  s.dip.refused = s.dip.refused || {};
+  const evIds = new Set(rules.events.map((e) => e.id));
+  s.pendingEvents = (s.pendingEvents || []).filter((p) => evIds.has(p.ev) && p.c < C);
+  for (const c of s.countries) {
+    if (!P.types[c.gov]) { c.gov = 'republic'; c.govt = null; }
+    if (!c.govt) { c.govt = newGovt(s, rules, c); }
+    const g = c.govt;
+    for (const f of P.factionIds) { if (g.support[f] == null) g.support[f] = 0.02; if (g.approval[f] == null) g.approval[f] = 50; }
+    for (const f of Object.keys(g.support)) if (!P.factions[f]) { delete g.support[f]; delete g.approval[f]; }
+    if (!P.factions[g.ruling]) g.ruling = P.factionIds.find((f) => P.factions[f].electable) || P.factionIds[0];
+    for (const grp of Object.keys(g.policies)) if (!P.policies[grp]) delete g.policies[grp];
+    for (const grp of P.policyIds) if (!P.policies[grp].options[g.policies[grp]]) g.policies[grp] = Object.keys(P.policies[grp].options)[0];
+    g.mods = g.mods || [];
+    g.evDay = g.evDay || {};
+    g.fx = govEffects(rules, c);
+    c.claims = (c.claims || []).filter((x) => x.p < s.prov.owner.length);
+    c.influence = c.influence ?? 0; c.reputation = c.reputation ?? 0; c.rival = c.rival < C ? c.rival ?? -1 : -1;
+  }
 }

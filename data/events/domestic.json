@@ -1,0 +1,174 @@
+{
+  "_doc": "Domestic events. Each month every country checks every event whose conditions hold; an eligible event fires with probability 1/mtth (mean months to happen), at most one event per country per month, then waits cooldownYears. See docs/GOVERNMENT.md for the condition and effect keys. {country}, {rival} and {neighbour} are replaced in texts.",
+  "events": [
+    {
+      "id": "general_strike", "title": "General strike",
+      "text": "Unions in {country} have called a general strike over jobs and wages. Factories and ports stand idle.",
+      "mtth": 18, "cooldownYears": 4,
+      "conditions": { "any": [{ "unemployment": [">", 0.09] }, { "approvalOf.socialists": ["<", 35] }], "support.socialists": [">", 0.08] },
+      "options": [
+        { "text": "Meet the unions' demands", "ai": 2, "effects": { "treasuryMonths": -0.5, "civilShare": 0.02, "modifier": { "name": "Union settlement", "months": 24, "effects": { "faction": { "socialists": 15, "business": -8 } } } } },
+        { "text": "Break the strike", "ai": 1, "effects": { "stability": -5, "legitimacy": -4, "modifier": { "name": "Strike broken", "months": 24, "effects": { "faction": { "socialists": -20, "business": 6 } } } } }
+      ]
+    },
+    {
+      "id": "corruption_scandal", "title": "Corruption scandal",
+      "text": "Newspapers in {country} reveal that senior officials took bribes from contractors.",
+      "mtth": 36, "cooldownYears": 5,
+      "conditions": { "legitimacy": ["<", 80] },
+      "options": [
+        { "text": "Open a public inquiry", "ai": 2, "effects": { "legitimacy": -3, "stability": -1, "modifier": { "name": "Anti-corruption drive", "months": 36, "effects": { "taxEff": 0.02, "faction": { "liberals": 6 } } } } },
+        { "text": "Bury the story", "ai": 1, "effects": { "legitimacy": -8, "modifier": { "name": "Cover-up", "months": 24, "effects": { "faction": { "liberals": -10 }, "stability": -1 } } } }
+      ]
+    },
+    {
+      "id": "military_demands", "title": "The generals want more",
+      "text": "The high command of {country} warns that the armed forces are underfunded and demands a larger budget.",
+      "mtth": 24, "cooldownYears": 4,
+      "conditions": { "support.military": [">", 0.1], "approvalOf.military": ["<", 40] },
+      "options": [
+        { "text": "Raise military spending", "ai": 2, "effects": { "civilShare": -0.03, "modifier": { "name": "Generals appeased", "months": 24, "effects": { "faction": { "military": 18 } } } } },
+        { "text": "Refuse", "ai": 1, "effects": { "modifier": { "name": "Generals rebuffed", "months": 24, "effects": { "faction": { "military": -12 }, "coupRisk": 1.4 } } } }
+      ]
+    },
+    {
+      "id": "mass_protests", "title": "Mass protests",
+      "text": "Hundreds of thousands march in the capital of {country}, demanding change.",
+      "mtth": 10, "cooldownYears": 3,
+      "conditions": { "stability": ["<", 35] },
+      "options": [
+        { "text": "Promise reforms", "ai": 2, "effects": { "stability": 4, "legitimacy": 3, "modifier": { "name": "Reform promises", "months": 24, "effects": { "faction": { "liberals": 10, "conservatives": -6 } } } } },
+        { "text": "Crack down", "ai": 1, "effects": { "stability": 2, "legitimacy": -10, "modifier": { "name": "Crackdown", "months": 36, "effects": { "liberty": -0.1, "faction": { "liberals": -18, "military": 5 } } } } }
+      ]
+    },
+    {
+      "id": "food_riots", "title": "Food riots",
+      "text": "Bread queues in {country} have turned into riots as food runs short.",
+      "mtth": 4, "cooldownYears": 2,
+      "conditions": { "foodSat": ["<", 0.85] },
+      "options": [
+        { "text": "Subsidise food", "ai": 3, "effects": { "treasuryMonths": -0.6, "stability": 4 } },
+        { "text": "Restore order with police", "ai": 1, "effects": { "stability": -6, "legitimacy": -5 } }
+      ]
+    },
+    {
+      "id": "inflation_crisis", "title": "Price spiral",
+      "text": "Prices in {country} are rising fast and savings are melting away.",
+      "mtth": 6, "cooldownYears": 3,
+      "conditions": { "inflation": [">", 0.08] },
+      "options": [
+        { "text": "Austerity budget", "ai": 2, "effects": { "civilShare": -0.03, "modifier": { "name": "Austerity", "months": 24, "effects": { "faction": { "socialists": -12, "business": 8 } } } } },
+        { "text": "Price controls", "ai": 1, "effects": { "stability": 2, "modifier": { "name": "Price controls", "months": 24, "effects": { "faction": { "business": -12, "socialists": 6 }, "taxEff": -0.02 } } } }
+      ]
+    },
+    {
+      "id": "war_weariness", "title": "War weariness",
+      "text": "Casualty lists grow and the public in {country} is tiring of the war.",
+      "mtth": 8, "cooldownYears": 2,
+      "conditions": { "warMonths": [">", 12], "warScore": ["<", 10] },
+      "options": [
+        { "text": "Rally the nation", "ai": 2, "effects": { "stability": 2, "modifier": { "name": "Wartime propaganda", "months": 12, "effects": { "faction": { "nationalists": 8, "liberals": -8 }, "liberty": -0.05 } } } },
+        { "text": "Promise a quick end", "ai": 1, "effects": { "stability": 3, "legitimacy": -3 } }
+      ]
+    },
+    {
+      "id": "rally_flag", "title": "Rally around the flag",
+      "text": "News from the front fills the people of {country} with pride.",
+      "mtth": 6, "cooldownYears": 3,
+      "conditions": { "atWar": true, "warScore": [">", 25] },
+      "options": [
+        { "text": "Celebrate the victories", "ai": 1, "effects": { "stability": 5, "legitimacy": 4, "modifier": { "name": "Victory fever", "months": 12, "effects": { "faction": { "nationalists": 10, "military": 8 } } } } }
+      ]
+    },
+    {
+      "id": "election_promises", "title": "Election campaign",
+      "text": "With elections coming in {country}, the governing party must choose its campaign promise.",
+      "mtth": 1, "cooldownYears": 3,
+      "conditions": { "family": "democracy", "monthsToElection": ["<", 4] },
+      "options": [
+        { "text": "Promise tax cuts", "ai": 1, "effects": { "tax": -0.01, "modifier": { "name": "Tax-cut pledge", "months": 12, "effects": { "faction": { "business": 8, "conservatives": 5 } } } } },
+        { "text": "Promise better public services", "ai": 1, "effects": { "civilShare": 0.02, "modifier": { "name": "Public services pledge", "months": 12, "effects": { "faction": { "socialists": 8, "liberals": 4 } } } } },
+        { "text": "Campaign on security", "ai": 1, "effects": { "civilShare": -0.01, "modifier": { "name": "Security campaign", "months": 12, "effects": { "faction": { "nationalists": 8, "military": 4 } } } } }
+      ]
+    },
+    {
+      "id": "coup_plot", "title": "Plot uncovered",
+      "text": "Intelligence services in {country} uncover officers plotting to seize power.",
+      "mtth": 6, "cooldownYears": 4,
+      "conditions": { "support.military": [">", 0.12], "approvalOf.military": ["<", 35], "stability": ["<", 50] },
+      "options": [
+        { "text": "Purge the officer corps", "ai": 2, "effects": { "manpower": -0.1, "modifier": { "name": "Officer purge", "months": 36, "effects": { "coupRisk": 0.2, "faction": { "military": -15 } } } } },
+        { "text": "Buy their loyalty", "ai": 1, "effects": { "civilShare": -0.04, "modifier": { "name": "Officers placated", "months": 24, "effects": { "coupRisk": 0.5, "faction": { "military": 20 } } } } }
+      ]
+    },
+    {
+      "id": "regional_autonomy", "title": "Regional autonomy movement",
+      "text": "Regional leaders in {country} demand more control over their own affairs.",
+      "mtth": 30, "cooldownYears": 6,
+      "conditions": { "provinces": [">", 20], "stability": ["<", 50] },
+      "options": [
+        { "text": "Grant autonomy", "ai": 2, "effects": { "stability": 4, "modifier": { "name": "Regional autonomy", "months": 60, "effects": { "taxEff": -0.04, "stability": 2 } } } },
+        { "text": "Refuse", "ai": 1, "effects": { "stability": -4, "modifier": { "name": "Autonomy refused", "months": 24, "effects": { "stability": -2 } } } }
+      ]
+    },
+    {
+      "id": "tech_boom", "title": "Technology boom",
+      "text": "A wave of start-ups and investment sweeps through the cities of {country}.",
+      "mtth": 60, "cooldownYears": 8,
+      "conditions": { "avgDev": [">", 65], "atWar": false },
+      "options": [
+        { "text": "Back it with public money", "ai": 2, "effects": { "treasuryMonths": -0.4, "dev": 1, "modifier": { "name": "Tech boom", "months": 24, "effects": { "faction": { "business": 8 } } } } },
+        { "text": "Let the market decide", "ai": 1, "effects": { "dev": 0.4, "modifier": { "name": "Tech boom", "months": 24, "effects": { "faction": { "business": 4 } } } } }
+      ]
+    },
+    {
+      "id": "natural_disaster", "title": "Natural disaster",
+      "text": "Floods and storms have struck {country}, destroying homes and roads.",
+      "mtth": 72, "cooldownYears": 4,
+      "conditions": {},
+      "options": [
+        { "text": "Fund a large relief effort", "ai": 2, "effects": { "treasuryMonths": -0.5, "stability": 2, "legitimacy": 2 } },
+        { "text": "Leave it to the regions", "ai": 1, "effects": { "stability": -4, "legitimacy": -3, "popShare": -0.001 } }
+      ]
+    },
+    {
+      "id": "religious_revival", "title": "Religious revival",
+      "text": "Preachers draw huge crowds in {country}, calling for faith to return to public life.",
+      "mtth": 48, "cooldownYears": 6,
+      "conditions": { "support.clergy": [">", 0.06], "not": { "policy.religion": "state" } },
+      "options": [
+        { "text": "Welcome the revival", "ai": 1, "effects": { "support": { "clergy": 0.03 }, "modifier": { "name": "Religious revival", "months": 36, "effects": { "faction": { "clergy": 12, "liberals": -6 } } } } },
+        { "text": "Defend the secular order", "ai": 1, "effects": { "modifier": { "name": "Secular stand", "months": 36, "effects": { "faction": { "clergy": -12, "liberals": 6 } } } } }
+      ]
+    },
+    {
+      "id": "refugees", "title": "Refugees at the border",
+      "text": "War in {neighbour} has sent refugees streaming toward {country}.",
+      "mtth": 8, "cooldownYears": 4,
+      "conditions": { "neighbourAtWar": true, "atWar": false },
+      "options": [
+        { "text": "Open the border", "ai": 1, "effects": { "popShare": 0.002, "treasuryMonths": -0.2, "modifier": { "name": "Refugees welcomed", "months": 24, "effects": { "faction": { "liberals": 8, "nationalists": -8 } } } } },
+        { "text": "Close the border", "ai": 1, "effects": { "modifier": { "name": "Border closed", "months": 24, "effects": { "faction": { "nationalists": 8, "liberals": -8 } } } } }
+      ]
+    },
+    {
+      "id": "border_incident", "title": "Border incident",
+      "text": "Troops of {rival} fired across the border into {country}.",
+      "mtth": 24, "cooldownYears": 3,
+      "conditions": { "hasRival": true, "rivalNeighbour": true, "atWar": false },
+      "options": [
+        { "text": "Lodge a formal protest", "ai": 2, "effects": { "opinion": { "target": "rival", "value": -10 } } },
+        { "text": "Mobilise along the border", "ai": 1, "effects": { "opinion": { "target": "rival", "value": -20 }, "civilShare": -0.01, "modifier": { "name": "Border mobilisation", "months": 12, "effects": { "faction": { "nationalists": 8, "military": 6, "liberals": -4 } } } } }
+      ]
+    },
+    {
+      "id": "economic_miracle", "title": "Economic optimism",
+      "text": "Full employment and rising wages put {country} in a confident mood.",
+      "mtth": 60, "cooldownYears": 8,
+      "conditions": { "unemployment": ["<", 0.055], "living": [">", 0.97], "inflation": ["<", 0.04] },
+      "options": [
+        { "text": "Take the credit", "ai": 1, "effects": { "stability": 3, "legitimacy": 3 } }
+      ]
+    }
+  ]
+}

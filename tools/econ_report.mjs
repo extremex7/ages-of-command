@@ -9,7 +9,7 @@ const rd = (p) => JSON.parse(fs.readFileSync(new URL('../' + p, import.meta.url)
 const years = +(process.argv[2] || 3);
 const tags = process.argv.slice(3).length ? process.argv.slice(3) : ['USA', 'CHN', 'DEU', 'JPN', 'IND', 'RUS', 'SAU', 'BRA', 'NGA', 'EGY', 'FRA', 'KOR'];
 const map = decodeMap(rd('data/map/world.json'));
-const rules = makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'), rd('data/rules/goods.json'), rd('data/rules/buildings.json'));
+const rules = makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'), rd('data/rules/goods.json'), rd('data/rules/buildings.json'), rd('data/rules/governments.json'), [rd('data/events/domestic.json')]);
 const game = newGame({ map, scenario: rd('data/scenarios/modern_2026.json'), rules, seed: 'econ-1' });
 const s = game.state, X = rules.econ;
 const gdp0 = Object.fromEntries(s.countries.map((c) => [c.tag, c.cache.gdp]));

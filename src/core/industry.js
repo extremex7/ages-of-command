@@ -11,7 +11,7 @@
 //      unemployment, consumer prices and army supply; world prices follow world demand/supply.
 // All per-province data are typed arrays in state.econ; per-country data live in c.econ.
 import { log } from './state.js';
-import { atWar } from './relations.js';
+import { atWar, tradeLinks } from './relations.js';
 
 // ---------------------------------------------------------------------------------------------
 // rules
@@ -123,7 +123,7 @@ function newCountryEcon(G, tariff) {
     tariff, embargo: [], battleUse: 0,
     supplyMun: 1, supplyFuel: 1, gdpMult: 1, living: 1, foodSat: 1, unemployment: 0.05,
     cpi: 1, cpi0: 0, cpiHist: [], inflation: 0, va: 0, idle: 0, indUtil: 1,
-    tariffRev: 0, impValue: 0, expValue: 0, hist: { gdp: [], treasury: [], cpi: [] },
+    tariffRev: 0, impValue: 0, expValue: 0, partnerShare: 0, hist: { gdp: [], treasury: [], cpi: [] },
   };
 }
 
@@ -303,7 +303,11 @@ export function industryMonth(state, map, rules, opts = {}) {
   const flows = { day: state.day, C, G, passes: [] }; // kept (unsaved) for trade-partner reports
   const sur = new Float64Array(C), def = new Float64Array(C), cut = new Float64Array(C);
   const ex = new Int32Array(C), im = new Int32Array(C);
-  for (const c of alive) cut[c.idx] = 1 - I.tariffImportCut * c.econ.tariff;
+  // trade agreements and economic blocs: no tariff on goods from partners. The demand cut uses
+  // the tariff on last month's non-partner share of imports; revenue counts only non-partner flows.
+  const links = tradeLinks(state);
+  const effTariff = new Float64Array(C), partnerImp = new Float64Array(C);
+  for (const c of alive) { effTariff[c.idx] = c.econ.tariff * (1 - (c.econ.partnerShare || 0)); cut[c.idx] = 1 - I.tariffImportCut * effTariff[c.idx]; }
   for (let g = 0; g < G; g++) {
     const sm = X.goods[g].stockMonths;
     let ne = 0, ni = 0;
@@ -359,7 +363,15 @@ export function industryMonth(state, map, rules, opts = {}) {
         const q = w[y] * Ry;
         if (q <= 0) continue;
         const YE = state.countries[y].econ, v = q * price;
-        YE.stock[g] += q; YE.imp[g] += q; YE.impValue += v; YE.tariffRev += v * YE.tariff;
+        let vp = 0;
+        const ln = links[y];
+        if (ln) {
+          let Rp = 0;
+          for (const x of ln) if (r[x] && !(cl && cl.includes(x))) Rp += r[x];
+          vp = Math.min(v, w[y] * Rp * price);
+          partnerImp[y] += vp;
+        }
+        YE.stock[g] += q; YE.imp[g] += q; YE.impValue += v; YE.tariffRev += (v - vp) * YE.tariff;
       }
       flows.passes.push({ g, price, r, w });
       if (moved <= 1e-9) break;
@@ -392,11 +404,12 @@ export function industryMonth(state, map, rules, opts = {}) {
       if (w > 0) {
         const impShare = e.need[g] > 0 ? Math.min(1, e.imp[g] / e.need[g]) : 0;
         cpiW += w;
-        cpiP += w * (prices[g] / X.goods[g].price) * (1 + e.tariff * impShare) * (1 + 0.6 * (1 - sp));
+        cpiP += w * (prices[g] / X.goods[g].price) * (1 + effTariff[k] * impShare) * (1 + 0.6 * (1 - sp));
       }
       st[g] = Math.min(st[g], Math.max(e.need[g], e.prod[g]) * I.stockCapMonths);
     }
     e.living = livW > 0 ? livS / livW : 1;
+    e.partnerShare = e.impValue > 0 ? Math.round((partnerImp[k] / e.impValue) * 1000) / 1000 : 0;
     const sE = iEnergy != null ? e.sat[iEnergy] : 1, sF = iFuel != null ? e.sat[iFuel] : 1;
     e.gdpMult = (0.55 + 0.45 * sE) * (0.9 + 0.1 * sF);
     const raw = cpiW > 0 ? cpiP / cpiW : 1;
@@ -483,6 +496,9 @@ const flowCache = new WeakMap();
 export function tradePartners(state, k, n = 6) {
   const f = flowCache.get(state);
   if (!f) return null;
+  const memo = (f.memo ||= new Map());
+  const hit = memo.get(k * 100 + n);
+  if (hit) return hit;
   const C = f.C, val = new Float64Array(C);
   const cl = new Set(f.closed[k] || []);
   for (const { price, r, w } of f.passes) {
@@ -491,7 +507,9 @@ export function tradePartners(state, k, n = 6) {
   }
   const out = [];
   for (let j = 0; j < C; j++) if (val[j] > 0) out.push([j, val[j]]);
-  return out.sort((a, b) => b[1] - a[1]).slice(0, n);
+  const res = out.sort((a, b) => b[1] - a[1]).slice(0, n);
+  memo.set(k * 100 + n, res);
+  return res;
 }
 
 // Monthly history for charts (display only; rounded to keep saves small).
@@ -522,7 +540,7 @@ function queued(state, prov, kind, b) {
 // Money and goods a project needs; goods missing from the stockpile are bought at a premium.
 export function projectCost(state, map, rules, country, prov, kind, b) {
   const X = rules.econ, I = rules.balance.industry, c = state.countries[country];
-  const pl = c.cache.priceLevel;
+  const pl = c.cache.priceLevel * (c.govt?.fx?.construction ?? 1);
   let money, goods, days, name;
   if (kind === 'infra') {
     const lvl = state.prov.infra[prov] + queued(state, prov, 'infra');

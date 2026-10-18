@@ -1,7 +1,9 @@
-// Diplomatic relationship queries. Wars and alliances change rarely, so a C×C relation matrix
-// is cached per state and rebuilt only when state.relVersion changes.
+// Diplomatic relationship queries. Wars, blocs and treaties change rarely, so a C×C relation
+// matrix is cached per state and rebuilt only when state.relVersion changes.
 const cache = new WeakMap();
-const HOSTILE = 1, ALLIED = 2, COBELLIGERENT = 4;
+const HOSTILE = 1, ALLIED = 2, COBELLIGERENT = 4, ACCESS = 8;
+// treaty types that make two countries allies (mutual defence, shared access)
+export const ALLIANCE_TYPES = ['alliance', 'defensive', 'subject'];
 
 function matrix(state) {
   let m = cache.get(state);
@@ -9,8 +11,21 @@ function matrix(state) {
   const C = state.countries.length;
   if (m && m.ver === ver && m.C === C) return m;
   const rel = new Uint8Array(C * C);
+  const trade = new Array(C).fill(null);
+  const addTrade = (x, y) => { (trade[x] ||= []).includes(y) || trade[x].push(y); };
   for (const a of state.alliances) {
-    for (const x of a.members) for (const y of a.members) if (x !== y) rel[x * C + y] |= ALLIED;
+    const eco = a.kind === 'economic';
+    for (const x of a.members) for (const y of a.members) {
+      if (x === y) continue;
+      if (eco) addTrade(x, y); else rel[x * C + y] |= ALLIED;
+    }
+  }
+  for (const t of state.dip?.treaties || []) {
+    const { a, b } = t;
+    if (a >= C || b >= C) continue;
+    if (ALLIANCE_TYPES.includes(t.type)) { rel[a * C + b] |= ALLIED; rel[b * C + a] |= ALLIED; }
+    else if (t.type === 'access') rel[b * C + a] |= ACCESS; // a grants b access
+    else if (t.type === 'trade') { addTrade(a, b); addTrade(b, a); }
   }
   for (const w of state.wars) {
     for (const x of w.attackers) {
@@ -19,7 +34,9 @@ function matrix(state) {
     }
     for (const x of w.defenders) for (const y of w.defenders) if (x !== y) rel[x * C + y] |= COBELLIGERENT;
   }
-  m = { ver, C, rel };
+  // enemies are never allies (a subject fighting for independence)
+  for (const w of state.wars) for (const x of w.attackers) for (const y of w.defenders) { rel[x * C + y] &= ~ALLIED; rel[y * C + x] &= ~ALLIED; }
+  m = { ver, C, rel, trade };
   cache.set(state, m);
   return m;
 }
@@ -34,6 +51,8 @@ export function atWar(state, a, b) {
   return (m.rel[a * m.C + b] & HOSTILE) !== 0;
 }
 
+// Same country, a member of the same defence bloc, or a bilateral alliance, defensive pact or
+// overlord–subject relation.
 export function allied(state, a, b) {
   if (a < 0 || b < 0) return false;
   if (a === b) return true;
@@ -47,6 +66,26 @@ export function friendly(state, a, b) {
   if (a === b) return true;
   const m = matrix(state);
   return (m.rel[a * m.C + b] & (ALLIED | COBELLIGERENT)) !== 0;
+}
+
+// Fighting on the same side of some war.
+export function cobelligerent(state, a, b) {
+  if (a < 0 || b < 0 || a === b) return false;
+  const m = matrix(state);
+  return (m.rel[a * m.C + b] & COBELLIGERENT) !== 0;
+}
+
+// Whether armies of `a` may pass through territory of `b` in peacetime.
+export function hasAccess(state, a, b) {
+  if (a < 0 || b < 0) return false;
+  if (a === b) return true;
+  const m = matrix(state);
+  return (m.rel[a * m.C + b] & (ALLIED | COBELLIGERENT | ACCESS)) !== 0;
+}
+
+// Countries with which `a` trades tariff-free (trade agreements and economic blocs); null if none.
+export function tradeLinks(state) {
+  return matrix(state).trade;
 }
 
 export function isAtWar(state, c) {
@@ -76,5 +115,5 @@ export function canEnter(state, country, p) {
   if (own < 0) return false;
   if (ctl === country || own === country) return true;
   if (atWar(state, country, ctl) || atWar(state, country, own)) return true;
-  return friendly(state, country, ctl) && friendly(state, country, own);
+  return hasAccess(state, country, ctl) && hasAccess(state, country, own);
 }

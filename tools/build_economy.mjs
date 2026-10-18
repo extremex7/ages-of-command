@@ -16,7 +16,7 @@ const rd = (p) => JSON.parse(fs.readFileSync(new URL(p, ROOT)));
 const scenId = process.argv[2] || 'modern_2026';
 const scenPath = new URL(`data/scenarios/${scenId}.json`, ROOT);
 const map = decodeMap(rd('data/map/world.json'));
-const rules = makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'), rd('data/rules/goods.json'), rd('data/rules/buildings.json'));
+const rules = makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'), rd('data/rules/goods.json'), rd('data/rules/buildings.json'), rd('data/rules/governments.json'), [rd('data/events/domestic.json')]);
 const scenario = JSON.parse(fs.readFileSync(scenPath));
 delete scenario.economy;
 for (const rec of Object.values(scenario.provinces)) rec.length = 4;

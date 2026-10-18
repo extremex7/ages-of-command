@@ -3,6 +3,8 @@
 import { provinceGdp, refreshCountryCache, log } from './state.js';
 import { isAtWar } from './relations.js';
 import { industryMonth, recordHistory } from './industry.js';
+import { govStabilityParts } from './government.js';
+import { transferShares } from './diplomacy.js';
 
 export function militaryUpkeep(state, c, rules, all = null) {
   if (all) return all[c.idx] * c.cache.priceLevel;
@@ -24,9 +26,12 @@ function allUpkeep(state, rules) {
   return up;
 }
 
+// Share of the nominal tax actually collected: stability, times the government's efficiency
+// (type, policies and modifiers; see docs/GOVERNMENT.md).
 export function taxEfficiency(c, rules) {
   const w = rules.balance.economy.taxEfficiencyStabilityWeight;
-  return 1 - w + w * (c.stability / 100);
+  const g = c.govt?.fx ? Math.max(0.6, Math.min(1.3, c.govt.fx.taxEff)) : 1;
+  return (1 - w + w * (c.stability / 100)) * g;
 }
 
 // Computes this month's ledger for every country without mutating treasuries.
@@ -44,21 +49,30 @@ export function computeLedgers(state, map, rules) {
     gdpOwned[o] += g;
   }
   const ups = allUpkeep(state, rules);
+  // reparations and subject tribute: a share of the payer's tax revenue
+  const taxRev = new Float64Array(C), transfer = new Float64Array(C);
+  for (const c of state.countries) if (c.alive) taxRev[c.idx] = gdpControlled[c.idx] * c.tax * taxEfficiency(c, rules);
+  for (const [from, to, share] of transferShares(state, rules)) {
+    if (!state.countries[from].alive || !state.countries[to].alive) continue;
+    const v = Math.max(0, taxRev[from]) * share;
+    transfer[from] -= v; transfer[to] += v;
+  }
   for (const c of state.countries) {
     if (!c.alive) { c.ledger = null; continue; }
     const k = c.idx;
     const eff = taxEfficiency(c, rules);
-    const taxRevenue = gdpControlled[k] * c.tax * eff;
+    const taxRevenue = taxRev[k];
     const tariffs = c.econ ? c.econ.tariffRev : 0;
-    const revenue = taxRevenue + requisition[k] + tariffs;
+    const revenue = taxRevenue + requisition[k] + tariffs + Math.max(0, transfer[k]);
     const civil = taxRevenue * c.civilShare;
     const military = militaryUpkeep(state, c, rules, ups);
     const interest = c.treasury < 0 ? (-c.treasury * E.debtInterestYear) / 12 : 0;
+    const paid = Math.max(0, -transfer[k]);
     c.ledger = {
       gdpMonth: gdpOwned[k], gdpLost: gdpOwned[k] - gdpControlled[k], efficiency: eff,
-      taxRevenue, requisition: requisition[k], tariffs, revenue, civil, military, interest,
+      taxRevenue, requisition: requisition[k], tariffs, transfersIn: Math.max(0, transfer[k]), transfersOut: paid, revenue, civil, military, interest,
       construction: c.econ ? c.econ.spentConstruction || 0 : 0,
-      net: revenue - civil - military - interest,
+      net: revenue - civil - military - interest - paid,
     };
   }
 }
@@ -91,6 +105,9 @@ export function monthlyEconomy(state, map, rules) {
       for (const k in ee.stabilityParts) target += ee.stabilityParts[k];
       ee.spentConstruction = 0;
     }
+    // government type, faction approval and legitimacy (see docs/GOVERNMENT.md)
+    const gp = govStabilityParts(rules, c);
+    if (gp) { c.govt.stabilityParts = gp; for (const k in gp) target += gp[k]; }
     target = Math.max(5, Math.min(95, target));
     c.stability += (target - c.stability) * 0.08;
     // manpower regenerates toward the cap

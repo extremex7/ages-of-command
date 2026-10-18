@@ -4,42 +4,31 @@
 import { aiLog, unitCount } from './state.js';
 import { atWar, allied, enemiesOf, friendly, isAtWar, canEnter } from './relations.js';
 import { recruit, canRecruit, orderMove, recruitCost } from './military.js';
-import { declareWar, canDeclareWar, warScore, demandCost, evaluatePeace, makePeace, provinceValue } from './war.js';
+import { declareWar, canDeclareWar, warScore, demandCost, evaluatePeace, makePeace, provinceValue, warJoiners, termsCost,
+  separateScore, evaluateSeparatePeace, makeSeparatePeace, warJustified } from './war.js';
+import { opinion, treatiesBrokenByWar, overlordOf, subjectsOf, hasClaim, TREATIES } from './diplomacy.js';
+import { govType } from './government.js';
 import { rand } from './rng.js';
+import { countryNeighbours } from './geo.js';
 import { constructionSlots, projectCost, canBuild, startProject, provinceLabour, devEff, infraEff, buildingEff, fertilityMap } from './industry.js';
 
-const nbCache = new WeakMap();
+export { countryNeighbours };
 
-// Countries sharing a land border or strait with each country, cached per map version.
-export function countryNeighbours(state, map) {
-  const ver = state.mapVersion || 0;
-  let c = nbCache.get(state);
-  if (c && c.ver === ver) return c;
-  const sets = state.countries.map(() => new Set());
-  const border = state.countries.map(() => []);
-  for (const i of map.ids) {
-    const o = state.prov.owner[i];
-    if (o < 0) continue;
-    let isBorder = false;
-    for (let e = map.adjStart[i]; e < map.adjStart[i + 1]; e++) {
-      if (map.adjKind[e] === 2) continue;
-      const o2 = state.prov.owner[map.adj[e]];
-      if (o2 >= 0 && o2 !== o) { sets[o].add(o2); isBorder = true; }
-    }
-    if (isBorder) border[o].push(i);
+// Strength each side could field if a declared war on t: the target with everyone who would
+// join it, against the attacker, its subjects and (at 40%) the allies it would call to arms.
+export function warOdds(state, a, t) {
+  const C = state.countries;
+  const def = warJoiners(state, a, t);
+  let theirs = 0;
+  for (const d of def) theirs += C[d].cache.armyPower * (d === t ? 1 : 0.6);
+  let mine = C[a].cache.armyPower;
+  for (const s of subjectsOf(state, a)) if (!def.includes(s)) mine += C[s].cache.armyPower;
+  for (const tr of state.dip.treaties) {
+    if (tr.type !== 'alliance' || (tr.a !== a && tr.b !== a)) continue;
+    const p = tr.a === a ? tr.b : tr.a;
+    if (!def.includes(p)) mine += C[p].cache.armyPower * 0.4;
   }
-  c = { ver, sets, border };
-  nbCache.set(state, c);
-  return c;
-}
-
-function alliancePower(state, c) {
-  let p = state.countries[c].cache.armyPower;
-  for (const al of state.alliances) {
-    if (!al.members.includes(c)) continue;
-    for (const m of al.members) if (m !== c && state.countries[m].alive) p += state.countries[m].cache.armyPower * 0.6;
-  }
-  return p;
+  return { mine, theirs: Math.max(1, theirs), joiners: def.slice(1) };
 }
 
 const DIFFICULTY = { easy: 0.6, normal: 1, hard: 1.3 };
@@ -103,28 +92,50 @@ function manageRecruitment(state, map, rules, c) {
   if (!canRecruit(state, map, rules, c.idx, site, type)) recruit(state, map, rules, c.idx, site, type);
 }
 
+// War needs a motive (low opinion, rivalry or claims on their land), favourable odds counting
+// everyone who would join, and stable politics. Breaking a treaty needs a stronger motive.
 function considerWar(state, map, rules, c) {
+  // checked about every four weeks (every fourth AI round)
+  if ((Math.floor(state.day / rules.balance.ai.thinkEveryDays) + c.idx) % 4) return;
   if (isAtWar(state, c.idx)) return;
   if (state.day - state.startDay < 60) return;
   const set = state.settings;
   const aggr = c.aggression * (set.aiAggression ?? 1) * (DIFFICULTY[set.difficulty] || 1);
   if (aggr <= 0) return;
   if (c.stability < 35) return;
-  const A = rules.balance.ai;
+  const A = rules.balance.ai, D = rules.balance.diplomacy;
+  const T = govType(rules, c);
   const nb = countryNeighbours(state, map).sets[c.idx];
-  const mine = alliancePower(state, c.idx);
+  const independence = overlordOf(state, c.idx);
   let best = null;
-  for (const t of nb) {
+  const targets = independence >= 0 ? [independence] : nb;
+  for (const t of targets) {
     if (canDeclareWar(state, map, c.idx, t)) continue;
-    const theirs = Math.max(1, alliancePower(state, t));
-    const ratio = mine / theirs;
+    // motive first (cheap), then the odds counting everyone who would join
+    const op = opinion(state, map, rules, c.idx, t);
+    let claims = 0;
+    for (const x of c.claims) if (state.prov.owner[x.p] === t) claims++;
+    const motive = Math.max(0, -op) / 100 + (c.rival === t ? 0.5 : 0) + Math.min(0.6, claims * 0.1) + (t === independence ? 0.6 : 0);
+    const broken = treatiesBrokenByWar(state, c.idx, t).filter((x) => x.type === 'nap' || x.type === 'guarantee');
+    // the AI aggression setting lowers the grievance needed for war
+    const need = (D.aiWarMotive + (broken.length ? 0.5 : 0) + (warJustified(state, c.idx, t) ? 0 : 0.1)) / Math.max(0.5, set.aiAggression ?? 1);
+    if (motive < need) continue;
+    const odds = warOdds(state, c.idx, t);
+    const ratio = odds.mine / odds.theirs;
     if (ratio < A.powerRatioForWar / Math.min(1.5, Math.max(0.35, aggr))) continue;
-    if (!best || ratio > best.ratio) best = { t, ratio };
+    const s = ratio * (0.5 + motive);
+    if (!best || s > best.s) best = { t, ratio, op, claims, motive, broken, odds, s };
   }
   if (!best) return;
-  if (rand(state) > A.baseWarChance * aggr) return;
+  if (rand(state) > A.baseWarChance * aggr * T.warPropensity * (0.5 + best.motive)) return;
   const C = state.countries;
-  aiLog(state, c.idx, `Declared war on ${C[best.t].name}: strength ratio ${best.ratio.toFixed(1)} incl. alliances, shared border, stability ${Math.round(c.stability)}.`);
+  const why = [];
+  if (best.t === independence) why.push('fighting for independence');
+  if (c.rival === best.t) why.push('rival');
+  if (best.claims) why.push(`holds ${best.claims} of our former provinces`);
+  if (best.op < 0) why.push(`opinion ${Math.round(best.op)}`);
+  if (best.broken.length) why.push(`breaking our ${best.broken.map((x) => TREATIES[x.type].name.toLowerCase()).join(', ')}`);
+  aiLog(state, c.idx, `Declared war on ${C[best.t].name}: ${why.join(', ')}; strength ratio ${best.ratio.toFixed(1)} counting ${best.odds.joiners.length} countries that would join them; stability ${Math.round(c.stability)}.`);
   declareWar(state, map, rules, c.idx, best.t);
 }
 
@@ -219,47 +230,112 @@ function planArmies(state, map, rules, c) {
   });
 }
 
-// Monthly peace evaluation for wars with an AI leader on at least one side.
-export function aiPeace(state, map, rules) {
+// Monthly peace evaluation for wars with an AI leader on at least one side. A winning leader
+// demands occupied land, then reparations with the score left over, or makes a small loser its
+// subject; a subject that is winning its war of independence demands it. Participants that are
+// not leaders and are losing badly seek a separate peace.
+export function aiPeace(state, map, rules, warScores = null) {
   for (const war of [...state.wars]) {
     const months = (state.day - war.start) / 30;
     if (months < 2) continue;
-    const score = warScore(state, map, rules, war);
+    const score = warScores?.get(war) ?? warScore(state, map, rules, war);
     for (const side of ['A', 'D']) {
       const leader = side === 'A' ? war.leaderA : war.leaderD;
       const other = side === 'A' ? war.leaderD : war.leaderA;
-      if (leader === state.player || !state.wars.includes(war)) continue;
+      if ((leader === state.player && !state.countries[leader].automate) || !state.wars.includes(war)) continue;
       const myScore = side === 'A' ? score : -score;
-      let terms = null;
-      if (myScore > 20) {
-        const mySide = side === 'A' ? war.attackers : war.defenders;
-        const theirSide = side === 'A' ? war.defenders : war.attackers;
-        const cands = map.ids.filter((i) => theirSide.includes(state.prov.owner[i]) && mySide.includes(state.prov.controller[i]));
-        cands.sort((x, y) => provinceValue(state, rules, y) - provinceValue(state, rules, x));
-        const take = [];
-        for (const p of cands) {
-          if (state.prov.controller[p] !== leader) continue;
-          if (demandCost(state, map, rules, war, take.concat(p), side === 'A') <= myScore) take.push(p);
-        }
-        if (take.length) terms = { provinces: take, to: leader };
-      }
-      if (!terms && (months * 30 > rules.balance.war.exhaustionDays && Math.abs(score) < 15 || myScore < -50)) terms = { provinces: [] };
+      const terms = peaceTerms(state, map, rules, war, side, leader, other, myScore, months);
       if (!terms) continue;
-      if (other === state.player) {
-        if (!state.offers.some((o) => o.war === war.id)) {
-          state.offers.push({ id: state.nextId++, war: war.id, from: leader, to: other, terms, day: state.day });
+      if (other === state.player && !state.countries[other].automate) {
+        if (!state.offers.some((o) => o.war === war.id && o.kind === 'peace')) {
+          state.offers.push({ id: state.nextId++, kind: 'peace', war: war.id, from: leader, to: other, terms, day: state.day });
         }
         continue;
       }
       const ev = evaluatePeace(state, map, rules, war, leader, terms);
       if (ev.accept) {
-        aiLog(state, leader, `Made peace with ${state.countries[other].name}: ${terms.provinces.length ? terms.provinces.length + ' provinces ceded' : 'white peace'} (war score ${Math.round(myScore)}).`);
+        aiLog(state, leader, `Made peace with ${state.countries[other].name}: ${describeTerms(state, terms)} (war score ${Math.round(myScore)}).`);
         makePeace(state, map, rules, war, leader, terms);
       }
     }
+    if (state.wars.includes(war) && months >= 3) aiSeparatePeace(state, map, rules, war);
   }
   // expire stale offers
-  state.offers = state.offers.filter((o) => state.day - o.day < 30 && state.wars.some((w) => w.id === o.war));
+  state.offers = state.offers.filter((o) => state.day - o.day < 30 && (o.war == null || state.wars.some((w) => w.id === o.war)));
+}
+
+export function describeTerms(state, terms) {
+  const parts = [];
+  if (terms.provinces?.length) parts.push(`${terms.provinces.length} province(s) ceded`);
+  if (terms.reparations) parts.push('reparations');
+  if (terms.subject) parts.push('becomes a subject');
+  if (terms.independence) parts.push('independence');
+  return parts.length ? parts.join(', ') : 'white peace';
+}
+
+function peaceTerms(state, map, rules, war, side, leader, other, myScore, months) {
+  const C = state.countries, D = rules.balance.diplomacy, PC = D.peaceCost;
+  if (war.kind === 'independence' && side === 'A' && myScore >= PC.independence) return { provinces: [], independence: true };
+  if (myScore > 20) {
+    const mySide = side === 'A' ? war.attackers : war.defenders;
+    const theirSide = side === 'A' ? war.defenders : war.attackers;
+    // a small, beaten enemy leader becomes a subject instead of losing land
+    if (myScore >= PC.subject + 5 && C[other].cache.provinces <= D.subjectMaxProvinces && C[other].cache.gdp < C[leader].cache.gdp * 0.3
+      && overlordOf(state, leader) < 0 && overlordOf(state, other) < 0 && !subjectsOf(state, other).length && war.kind !== 'independence') {
+      return { provinces: [], subject: true, to: leader };
+    }
+    const cands = map.ids.filter((i) => theirSide.includes(state.prov.owner[i]) && mySide.includes(state.prov.controller[i]));
+    // reclaim lost land first, then the most valuable provinces
+    cands.sort((x, y) => (hasClaim(state, leader, y) - hasClaim(state, leader, x)) || provinceValue(state, rules, y) - provinceValue(state, rules, x));
+    const take = [];
+    for (const p of cands) {
+      if (state.prov.controller[p] !== leader) continue;
+      if (demandCost(state, map, rules, war, take.concat(p), side === 'A', leader) <= myScore) take.push(p);
+    }
+    const terms = { provinces: take, to: leader };
+    if (termsCost(state, map, rules, war, leader, { ...terms, reparations: true }) <= myScore) terms.reparations = true;
+    if (take.length || terms.reparations) return terms;
+  }
+  if ((months * 30 > rules.balance.war.exhaustionDays && Math.abs(myScore) < 15) || myScore < -50) return { provinces: [] };
+  return null;
+}
+
+// Non-leaders that are losing ask the enemy leader for a separate peace, ceding occupied land if needed.
+function aiSeparatePeace(state, map, rules, war) {
+  const C = state.countries;
+  for (const c of [...war.attackers, ...war.defenders]) {
+    if (c === war.leaderA || c === war.leaderD || (c === state.player && !C[c].automate)) continue;
+    if (!state.wars.includes(war) || !(war.attackers.includes(c) || war.defenders.includes(c))) continue;
+    if (overlordOf(state, c) >= 0) continue; // subjects follow their overlord
+    const sc = separateScore(state, map, rules, war, c);
+    const occupied = C[c].cache.provinces ? C[c].cache.occupied / C[c].cache.provinces : 0;
+    if (sc > -25 && occupied < 0.35) continue;
+    const att = war.attackers.includes(c);
+    const enemyLeader = att ? war.leaderD : war.leaderA;
+    const enemySide = att ? war.defenders : war.attackers;
+    let terms = { provinces: [] };
+    let ev = evaluateSeparatePeace(state, map, rules, war, c, terms);
+    if (!ev.accept) {
+      const lost = map.ids.filter((i) => state.prov.owner[i] === c && enemySide.includes(state.prov.controller[i]))
+        .sort((x, y) => provinceValue(state, rules, x) - provinceValue(state, rules, y));
+      const give = [];
+      for (const p of lost) {
+        give.push(p);
+        ev = evaluateSeparatePeace(state, map, rules, war, c, { provinces: give });
+        if (ev.accept) break;
+      }
+      if (!ev.accept || give.length >= C[c].cache.provinces) continue;
+      terms = { provinces: give };
+    }
+    if (enemyLeader === state.player && !C[enemyLeader].automate) {
+      if (!state.offers.some((o) => o.kind === 'separate' && o.war === war.id && o.from === c)) {
+        state.offers.push({ id: state.nextId++, kind: 'separate', war: war.id, from: c, to: enemyLeader, terms, day: state.day });
+      }
+      continue;
+    }
+    aiLog(state, c, `Made a separate peace with ${C[enemyLeader].name}: own score ${Math.round(sc)}, ${Math.round(occupied * 100)}% of our provinces occupied${terms.provinces.length ? `, ceding ${terms.provinces.length}` : ''}.`);
+    makeSeparatePeace(state, map, rules, war, c, terms);
+  }
 }
 
 // Monthly economic AI, every other month per country: invest in what the country lacks most

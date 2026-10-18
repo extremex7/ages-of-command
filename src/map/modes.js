@@ -3,6 +3,7 @@
 import { TERRAINS } from '../core/mapdata.js';
 import { atWar, allied, friendly } from '../core/relations.js';
 import { provinceGdp } from '../core/state.js';
+import { opinion, overlordOf } from '../core/diplomacy.js';
 
 export const MAP_MODES = [
   { id: 'political', name: 'Political', key: 'p', tip: 'Country ownership. Stripes mark provinces occupied by another country.' },
@@ -14,11 +15,13 @@ export const MAP_MODES = [
   { id: 'industry', name: 'Industry', key: 'k', tip: 'Industrial value added per year (log scale): farms, mines, power and factories.' },
   { id: 'infrastructure', name: 'Infrastructure', key: 'f', tip: 'Infrastructure level 0–10: building efficiency and movement speed.' },
   { id: 'military', name: 'Military', key: 'r', tip: 'Fronts: your side, enemies, and provinces under siege.' },
-  { id: 'diplomacy', name: 'Diplomacy', key: 'y', tip: 'Relations to the selected (or your) country: allies, enemies, truces.' },
+  { id: 'diplomacy', name: 'Diplomacy', key: 'y', tip: 'Opinion of each country toward the selected (or your) country, red to green; allies blue, enemies dark red, subjects purple.' },
+  { id: 'government', name: 'Government', key: 'j', tip: 'Form of government: democracies, autocracies, theocracies and military rule; darker = lower stability.' },
 ];
 
 const RES_COLORS = { oil: '#1f1f1f', coal: '#6b5640', iron: '#b5582a', uranium: '#6fbf2f', rare_earths: '#9b45b8', timber: '#3f7a3a' };
 const RES_WEIGHT = { oil: 3, uranium: 4, rare_earths: 4, iron: 1.5, coal: 1.4, timber: 0.12 }; // minerals show over forests
+const GOV_COLORS = { democracy: '#4f86c4', autocracy: '#c4704f', theocracy: '#9a7ac4', military: '#6a7a3a' };
 const TERRAIN_COLORS = { plains: '#a9c18a', hills: '#b9a878', mountains: '#8c7f73', forest: '#5f8a5a', desert: '#e0cc94', tundra: '#c7d0cf' };
 
 function ramp(t, a, b) {
@@ -38,6 +41,24 @@ export function provinceColors(mode, state, map, focus, rules) {
   const out = new Array(map.count);
   const C = state.countries;
   const P = state.prov;
+  // per-country colours for the diplomatic and government modes, computed once
+  let cc = null;
+  if ((mode === 'diplomacy' && focus >= 0 && rules && state.dip) || (mode === 'government' && rules?.politics)) {
+    cc = C.map((c) => {
+      if (!c.alive) return '#555';
+      if (mode === 'government') {
+        const fam = rules.politics.types[c.gov]?.family;
+        return ramp(0.35 + 0.65 * Math.min(1, c.stability / 70), '#3a3a3a', GOV_COLORS[fam] || '#888');
+      }
+      const k = c.idx;
+      if (k === focus) return '#3f8f5a';
+      if (atWar(state, focus, k)) return '#8e2a22';
+      if (overlordOf(state, k) === focus || overlordOf(state, focus) === k) return '#8a5ab8';
+      if (allied(state, focus, k)) return '#4f7fc4';
+      if ((C[focus].truces[k] ?? -1) > state.day) return '#d8b84a';
+      return ramp3((opinion(state, map, rules, k, focus) + 100) / 200, '#c4544a', '#e3ddd0', '#5a9a4a');
+    });
+  }
   for (const i of map.ids) {
     const o = P.owner[i];
     if (o < 0) { out[i] = '#555'; continue; }
@@ -78,9 +99,11 @@ export function provinceColors(mode, state, map, focus, rules) {
         if (P.siege[i] > 0) out[i] = '#e0a040';
         break;
       }
+      case 'government': out[i] = cc ? cc[o] : C[o].color; break;
       case 'diplomacy': {
         const me = focus;
         if (me < 0) { out[i] = C[o].color; break; }
+        if (cc) { out[i] = cc[o]; break; }
         if (o === me) out[i] = '#3f8f5a';
         else if (atWar(state, me, o)) out[i] = '#c4443a';
         else if (allied(state, me, o)) out[i] = '#4f7fc4';
@@ -101,7 +124,8 @@ function atWarAny(state, c) {
 export const MODE_LEGENDS = {
   terrain: Object.entries(TERRAIN_COLORS),
   military: [['Your side', '#5f8fc4'], ['Allies / co-belligerents', '#8fb4d8'], ['Enemy', '#c4544a'], ['Under siege', '#e0a040'], ['Neutral', '#d6d1c6']],
-  diplomacy: [['Selected country', '#3f8f5a'], ['Allied', '#4f7fc4'], ['At war', '#c4443a'], ['Truce', '#d8b84a'], ['Neutral', '#cfcac0']],
+  diplomacy: [['Selected', '#3f8f5a'], ['Allied', '#4f7fc4'], ['Subject / overlord', '#8a5ab8'], ['At war', '#8e2a22'], ['Truce', '#d8b84a'], ['Hostile', '#c4544a'], ['Neutral', '#e3ddd0'], ['Friendly', '#5a9a4a']],
+  government: [['Democracy', '#4f86c4'], ['Autocracy', '#c4704f'], ['Theocracy', '#9a7ac4'], ['Military rule', '#6a7a3a'], ['Darker: low stability', '#3a3a3a']],
   population: [['< 1 /km²', '#f4efe3'], ['~30 /km²', '#d9a05b'], ['1000+ /km²', '#7a2e2e']],
   development: [['Low', '#7a3b3b'], ['Medium', '#d8c46a'], ['High', '#3b7a5a']],
   economy: [['Small', '#efeae0'], ['Medium', '#7fb0c8'], ['Large', '#1f4e79']],

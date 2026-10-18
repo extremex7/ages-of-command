@@ -4,6 +4,9 @@ import { h, mount } from './dom.js';
 import { MapRenderer } from '../map/renderer.js';
 import { buildIndex, pickProvince } from '../map/picking.js';
 import { MAP_MODES, MODE_LEGENDS } from '../map/modes.js';
+import { TREATIES } from '../core/diplomacy.js';
+
+const TREATY_NAMES = Object.fromEntries(Object.entries(TREATIES).map(([k, t]) => [k, t.name.toLowerCase()]));
 import { tick } from '../core/sim.js';
 import { formatDate, civilFromDays, dateString } from '../core/calendar.js';
 import { saveGame } from '../core/game.js';
@@ -14,7 +17,7 @@ import { flagCanvas } from './flags.js';
 import { money, signedMoney, people, pct } from './format.js';
 import { writeSave, rotateAutosaves } from './storage.js';
 import { renderPanel, renderProvince, TABS } from './panels.js';
-import { saveDialog, peaceDialog, menuDialog, reportDialog } from './dialogs.js';
+import { saveDialog, peaceDialog, menuDialog, reportDialog, separatePeaceDialog, eventDialog } from './dialogs.js';
 
 export const SPEEDS = [0, 1, 3, 8, 20, 0]; // days per second; 5 = as fast as the frame budget allows
 
@@ -303,7 +306,9 @@ export class Client {
     }
     if (ticked) this.afterTicks();
     const s = this.state;
-    if ((s.mapVersion || 0) !== this.lastMapVersion || (s.relVersion || 0) !== this.lastRel) {
+    // treaties change often once the AI does diplomacy; only the modes that colour by relations repaint for them
+    const relChanged = (s.relVersion || 0) !== this.lastRel && (this.renderer.mode === 'diplomacy' || this.renderer.mode === 'military');
+    if ((s.mapVersion || 0) !== this.lastMapVersion || relChanged) {
       this.lastMapVersion = s.mapVersion || 0; this.lastRel = s.relVersion || 0;
       this.renderer.invalidate();
     }
@@ -345,8 +350,18 @@ export class Client {
     }
     this.logSeen = s.logSeq || 0;
     if (s.offers.some((o) => o.to === s.player && !o.notified)) {
-      for (const o of s.offers) if (o.to === s.player && !o.notified) { o.notified = true; this.toast(`${s.countries[o.from].name} offers peace. See the Diplomacy tab.`, true); if (this.speed) this.setSpeed(0); }
+      for (const o of s.offers) {
+        if (o.to !== s.player || o.notified) continue;
+        o.notified = true;
+        const who = s.countries[o.from].name;
+        const what = { treaty: `proposes a ${TREATY_NAMES[o.type] || 'treaty'}`, call: 'calls you to arms', separate: 'asks for a separate peace' }[o.kind] || 'offers peace';
+        this.toast(`${who} ${what}. See the Diplomacy tab.`, o.kind !== 'treaty');
+        if (this.speed && o.kind !== 'treaty') this.setSpeed(0);
+      }
     }
+    // a domestic event waits for the player's decision
+    const ev = s.pendingEvents.find((p) => p.c === s.player && !p.shown);
+    if (ev && this.mode === 'play') { ev.shown = true; this.openEvent(ev); }
     if (s.gameOver && !this.gameOverShown) {
       this.gameOverShown = true; this.speed = 0;
       this.toast(`Game over: ${s.gameOver.reason}`, true);
@@ -481,6 +496,8 @@ export class Client {
   }
 
   openPeace(war) { peaceDialog(this, war); }
+  openSeparatePeace(war) { separatePeaceDialog(this, war); }
+  openEvent(p) { eventDialog(this, p); }
   openReport(id) { reportDialog(this, id); }
   isAtWar() { return isAtWar(this.state, this.state.player); }
 }

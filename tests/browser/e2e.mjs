@@ -67,6 +67,7 @@ const after = await page.evaluate((id) => {
 }, moved.id);
 console.log('after run: days advanced', after.day - r.day, 'army at', after.loc, 'target', moved.target, 'tick ms', after.tickMs.toFixed(2), 'base render ms', after.base.baseMs.toFixed(1));
 await page.screenshot({ path: out + '04-after.png' });
+while (await page.locator('.dialog .menu-buttons button').count()) { await page.locator('.dialog .menu-buttons button').first().click(); await page.waitForTimeout(100); }
 // economy: industry tab, build in the capital, economy tab, embargo, economic map modes
 await page.keyboard.press('u');
 await page.waitForTimeout(200);
@@ -92,8 +93,46 @@ const embargoed = await page.evaluate(() => { const s = window.__client.state; r
 console.log('embargoes', embargoed);
 if (!embargoed.includes('DEU')) errors.push('embargo button did not work');
 for (const [k, n] of [['x', '10-resources'], ['k', '11-industry'], ['f', '12-infrastructure']]) { await page.keyboard.press(k); await page.waitForTimeout(300); await page.screenshot({ path: out + n + '.png' }); }
+// politics and diplomacy: government tab, a policy change, diplomacy tab, relations, map modes, events
+await page.evaluate(() => { const c = window.__client; c.view.selectedCountry = -1; c.setTab('government'); });
+await page.waitForTimeout(200);
+await page.screenshot({ path: out + '13-government.png' });
+const pol = await page.evaluate(() => { const s = window.__client.state; return JSON.stringify(s.countries[s.player].govt.policies); });
+await page.locator('.panel .row button:not(.on):not([disabled])').first().click();
+const pol2 = await page.evaluate(() => { const s = window.__client.state; return JSON.stringify(s.countries[s.player].govt.policies); });
+console.log('policy changed', pol !== pol2);
+if (pol === pol2) errors.push('policy button did not change a policy');
+await page.keyboard.press('d');
+await page.waitForTimeout(200);
+await page.screenshot({ path: out + '14-diplomacy.png' });
+await page.evaluate(() => { const c = window.__client, s = c.state; c.view.selectedCountry = s.countries.findIndex((x) => x.tag === 'ITA'); c.setTab('country'); });
+await page.waitForTimeout(200);
+await page.screenshot({ path: out + '15-relations.png' });
+const imp = page.locator('.panel button:has-text("Improve relations")');
+if (await imp.count()) { const dis = await imp.first().isDisabled(); if (!dis) await imp.first().click(); }
+const boosts = await page.evaluate(() => window.__client.state.dip.mods.filter((m) => m.why === 'Improved relations').length);
+console.log('improve-relations modifiers', boosts);
+for (const [k, n] of [['y', '16-diplomacy-map'], ['j', '17-government-map']]) { await page.keyboard.press(k); await page.waitForTimeout(300); await page.screenshot({ path: out + n + '.png' }); }
+const evOk = await page.evaluate(() => {
+  const c = window.__client, s = c.state, R = c.game.rules;
+  const ev = R.events.find((e) => e.options?.length > 1) || R.events[0];
+  s.pendingEvents.push({ id: s.nextId++, ev: ev.id, c: s.player, day: s.day, title: ev.title, text: ev.text });
+  c.openEvent(s.pendingEvents[s.pendingEvents.length - 1]);
+  return ev.id;
+});
+await page.waitForTimeout(300);
+await page.screenshot({ path: out + '18-event.png' });
+console.log('event dialog for', evOk, 'open', await page.locator('.dialog').count());
+await page.locator('.dialog .menu-buttons button').first().click();
+const pend = await page.evaluate(() => window.__client.state.pendingEvents.length);
+console.log('pending events after choosing', pend);
+// declare-war dialog shows joiners and consequences (cancelled)
+await page.evaluate(() => { const c = window.__client, s = c.state; c.view.selectedCountry = s.countries.findIndex((x) => x.tag === 'ESP'); c.setTab('country'); });
+await page.waitForTimeout(150);
+const dw = page.locator('.panel button:has-text("Declare war")');
+if (await dw.count() && !(await dw.first().isDisabled())) { await dw.first().click(); await page.waitForTimeout(200); await page.screenshot({ path: out + '19-declare.png' }); await page.keyboard.press('Escape'); }
 // map modes + zoom
-for (const k of ['t', 'o', 'v', 'g', 'r', 'y', 'p']) { await page.keyboard.press(k); await page.waitForTimeout(150); }
+for (const k of ['t', 'o', 'v', 'g', 'r', 'y', 'j', 'p']) { await page.keyboard.press(k); await page.waitForTimeout(150); }
 await page.mouse.move(683, 400);
 for (let i = 0; i < 6; i++) { await page.mouse.wheel(0, -300); await page.waitForTimeout(60); }
 await page.waitForTimeout(400);

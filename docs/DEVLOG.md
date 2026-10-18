@@ -77,3 +77,50 @@ slots, infrastructure, trade and embargo, war, tariffs, famine, prices, army sup
 AI investment); the determinism-after-reload test now covers stockpiles, buildings, prices and
 CPI. Browser end-to-end test builds, embargoes and switches economic map modes with no console
 errors. Low profile at 4× CPU throttle: 43 FPS.
+
+## 2026-10-18 — Session 3: Milestone 4, diplomacy and government
+
+**What was built.** Opinion, trust, reputation and influence with full breakdowns; six proposable
+treaties (alliance, defensive pact, NAP, military access, guarantee, trade agreement) plus subjects
+and reparations from peace treaties; defence and economic blocs with membership votes; calls to
+arms; peace terms for reparations, subjugation and independence; separate peace; rivals and
+claims. Eight government types with faction approval, support, legitimacy, elections, coups,
+revolutions, five policy groups and reforms. A data-driven event engine with 17 domestic events.
+AI diplomacy (rivals, treaties, embargoes, blocs, influence) and an AI war decision that needs a
+motive. Government and Diplomacy tabs, a relations section on every country, declare-war preview,
+event and separate-peace dialogs, and diplomacy/government map modes. Save format v4 with a
+migration. Rules: [DIPLOMACY.md](DIPLOMACY.md), [GOVERNMENT.md](GOVERNMENT.md).
+
+**Decisions.**
+- Opinion is computed on demand from current facts plus a sparse list of decaying modifiers, so
+  no 196×196 matrix is stored or saved and every value can explain itself.
+- Treaties and blocs feed the existing relation matrix (allied, access, co-belligerent flags), so
+  movement and war code only needed to read new flags.
+- Every AI decision depends only on saved state; a derived trade-partner cache that the AI briefly
+  used broke determinism after reload and was removed from AI logic.
+- Government effects (`govt.fx`) are derived on load rather than saved.
+
+**Problems found and fixed.**
+- Approval and stability started too high (78 and 68): drivers were re-centred and the approval
+  curve now has an explicit base and spread.
+- The AI signed ~600 treaties in 3 years and NATO grew to 43 members: added per-type caps,
+  stricter acceptance bases, a higher bloc vote threshold, and treaty seeking every other round.
+  Distant small countries also asked great powers for defence pacts; a pact partner must now
+  border the country or its rival.
+- Small countries picked great powers as rivals because of a threat term; rivals now come from
+  dislike and lost land.
+- A subject could not declare independence (it counted as allied) and the war removed its own
+  subject treaty; checks were reordered and peace-treaty obligations survive a declaration.
+- Monthly tick reached 33 ms; spreading AI diplomacy and events across days, compiled event
+  conditions and cheaper motive checks brought it to ~9 ms.
+- In the browser, fast-forward at 4× throttle fell from 364 to 84 days per 5 s: each new treaty
+  repainted the whole map. Only relation-coloured map modes repaint now (370 days).
+- Relations key/value rows merged into one cell when bare text was passed to the grid.
+
+**Results.** 63 tests pass (24 new: treaty validation and limits, subjects and independence,
+joiners, NAP breaking, access, opinion and rivals, proposals and influence, peace terms, separate
+peace, trade tariffs, bloc votes, AI turn processing, faction approval, elections, coups,
+revolutions, reforms, event validation, conditions and effects, the v3 → v4 migration and
+determinism after reload with diplomacy). The browser end-to-end test changes a policy, improves
+relations, opens both new map modes and resolves an event dialog with no console errors. Low
+profile at 4× CPU throttle: 38 FPS.

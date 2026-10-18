@@ -115,9 +115,10 @@ function seekTreaty(state, map, rules, c, greats) {
     if (p === k || p === R || !P.alive || !P.cache || overlordOf(state, p) >= 0 || atWar(state, k, p)) continue;
     const op = opinion(state, map, rules, k, p);
     const pp = P.cache.armyPower, nb = nbs[k].has(p);
+    // a far-away power is only worth a defence pact when it borders the threat itself
     const hostileToR = R >= 0 && (P.rival === R || opinion(state, map, rules, p, R) < -20);
     if (threatened && pacts < maxPacts && hostileToR && op > 20) wants.push({ type: 'alliance', p, u: 30 + op * 0.3 + Math.min(30, (pp / myP) * 10), why: `ally against ${C[R].name}` });
-    else if (threatened && pacts < maxPacts && op > 10 && pp > myP * 0.3) wants.push({ type: 'defensive', p, u: 20 + op * 0.2 + Math.min(20, (pp / myP) * 8), why: `protection from ${C[R].name}` });
+    else if (threatened && pacts < maxPacts && op > 10 && pp > myP * 0.3 && (nb || nbs[R].has(p))) wants.push({ type: 'defensive', p, u: 20 + op * 0.2 + Math.min(20, (pp / myP) * 8), why: `protection from ${C[R].name}` });
     if (nb && have.nap < 2 && pp > myP && op > -30 && op < 10 && P.rival !== k) wants.push({ type: 'nap', p, u: 10 + 10 * Math.min(2, pp / myP), why: `secure the border with a strong neighbour` });
     if (R >= 0 && have.guarantee < 3 && myP > pp * 3 && nbs[R].has(p) && op > 30 && greats.includes(k)) wants.push({ type: 'guarantee', p, u: 15 + op * 0.1, why: `protect ${P.name} from ${C[R].name}` });
     // (trade partners from the last market are not saved, so the AI judges markets by size and proximity)

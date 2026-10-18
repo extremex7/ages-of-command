@@ -3,9 +3,11 @@
 A map-based grand strategy sandbox inspired by the accessibility of Age of History 2, built to
 grow into a deeper historical-to-futuristic simulation. Done so far: the **Milestone 1 build and
 "Immediate First Task" prototype** (a real world map, every country playable, a working clock,
-armies, war, peace, AI and save/load) and **Milestone 3, the economy**: resources, production
+armies, war, peace, AI and save/load), **Milestone 3, the economy** (resources, production
 chains, construction, infrastructure, a world market with prices, tariffs and embargoes, inflation,
-unemployment and army supply.
+unemployment and army supply) and **Milestone 4, diplomacy and government** (treaties, blocs,
+opinion and trust, subjects, richer peace terms, separate peace, government types, factions,
+elections, coups, revolutions, policies, domestic events, AI diplomacy).
 
 ![status](https://img.shields.io/badge/status-prototype-orange)
 
@@ -22,6 +24,8 @@ npm start            # serves the game at http://localhost:8080/
 Open the URL, choose **New Game → Choose country**, click a country, then **Play as …**.
 Press **Space** to start time. To build, select one of your provinces and use **Build here** in
 the province panel; the **Industry** tab shows your goods, trade and construction queue.
+Select another country to see your relations with it and propose treaties; the **Government**
+tab shows your factions, elections and policies.
 
 > The game must be served over http(s); opening `index.html` from disk will not work because
 > browsers block `fetch` of local files.
@@ -34,19 +38,19 @@ the province panel; the **Industry** tab shows your goods, trade and constructio
 | Right click | Move the selected armies (pathfinding picks the route) |
 | Drag, arrow keys | Pan · Mouse wheel, `+` `−` zoom |
 | `Space` · `1`–`5` | Pause/resume · game speed (1, 3, 8, 20 days/s, max) |
-| `P T O V G X K F R Y` | Map modes: political, terrain, population, development, economy, resources, industry, infrastructure, military, diplomacy |
-| `N E U M D L I` | Tabs: nation, economy, industry, military, diplomacy, events, AI/performance |
+| `P T O V G X K F R Y J` | Map modes: political, terrain, population, development, economy, resources, industry, infrastructure, military, diplomacy (opinion), government |
+| `N B E U M D L I` | Tabs: nation, government, economy, industry, military, diplomacy, events, AI/performance |
 | `C` · `H` | Centre on your capital · show whole world |
 | `Ctrl+S` | Quick save · `Esc` clears selection / closes dialogs |
 
 ## Test
 
 ```bash
-npm test                            # 39 unit/integration tests of the simulation (node:test)
+npm test                            # 63 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/econ_report.mjs 5        # world market and national indicators over 5 years of AI play
 npm start &                         # then, with Playwright available:
-node tests/browser/e2e.mjs          # boots the game, plays, recruits, moves, saves, reloads
+node tests/browser/e2e.mjs          # boots the game, plays, recruits, moves, builds, uses politics and diplomacy, saves, reloads
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -70,24 +74,29 @@ working across map rebuilds.
 index.html, styles/        browser entry point and UI styles
 src/core/                  simulation (pure JS, no DOM): calendar, rng, mapdata, state, economy,
                            industry (production, market, construction), military, pathfind,
-                           combat, war, relations, ai, sim (clock), save, rules
+                           combat, war, relations, diplomacy, government, events, ai,
+                           ai_diplomacy, sim (clock), save, rules
 src/map/                   Canvas 2D renderer, map modes, spatial index / picking
 src/ui/                    menus, HUD, panels, dialogs, local save slots
 data/map/                  generated world map (2,358 provinces) + stable id registry
-data/rules/                units.json, balance.json, goods.json, buildings.json — editable game rules
+data/rules/                units.json, balance.json, goods.json, buildings.json, governments.json — editable game rules
+data/events/               domestic events + index.json
 data/scenarios/            scenario files + index.json
 tools/                     map/scenario/economy pipeline, dev server, benchmark, economy report
 tests/                     node:test suites; tests/browser/ Playwright end-to-end + benchmark
-docs/                      ARCHITECTURE, FEATURES (checklist), DEVLOG, PERFORMANCE, MODDING
+docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, FEATURES (checklist), DEVLOG,
+                           PERFORMANCE, MODDING
 ```
 
 ## Documentation
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — stack decision and system design
 - [docs/ECONOMY.md](docs/ECONOMY.md) — every economic rule and formula
+- [docs/DIPLOMACY.md](docs/DIPLOMACY.md) — opinion, treaties, blocs, peace terms, AI diplomacy
+- [docs/GOVERNMENT.md](docs/GOVERNMENT.md) — government types, factions, elections, coups, policies, events
 - [docs/FEATURES.md](docs/FEATURES.md) — implemented / partial / planned checklist and the continuation plan
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — measured numbers and how to reproduce them
-- [docs/MODDING.md](docs/MODDING.md) — data formats for units, balance and scenarios
+- [docs/MODDING.md](docs/MODDING.md) — data formats for units, balance, goods, buildings, governments, events and scenarios
 - [docs/DEVLOG.md](docs/DEVLOG.md) — development log
 
 ## Data sources and honesty notes

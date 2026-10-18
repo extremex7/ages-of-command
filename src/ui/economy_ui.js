@@ -210,8 +210,10 @@ export function embargoButton(cl, k) {
   const s = cl.state, me = s.player;
   if (me < 0 || k === me || !s.countries[k].alive) return null;
   const on = s.countries[me].econ.embargo.includes(k);
+  const trade = s.dip?.treaties.some((t) => t.type === 'trade' && ((t.a === me && t.b === k) || (t.a === k && t.b === me)));
   return h('button', {
-    tip: on ? `Lift the embargo: trade with ${s.countries[k].name} resumes next month.` : `Stop all trade with ${s.countries[k].name} from next month (both directions).`,
+    disabled: !on && trade,
+    tip: !on && trade ? 'You have a trade agreement with them: end it first (Diplomacy tab).' : on ? `Lift the embargo: trade with ${s.countries[k].name} resumes next month.` : `Stop all trade with ${s.countries[k].name} from next month (both directions). Their opinion of you falls.`,
     on: { click: () => { toggleEmbargo(s, me, k); cl.uiDirty = true; cl.requestFrame(); } },
   }, on ? 'Lift embargo' : 'Embargo');
 }

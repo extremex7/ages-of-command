@@ -3,8 +3,10 @@ import { h, mount } from './dom.js';
 import { formatDate } from '../core/calendar.js';
 import { saveGame } from '../core/game.js';
 import { listSlots, writeSave, saveSettings } from './storage.js';
-import { warScore, evaluatePeace, makePeace, declareWar, demandCost, provinceValue } from '../core/war.js';
-import { allied } from '../core/relations.js';
+import { warScore, evaluatePeace, makePeace, declareWar, demandCost, provinceValue, warJoiners, warConsequences,
+  evaluateSeparatePeace, makeSeparatePeace, separateScore } from '../core/war.js';
+import { overlordOf } from '../core/diplomacy.js';
+import { resolveEvent, describeEffects } from '../core/events.js';
 import { people } from './format.js';
 import { kvbox } from './panels.js';
 
@@ -61,7 +63,7 @@ function perfDialog(cl) {
 
 function helpDialog(cl) {
   const rows = [['Left click', 'Select province / army (Shift adds armies)'], ['Right click', 'Move selected armies'], ['Drag / arrows', 'Pan map'], ['Wheel / + −', 'Zoom'],
-    ['Space', 'Pause / resume'], ['1–5', 'Game speed'], ['P T O V G R Y', 'Map modes'], ['N E M D L I', 'Sidebar tabs'], ['C / H', 'Centre on capital / whole world'], ['Ctrl+S', 'Quick save'], ['Esc', 'Clear selection / close dialog']];
+    ['Space', 'Pause / resume'], ['1–5', 'Game speed'], ['P T O V G X K F R Y J', 'Map modes'], ['N B E U M D L I', 'Sidebar tabs'], ['C / H', 'Centre on capital / whole world'], ['Ctrl+S', 'Quick save'], ['Esc', 'Clear selection / close dialog']];
   open(cl, h('h2', 'Controls'), h('table.t', rows.map(([k, v]) => h('tr', h('td', h('b', k)), h('td', v)))));
 }
 
@@ -75,46 +77,100 @@ export function reportDialog(cl, id) {
 }
 
 export function declareDialog(cl, target) {
-  const s = cl.state, C = s.countries, me = s.player;
-  const joiners = [];
-  for (const al of s.alliances) if (al.members.includes(target)) for (const m of al.members) if (m !== target && !allied(s, m, me) && !joiners.includes(m) && C[m].alive) joiners.push(m);
+  const s = cl.state, C = s.countries, me = s.player, R = cl.game.rules;
+  const joiners = warJoiners(s, me, target).slice(1);
+  const cons = warConsequences(s, cl.game.map, R, me, target);
   const w = open(cl, h('h2', `Declare war on ${C[target].name}?`),
-    h('p', joiners.length ? `Their allies will join the war: ${joiners.map((k) => C[k].name).join(', ')}.` : 'No allies will join them.'),
-    h('p.muted', `Their army power: ${C[target].cache.armyPower.toFixed(0)} (yours ${C[me].cache.armyPower.toFixed(0)}). Declaring war costs 3 stability.`),
+    h('p', joiners.length ? `Joining their defence (blocs, alliances, defensive pacts, guarantees, subjects): ${joiners.map((k) => C[k].name).join(', ')}.` : 'No one will join them.'),
+    h('p.muted', `Their army power: ${C[target].cache.armyPower.toFixed(0)}${joiners.length ? ` (with allies ${(C[target].cache.armyPower + joiners.reduce((a, k) => a + C[k].cache.armyPower, 0)).toFixed(0)})` : ''}; yours ${C[me].cache.armyPower.toFixed(0)}. Declaring war costs 3 stability.`),
+    cons.length > 0 && h('ul', cons.map((x) => h('li.warn', x))),
     h('div.row', h('button.danger', { on: { click: () => {
-      const err = declareWar(s, cl.game.map, cl.game.rules, me, target);
+      const err = declareWar(s, cl.game.map, R, me, target);
       if (err) cl.toast(err, true);
       w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame();
     } } }, 'Declare war'), h('button', { on: { click: () => w.remove() } }, 'Cancel')));
 }
 
 export function peaceDialog(cl, war) {
-  const s = cl.state, map = cl.game.map, R = cl.game.rules, me = s.player, C = s.countries;
+  const s = cl.state, map = cl.game.map, R = cl.game.rules, me = s.player, C = s.countries, PC = R.balance.diplomacy.peaceCost;
   const att = war.attackers.includes(me);
   const mySide = att ? war.attackers : war.defenders, theirSide = att ? war.defenders : war.attackers;
   const other = att ? war.leaderD : war.leaderA;
   const cands = map.ids.filter((i) => theirSide.includes(s.prov.owner[i]) && mySide.includes(s.prov.controller[i]))
     .sort((a, b) => provinceValue(s, R, b) - provinceValue(s, R, a));
   const chosen = new Set();
+  const extra = { reparations: false, subject: false, independence: false };
   const result = h('div');
   const update = () => {
-    const terms = { provinces: [...chosen], to: me };
+    const terms = { provinces: [...chosen], to: me, ...extra };
     const ev = evaluatePeace(s, map, R, war, me, terms);
     cl.view.highlight = [...chosen];
     cl.requestFrame();
+    const any = chosen.size || extra.reparations || extra.subject || extra.independence;
     mount(result,
       h('p', `War score (yours): `, h('b', Math.round(ev.score)), ` · demands cost: `, h('b', Math.round(ev.cost))),
       h('p', { className: ev.accept ? 'good' : 'bad' }, (C[other].idx === s.player ? '' : `${C[other].name}: `) + ev.reason),
       h('div.row',
-        h('button.primary', { disabled: !ev.accept, on: { click: () => { makePeace(s, map, R, war, me, terms); cl.view.highlight = null; w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame(); } } }, chosen.size ? 'Send demands' : 'Offer white peace'),
+        h('button.primary', { disabled: !ev.accept, on: { click: () => { makePeace(s, map, R, war, me, terms); cl.view.highlight = null; w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame(); } } }, any ? 'Send demands' : 'Offer white peace'),
         h('button', { on: { click: () => { cl.view.highlight = null; w.remove(); cl.requestFrame(); } } }, 'Cancel')));
   };
+  const check = (key, label, tip) => h('label.item', { style: { display: 'flex', gap: '0.5em', alignItems: 'center' }, tip },
+    h('input', { type: 'checkbox', on: { change: (e) => { extra[key] = e.target.checked; update(); } } }), h('span', label), h('span.muted', `cost ${PC[key]}`));
   const list = h('div.list', cands.length ? cands.map((p) => {
     const cb = h('input', { type: 'checkbox', on: { change: (e) => { if (e.target.checked) chosen.add(p); else chosen.delete(p); update(); } } });
     return h('label.item', { style: { display: 'flex', gap: '0.5em', alignItems: 'center' } }, cb, h('span', map.name[p]),
-      h('span.muted', `${C[s.prov.owner[p]].name} · cost ${Math.round(demandCost(s, map, R, war, [p], att))}`));
-  }) : h('div.item.muted', 'You occupy no enemy provinces. Only a white peace is possible.'));
+      h('span.muted', `${C[s.prov.owner[p]].name} · cost ${Math.round(demandCost(s, map, R, war, [p], att, me))}`));
+  }) : h('div.item.muted', 'You occupy no enemy provinces.'));
+  const D = R.balance.diplomacy;
+  const indep = war.kind === 'independence' && me === war.leaderA && overlordOf(s, me) === war.leaderD;
   const w = open(cl, h('h2', `Peace: ${war.name}`), h('p.muted', `Negotiating with ${C[other].name}. Score now ${Math.round(warScore(s, map, R, war) * (att ? 1 : -1))}.`),
-    h('h4', 'Demand occupied provinces'), list, result);
+    h('h4', 'Demand occupied provinces'), list,
+    h('h4', 'Other terms'),
+    h('div.list',
+      indep ? check('independence', 'Independence', `${C[other].name} releases you from subject status.`) : null,
+      check('reparations', `Reparations (${Math.round(D.reparationsShare * 100)}% of their tax for ${D.reparationsYears} years)`, 'Paid monthly from their tax revenue into your treasury.'),
+      !indep && check('subject', `Make ${C[other].name} a subject`, `They follow you into wars, cannot sign treaties, leave their organisations and pay ${Math.round(D.subjectTribute * 100)}% of their tax as tribute. Only for countries of up to ${D.subjectMaxProvinces} provinces.`)),
+    result);
   update();
+}
+
+// A participant who is not a war leader leaves the war on its own, ceding occupied land if needed.
+export function separatePeaceDialog(cl, war) {
+  const s = cl.state, map = cl.game.map, R = cl.game.rules, me = s.player, C = s.countries;
+  const att = war.attackers.includes(me);
+  const enemySide = att ? war.defenders : war.attackers, leader = att ? war.leaderD : war.leaderA;
+  const lost = map.ids.filter((i) => s.prov.owner[i] === me && enemySide.includes(s.prov.controller[i]));
+  const chosen = new Set();
+  const result = h('div');
+  const update = () => {
+    const terms = { provinces: [...chosen] };
+    const ev = evaluateSeparatePeace(s, map, R, war, me, terms);
+    cl.view.highlight = [...chosen]; cl.requestFrame();
+    mount(result, h('p', { className: ev.accept ? 'good' : 'bad' }, `${C[leader].name}: ${ev.reason}`),
+      h('div.row',
+        h('button.primary', { disabled: !ev.accept, on: { click: () => { makeSeparatePeace(s, map, R, war, me, terms); cl.view.highlight = null; w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame(); } } }, 'Make separate peace'),
+        h('button', { on: { click: () => { cl.view.highlight = null; w.remove(); cl.requestFrame(); } } }, 'Cancel')));
+  };
+  const w = open(cl, h('h2', `Separate peace with ${C[leader].name}`),
+    h('p.muted', `You leave the ${war.name}; your allies fight on and think less of you. Your own score: ${Math.round(separateScore(s, map, R, war, me))}.`),
+    h('h4', 'Cede occupied provinces (optional)'),
+    h('div.list', lost.length ? lost.map((p) => h('label.item', { style: { display: 'flex', gap: '0.5em', alignItems: 'center' } },
+      h('input', { type: 'checkbox', on: { change: (e) => { if (e.target.checked) chosen.add(p); else chosen.delete(p); update(); } } }), h('span', map.name[p]))) : h('div.item.muted', 'The enemy occupies none of your provinces.')),
+    result);
+  update();
+}
+
+// A domestic event for the player: the text, and each option with its effects spelled out.
+export function eventDialog(cl, pend) {
+  const s = cl.state, R = cl.game.rules;
+  const ev = R.events.find((e) => e.id === pend.ev);
+  if (!ev) return;
+  cl.setSpeed(0);
+  const left = R.balance.government.eventChoiceDays - (s.day - pend.day);
+  const w = open(cl, h('h2', pend.title), h('p', pend.text),
+    h('p.muted', `If you do not decide within ${left} days, your advisers choose for you.`),
+    h('div.menu-buttons', ev.options.map((o, i) => h('button', { on: { click: () => {
+      resolveEvent(s, cl.game.map, R, pend, i);
+      w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame();
+    } } }, h('b', o.text), h('div.muted', { style: { fontSize: '0.85em', whiteSpace: 'normal' } }, describeEffects(R, o.effects || {}).join(' · ') || 'No effects')))));
 }

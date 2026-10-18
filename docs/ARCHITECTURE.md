@@ -39,9 +39,12 @@ src/map (Canvas) ──── reads state + static map; never drives simulation
 ## Simulation clock (`sim.js`)
 
 One tick = one day. Daily: recruitment, movement, battle detection/resolution, sieges,
-organisation recovery, construction. AI: each country thinks every 7 days, staggered by country index so ~1/7
+organisation recovery, construction, domestic events (each country checked once a month,
+spread across days), AI diplomacy (each country every 3 months, spread across days). AI military: each country thinks every 7 days, staggered by country index so ~1/7
 of countries run per tick. Monthly (1st of month): production, world market, consumption and
-their effects, budget, reinforcement, AI peace evaluation, AI investment, country caches. The renderer has no influence on the clock; the UI loop runs ticks
+their effects, budget, reinforcement, war scores, government (approval, legitimacy, elections,
+coups, revolutions, AI policies), diplomacy (influence, reputation, modifier decay, tribute and
+reparations, expiring claims), AI peace evaluation, AI investment, country caches. The renderer has no influence on the clock; the UI loop runs ticks
 within a per-frame time budget, so fast-forward cannot freeze the interface.
 
 ## Systems
@@ -67,14 +70,30 @@ within a per-frame time budget, so fast-forward cannot freeze the interface.
   neighbour or surrender if encircled. Each battle produces a report explaining the outcome.
 - **Occupation**: unopposed armies besiege enemy provinces; time scales with fort level and
   development, shrinking with √(units). Liberation of your own/allied land is twice as fast.
-- **War & peace** (`war.js`, `relations.js`): declarations call in the target's alliance
-  partners. War score = enemy economy you occupy − your economy they occupy + battle results.
-  Peace terms (provinces you occupy) cost war score; white peace is accepted when the other side
+- **War & peace** (`war.js`, `relations.js`): declarations break treaties with the target and
+  call in its bloc partners, allies, defensive-pact partners, guarantors and subjects; the
+  attacker can call its allies to arms. War score = enemy economy you occupy − your economy they occupy + battle results.
+  Peace terms (provinces you occupy, reparations, subjugation, independence) cost war score;
+co-belligerents can sign a separate peace; white peace is accepted when the other side
   is not clearly winning or the war has dragged on. Truces follow every peace. Countries with no
-  provinces are eliminated. A cached relation matrix answers war/ally queries in O(1).
+  provinces are eliminated. A cached relation matrix (hostile, allied, co-belligerent, access flags) answers queries in
+  O(1); it is rebuilt when wars, blocs or treaties change.
+- **Diplomacy** (`diplomacy.js`, rules in DIPLOMACY.md): treaties are a list of
+  `{type, a, b, start, until}` with an incremental index; opinion and trust are computed on demand
+  from treaties, blocs, borders, wars, rivals, claims, reputation and a sparse list of decaying
+  modifiers, so nothing per-pair is stored. Proposals return a score with reasons that the UI
+  shows before you click.
+- **Government** (`government.js`, rules in GOVERNMENT.md): `c.govt` holds the ruling faction,
+  faction support and approval, legitimacy, policies, election dates and modifiers. Combined
+  effects (`govt.fx`) are derived and recomputed on load, not saved.
+- **Events** (`events.js`): data-driven domestic events with compiled conditions, player choice
+  dialogs and AI weights.
+- **AI diplomacy** (`ai_diplomacy.js`): rivals, treaty review, one treaty sought per round,
+  embargoes, blocs, influence spending; every decision logged.
 - **AI** (`ai.js`): budget management (tax/spending), recruitment within its military budget,
-  war declarations only against neighbours when its alliance-weighted power ratio clears a
-  threshold scaled by government aggression and the AI-aggressiveness setting, army planning
+  war declarations against neighbours that need a motive (opinion, rivalry, claims,
+  independence) and odds that count both sides' likely joiners, scaled by government war
+  propensity and the AI-aggressiveness setting, army planning
   (engage invaders it can beat, finish sieges, take high-value enemy provinces, recover when
   weak, man the border with the strongest neighbour in peacetime), and monthly peace offers
   sized to its war score. Decisions are logged with reasons (AI tab).
@@ -104,8 +123,9 @@ append-only registry so they stay stable.
 ## Saves (`save.js`)
 
 JSON in which every typed array (province fields, building levels, stockpiles) is base64
-(~850 KB for a modern-world campaign; browser slots are gzip-compressed to ~280 KB). Versioned with
-step-by-step migrations (`MIGRATIONS[v]`; v2 → v3 installs the scenario's economy into old saves),
+(~1.1 MB for a modern-world campaign; browser slots are gzip-compressed to ~260–320 KB). Versioned with
+step-by-step migrations (`MIGRATIONS[v]`; v2 → v3 installs the scenario's economy into old saves; v3 → v4 installs governments and the
+scenario's treaties and blocs; unknown government types or policies fall back to defaults),
 validated against the loaded map and rules (unknown countries,
 wrong array lengths, missing fields are rejected with a message; removed unit types and invalid
 army locations are dropped; a larger newer map extends province arrays). Browser slots use

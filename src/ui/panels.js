@@ -2,24 +2,26 @@
 // is decorative — every number shown comes from the simulation.
 import { h, mount } from './dom.js';
 import { flagCanvas } from './flags.js';
-import { money, signedMoney, people, pct, GOV_NAMES } from './format.js';
+import { money, signedMoney, people, pct } from './format.js';
 import { formatDate } from '../core/calendar.js';
 import { TERRAINS } from '../core/mapdata.js';
 import { computeLedgers } from '../core/economy.js';
 import { recruit, recruitCost, canRecruit, mergeArmies, splitArmy, armyMen, siegeDays } from '../core/military.js';
 import { unitCount, provinceGdp } from '../core/state.js';
-import { atWar, allied } from '../core/relations.js';
-import { warScore, canDeclareWar, makePeace } from '../core/war.js';
-import { countryNeighbours } from '../core/ai.js';
+import { canDeclareWar } from '../core/war.js';
 import { declareDialog } from './dialogs.js';
 import { economyTab, industryTab, provinceEconomy, embargoButton } from './economy_ui.js';
+import { diplomacyTab, relationsSection } from './diplomacy_ui.js';
+import { governmentTab } from './government_ui.js';
+import { govType } from '../core/government.js';
 
 export const TABS = [
-  { id: 'country', name: 'Nation', key: 'n', tip: 'Overview of the selected country, or yours.' },
+  { id: 'country', name: 'Nation', key: 'n', tip: 'Overview of the selected country, or yours, and your relations with it.' },
+  { id: 'government', name: 'Government', key: 'b', tip: 'Government type, factions, elections, policies and reforms.' },
   { id: 'economy', name: 'Economy', key: 'e', tip: 'Budget, taxes, tariffs, indicators and history.' },
   { id: 'industry', name: 'Industry', key: 'u', tip: 'Goods, production, construction and trade.' },
   { id: 'military', name: 'Military', key: 'm', tip: 'Recruit units, manage armies, battle reports.' },
-  { id: 'diplomacy', name: 'Diplomacy', key: 'd', tip: 'Wars, peace, alliances, neighbours.' },
+  { id: 'diplomacy', name: 'Diplomacy', key: 'd', tip: 'Proposals, wars and peace, treaties, organisations, relations.' },
   { id: 'log', name: 'Events', key: 'l', tip: 'Notification history.' },
   { id: 'ai', name: 'AI', key: 'i', tip: 'AI decisions with reasons, and performance timings.' },
 ];
@@ -34,7 +36,7 @@ function bar(v, cls = '') {
 }
 
 export function renderPanel(cl, el) {
-  const fn = { country: countryTab, economy: economyTab, industry: industryTab, military: militaryTab, diplomacy: diplomacyTab, log: logTab, ai: aiTab }[cl.tab];
+  const fn = { country: countryTab, government: governmentTab, economy: economyTab, industry: industryTab, military: militaryTab, diplomacy: diplomacyTab, log: logTab, ai: aiTab }[cl.tab];
   mount(el, fn(cl));
 }
 
@@ -47,10 +49,11 @@ function countryTab(cl) {
   const units = nArmies.reduce((t, a) => t + unitCount(a), 0);
   const wars = s.wars.filter((w) => w.attackers.includes(k) || w.defenders.includes(k));
   const allies = s.alliances.filter((a) => a.members.includes(k));
+  const g = c.govt, P = cl.game.rules.politics;
   const mine = k === s.player;
   const why = s.player >= 0 && !mine ? canDeclareWar(s, cl.game.map, s.player, k) : 'n/a';
   return h('div',
-    h('div.row', flagCanvas(c, true), h('div', h('h3', c.name), h('div.muted', GOV_NAMES[c.gov] || c.gov))),
+    h('div.row', flagCanvas(c, true), h('div', h('h3', c.name), h('div.muted', govType(cl.game.rules, c).name + (g ? ` · ${P.factions[g.ruling]?.name || ''} govern` : '')))),
     !c.alive && h('p.bad', 'This country no longer exists.'),
     kvbox(
       'Capital', c.capital >= 0 ? h('a', { href: '#', on: { click: (e) => { e.preventDefault(); cl.focusProvince(c.capital); } } }, cl.game.map.name[c.capital]) : '—',
@@ -63,15 +66,17 @@ function countryTab(cl) {
       'Monthly balance', L ? signedMoney(L.net) : '—',
       'Tax rate', pct(c.tax),
       'Stability', Math.round(c.stability),
+      g && 'Approval / legitimacy', g && `${Math.round(g.approvalAll)} / ${Math.round(g.legitimacy)}`,
       'Manpower', people(c.manpower),
       'Army', `${units} units in ${nArmies.length} armies`,
-      'Alliances', allies.length ? allies.map((a) => a.name).join(', ') : 'None',
+      'Organisations', allies.length ? allies.map((a) => a.name).join(', ') : 'None',
       'At war', wars.length ? wars.map((w) => w.name).join(', ') : 'No'),
     h('div', { tip: 'Stability' }, bar(c.stability / 100, c.stability < 35 ? 'var(--bad)' : '')),
     !mine && s.player >= 0 && c.alive && h('div.row', { style: { marginTop: '0.8em' } },
       h('button.danger', { disabled: !!why, tip: why || `Declare war on ${c.name}`, on: { click: () => declareDialog(cl, k) } }, 'Declare war…'),
       h('button', { on: { click: () => { cl.renderer.mode = 'diplomacy'; cl.renderer.focus = k; cl.renderer.invalidate(); cl.renderModes(); } } }, 'Show relations'),
       embargoButton(cl, k)),
+    c.alive && relationsSection(cl, k),
     !mine && c.alive && h('div.row', { style: { marginTop: '0.5em' } },
       h('button', { tip: 'Take control of this country from now on. The country you leave is run by the AI.', on: { click: () => { cl.setSpeed(0); cl.startPlaying(k); } } }, `Play as ${c.name}`)),
     mine && h('p.note', 'Tip: right-click a province with armies selected to move them. Space pauses, keys 1–5 set speed.'));
@@ -140,54 +145,6 @@ function reportsList(cl) {
     reps.length ? h('table.t', reps.map((r) => h('tr.click', { on: { click: () => cl.openReport(r.id) } },
       h('td', formatDate(r.day)), h('td', r.provName), h('td', { className: (r.winner === 'att' ? r.attackers : r.defenders).includes(C[me]?.name) ? 'good' : me >= 0 ? 'bad' : '' }, r.winner === 'att' ? 'Attacker won' : 'Defender won'))))
       : h('p.muted', 'No battles yet.'));
-}
-
-function diplomacyTab(cl) {
-  const s = cl.state, C = s.countries, me = s.player, map = cl.game.map, R = cl.game.rules;
-  const wars = me >= 0 ? s.wars.filter((w) => w.attackers.includes(me) || w.defenders.includes(me)) : s.wars;
-  const offers = s.offers.filter((o) => o.to === me);
-  const out = [];
-  if (offers.length) {
-    out.push(h('h3', 'Peace offers'));
-    for (const o of offers) {
-      const war = s.wars.find((w) => w.id === o.war);
-      if (!war) continue;
-      const desc = o.terms.provinces.length ? `They demand ${o.terms.provinces.length} province(s): ${o.terms.provinces.slice(0, 5).map((p) => map.name[p]).join(', ')}${o.terms.provinces.length > 5 ? '…' : ''}` : 'White peace (no changes).';
-      out.push(h('div.army-card', h('b', `${C[o.from].name}: ${war.name}`), h('div', desc),
-        h('div.row', h('button.primary', { on: { click: () => { makePeace(s, map, R, war, o.from, o.terms); s.offers = s.offers.filter((x) => x !== o); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame(); } } }, 'Accept'),
-          h('button', { on: { click: () => { s.offers = s.offers.filter((x) => x !== o); cl.uiDirty = true; } } }, 'Decline'))));
-    }
-  }
-  out.push(h('h3', me >= 0 ? 'Your wars' : 'Wars'));
-  if (!wars.length) out.push(h('p.muted', 'At peace.'));
-  for (const w of wars) {
-    const score = warScore(s, map, R, w);
-    const mySide = me >= 0 ? (w.attackers.includes(me) ? 1 : -1) : 1;
-    const leader = me === w.leaderA || me === w.leaderD;
-    out.push(h('div.army-card',
-      h('div.row.spread', h('b', w.name), h('span.muted', 'since ' + formatDate(w.start))),
-      h('div', h('span.muted', 'Attackers: '), w.attackers.map((k) => C[k].name).join(', ')),
-      h('div', h('span.muted', 'Defenders: '), w.defenders.map((k) => C[k].name).join(', ')),
-      h('div', { tip: 'War score: share of the enemy economy you occupy, minus what they occupy of yours, plus battle results (max ±30). Positive favours you.' },
-        h('span.muted', 'War score: '), h('b', { className: score * mySide >= 0 ? 'good' : 'bad' }, Math.round(score * mySide))),
-      me >= 0 && h('div.row', { style: { marginTop: '0.4em' } },
-        leader ? h('button', { on: { click: () => cl.openPeace(w) } }, 'Negotiate peace…')
-          : h('span.muted', `Peace is negotiated by the war leaders (${C[w.leaderA].name} and ${C[w.leaderD].name}).`))));
-  }
-  if (me >= 0) {
-    const al = s.alliances.filter((a) => a.members.includes(me));
-    out.push(h('h3', { style: { marginTop: '1em' } }, 'Alliances'), al.length ? al.map((a) => h('div', h('b', a.name), h('div.muted', a.members.map((k) => C[k].name).join(', ')))) : h('p.muted', 'None. Alliance diplomacy arrives in Milestone 4.'));
-    const nb = [...countryNeighbours(s, map).sets[me]].filter((k) => C[k].alive).sort((a, b) => C[b].cache.armyPower - C[a].cache.armyPower);
-    out.push(h('h3', { style: { marginTop: '1em' } }, 'Neighbours'), h('table.t',
-      h('tr', h('th', 'Country'), h('th.n', { tip: 'Army power relative to yours' }, 'Army'), h('th', 'Status')),
-      nb.map((k) => {
-        const c = C[k];
-        const st = atWar(s, me, k) ? h('span.bad', 'War') : allied(s, me, k) ? h('span.good', 'Allied') : (c.truces[me] ?? 0) > s.day ? h('span.warn', 'Truce') : h('span.muted', 'Peace');
-        return h('tr.click', { on: { click: () => { cl.view.selectedCountry = k; cl.setTab('country'); cl.focusCountry(k); } } },
-          h('td', flagCanvas(c), ' ', c.name), h('td.n', (c.cache.armyPower / Math.max(1, C[me].cache.armyPower)).toFixed(2) + '×'), h('td', st));
-      })));
-  }
-  return h('div', out);
 }
 
 function logTab(cl) {

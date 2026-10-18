@@ -42,7 +42,8 @@ for (const profile of ['low', 'balanced', 'high']) {
   });
   // fully zoomed-out world view base render cost
   const world = await page.evaluate(() => { const r = window.__client.renderer; r.fit(); r.invalidate(); r.draw(window.__client.state, window.__client.view); return r.stats.baseMs; });
-  // max speed simulation for 5 seconds while rendering
+  // max speed simulation for 5 seconds while rendering; the AI answers events and offers so no dialog pauses the clock
+  await page.evaluate(() => { const s = window.__client.state; s.countries[s.player].automate = true; });
   await page.keyboard.press('5');
   await page.waitForTimeout(5000);
   await page.keyboard.press(' ');

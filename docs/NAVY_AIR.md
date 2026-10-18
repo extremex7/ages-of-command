@@ -252,7 +252,7 @@ Air stats: `air` (air-to-air), `attack` (ground attack), `bomb` (strategic bombi
 A wing is `{ id, owner, name, base, units, str, exp, mission }`.
 
 - **Building**: aircraft are recruited in an owned, controlled province with infrastructure ≥ 1
-  (`air.minInfra`, default 1; the key is not in balance.json). A new aircraft unit joins a wing of
+  (`air.minInfra`, 1). A new aircraft unit joins a wing of
   the same type at that base with fewer than 12 units, or forms a new wing.
 - **Bases** (`canBase`): a province the country or a friend controls and that a friend owns.
   Rebasing is instant and costs 0.02 strength. A wing whose base is lost flies to the capital,
@@ -327,4 +327,3 @@ control are derived each day and never saved.
   aircraft attacking fleets, and carrier wings as separate air units.
 - AI amphibious invasion planning: the AI only goes by sea when its normal orders find the sea
   route faster.
-- AI construction of ballistic missile submarines.

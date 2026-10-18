@@ -74,7 +74,7 @@ function build(id) {
   }
   const fleets = [], wings = [], errs = [];
   const summary = { countries: 0, ships: 0, wings: 0, warheads: 0 };
-  for (const c of scen.countries) { delete c.warheads; delete c.icbm; delete c.sats; }
+  for (const c of scen.countries) { delete c.warheads; delete c.icbm; delete c.sats; delete c.stations; delete c.colonies; }
   for (const row of rows) {
     const c = byTag.get(row.tag);
     if (!c) { errs.push(`unknown tag ${row.tag}`); continue; }

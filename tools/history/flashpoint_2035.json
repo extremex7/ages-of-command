@@ -245,6 +245,7 @@
     {
       "tag": "GRL",
       "new": true,
+      "techLag": 1,
       "name": "Greenland",
       "color": "#8fb0c0",
       "gov": "parliamentary",

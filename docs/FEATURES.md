@@ -159,7 +159,7 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Tests | ✅ | 39 new tests (118 in all) |
 | Transport ships and capacity, naval mines, port sizes | ⬜ | Any army can embark in a friendly port |
 | Aircraft attacking fleets, air control over sea zones | ⬜ | Air acts over land battles and bombing targets only |
-| AI-planned amphibious invasions; AI ballistic missile submarines | ⬜ | The AI goes by sea only when its normal orders find it faster; it keeps the SSBNs it starts with |
+| AI-planned amphibious invasions | ⬜ | The AI goes by sea only when its normal orders find it faster |
 | Supply that consumes goods; fleet and air supply | ⬜ | Supply levels have no goods cost |
 | Wing experience, warheads assigned to launchers | ⬜ | Fields exist but are not used |
 

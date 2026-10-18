@@ -289,7 +289,18 @@ Rules: [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md), [STRATEGIC.md](
 
 **Not done (honest gaps).**
 - There are no transport ships or capacity, no naval mines and no aircraft attacking fleets.
-- The AI plans no amphibious invasions and builds no ballistic missile submarines.
+- The AI plans no amphibious invasions.
 - Supply has no goods cost.
 - Wing experience is never gained, and warheads are not assigned to launchers.
 - Simulation throughput in the browser at maximum speed is about half of Milestone 5's.
+- Any wing with a bomb load counts as nuclear delivery (drones and ground-attack wings
+  included), missiles have unlimited range and submarine tubes are never used up.
+- In Orbital Age 2085 the arms control treaties cap arsenals at 1,550, so the largest powers
+  dismantle warheads from the start (by design of the scenario's treaties; easy to change).
+
+**Fixed after review.** The AI's last-resort nuclear strike now falls back to cities when no
+enemy army stands in a strikeable province; the Strategic tab's missile defence figure no longer
+counts the player's own hypersonic weapons against them; nuclear powers' AI builds ballistic
+missile submarines; supply no longer spreads through unowned land; AI depot replacement refreshes
+supply; Greenland in Flashpoint 2035 gets a technology lag like other countries; `air.minInfra`
+is in balance.json; the forces builder clears stale station and colony counts.

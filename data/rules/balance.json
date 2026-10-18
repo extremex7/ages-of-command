@@ -25,7 +25,8 @@
     "bomberLoss": 0.12,
     "groundDefence": 4,
     "bombingLevels": 0.08,
-    "bombingStability": 1.5
+    "bombingStability": 1.5,
+    "minInfra": 1
   },
   "supply": {
     "_doc": "Logistics: supply levels, attrition, depots. See docs/LOGISTICS.md.",

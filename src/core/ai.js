@@ -87,7 +87,7 @@ function pickUnitType(state, rules, c) {
 // Spending targets by domain: coastal countries keep a navy, and countries that can fly keep an
 // air force, in proportion to how industrialised they are. Picks the domain furthest below its
 // share of upkeep, then a role in it.
-const SEA_MIX = [['capital', 3], ['screen', 4], ['nsub', 2], ['sub', 2], ['carrier', 1]];
+const SEA_MIX = [['capital', 3], ['screen', 4], ['nsub', 2], ['sub', 2], ['carrier', 1], ['ssbn', 1]];
 const AIR_MIX = [['fighter', 5], ['attack', 3], ['drone', 2], ['bomber', 1]];
 // Upkeep by domain and units by role for every country, built once a day (the AI asks per country).
 const forceCache = new WeakMap();
@@ -129,6 +129,7 @@ function pickDomain(state, rules, c) {
   for (const [role, w] of mix) {
     if (!b[role]) continue;
     if (role === 'carrier' && c.cache.gdp < 1500) continue;
+    if (role === 'ssbn' && !(c.strat?.warheads > 0)) continue; // missile submarines only for nuclear powers
     const v = (have[role] || 0) / w;
     if (v < pv) { pv = v; pick = b[role]; }
   }

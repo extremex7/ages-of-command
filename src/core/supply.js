@@ -101,6 +101,7 @@ function buildSupplyMap(state, map, rules, k) {
       const v = map.adj[e];
       if (map.adjKind[e] > 0 && !laneOpen(state, map, rules, k, e)) continue;
       const ctl = P.controller[v];
+      if (ctl < 0) continue; // nobody's land: no roads to carry supply
       const enemy = isEn(ctl);
       if (!enemy && ctl >= 0 && !isFr(ctl) && !enter(v)) continue;
       const step = (S.stepBase + S.stepPerInfra * P.infra[v]) * (map.adjKind[e] > 0 ? S.waterStep : 1) * (enemy ? S.enemyStep : 1);
@@ -229,6 +230,6 @@ export function aiDepots(state, map, rules, c) {
   }
   if (state.prov.controller[worst.loc] === c.idx) best = worst.loc;
   if (best < 0) return;
-  if ((c.depots || []).length >= maxDepots(state, rules, c.idx)) c.depots.shift();
+  if ((c.depots || []).length >= maxDepots(state, rules, c.idx)) { c.depots.shift(); state.supplyVer = (state.supplyVer || 0) + 1; }
   if (!buildDepot(state, map, rules, c.idx, best)) aiLog(state, c.idx, `Built a supply depot in ${map.name[best]}: ${worst.name} was at ${Math.round(worst.supply * 100)}% supply.`);
 }

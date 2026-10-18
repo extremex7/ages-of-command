@@ -130,7 +130,7 @@ export function interceptChance(state, rules, attacker, defender) {
   if (knowsId(state, rules, defender, 'missile_defense')) p += S.missileDefence;
   p += S.warningIntercept * satCover(C[defender], 'warning', rules);
   if (knowsId(state, rules, defender, 'orbital_defense')) p += S.orbitalDefence;
-  if (knowsId(state, rules, attacker, 'hypersonic_weapons')) p -= S.hypersonic;
+  if (attacker >= 0 && knowsId(state, rules, attacker, 'hypersonic_weapons')) p -= S.hypersonic; // attacker -1: before hypersonic weapons
   return Math.max(0, Math.min(S.maxIntercept, p));
 }
 
@@ -494,7 +494,8 @@ function aiStrategic(state, map, rules) {
           const deterred = hasDeterrent(state, map, rules, foe);
           const chance = S.aiNukeChance * (0.5 + c.aggression) * (deterred ? (capLost && occ > 0.5 ? 0.3 : 0.05) : 1);
           if (rand(state) < chance) {
-            const tgt = strikeTargets(state, map, rules, c.idx, foe, 1, true)[0] ?? strikeTargets(state, map, rules, c.idx, foe, 1)[0];
+            // enemy armies on our soil first, then their cities; only targets that can actually be struck
+            const tgt = [...strikeTargets(state, map, rules, c.idx, foe, 5, true), ...strikeTargets(state, map, rules, c.idx, foe, 5)].find((p) => !canNuke(state, map, rules, c.idx, p));
             if (tgt != null && !nuclearStrike(state, map, rules, c.idx, tgt)) aiLog(state, c.idx, `Used a nuclear weapon on ${map.name[tgt]}: ${Math.round(occ * 100)}% of our land occupied${capLost ? ', capital lost' : ''}.`);
           }
         }

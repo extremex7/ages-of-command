@@ -43,15 +43,30 @@ Nothing is marked ✅ if it is only a placeholder.
 | Separate peace for non-leaders | ⬜ | Only war leaders negotiate |
 | Fronts, battle plans, commanders | ⬜ | |
 
-## Milestone 3 — economy (next)
+## Milestone 3 — economy
 
-| Feature | Status |
-| --- | --- |
-| Taxation, budget, debt | ✅ |
-| Population growth, manpower | ✅ (simple) |
-| Resources, production chains, factories, construction | ⬜ |
-| Trade, markets, prices, sanctions | ⬜ |
-| Economic reports and calculation tooltips | 🟡 Ledger tooltips exist; no history charts |
+See [ECONOMY.md](ECONOMY.md) for every formula.
+
+| Feature | Status | Notes |
+| --- | --- | --- |
+| Taxation, budget, debt, tariffs | ✅ | Tariff revenue in the ledger; tariff slider |
+| Population growth tied to food | ✅ | Hunger slows or reverses growth |
+| Development growth | ✅ | Driven by living standard and civil spending |
+| 14 goods: food, timber, coal, oil, iron, uranium, rare earths, steel, energy, fuel, consumer goods, electronics, machinery, munitions | ✅ | Data-driven (`goods.json`) |
+| Resource deposits per province | ✅ | Sized from real production shares; resources map mode |
+| 15 building types with inputs, outputs, workforce, deposits, farmland | ✅ | Data-driven (`buildings.json`) |
+| National stockpiles and shortages | ✅ | Shortages hit GDP, stability, unemployment, prices, armies |
+| Workforce and unemployment | ✅ | Industrial workforce per province; idle workers counted |
+| Infrastructure | ✅ | 0–10 per province; building efficiency and movement speed |
+| Construction queue with slots, goods and refunds | ✅ | Province panel build menu; Industry tab queue |
+| World market, prices, imports/exports | ✅ | Automatic each month; prices follow world supply and demand |
+| Embargoes; war closes trade | ✅ | Player embargo button; AI does not embargo yet |
+| Inflation / CPI and price level | ✅ | CPI raises unit, upkeep and construction costs |
+| Army supply (munitions, fuel) | ✅ | Shortages weaken combat and slow armour; shown in battle reports |
+| AI investment | ✅ | Builds against its largest shortfalls; logs reasons |
+| Economic reports and calculation tooltips | ✅ | Indicators, budget, stability drivers, 24-month charts, per-good breakdown |
+| Trade agreements, tariffs per partner, AI sanctions | ⬜ | |
+| Gas/hydro/renewable power, transport costs, regional markets | ⬜ | Folded into simpler rules (see ECONOMY.md) |
 
 ## Later milestones
 
@@ -70,6 +85,11 @@ Nothing is marked ✅ if it is only a placeholder.
 
 ## Known limitations
 
+- Economy: electricity from gas, hydro and renewables is folded into thermal plants; goods are
+  national pools with no internal transport; trade is automatic, with no agreements.
+- Deposits and starting industry are generated from rounded national figures, not mapped
+  from real mine locations.
+
 - Terrain is estimated from latitude/longitude boxes; there are no rivers.
 - Province population/GDP within a country are spread by a model, not census data.
 - Islands are linked by "sea lanes" that land armies cross slowly; there are no fleets yet.
@@ -80,9 +100,8 @@ Nothing is marked ✅ if it is only a placeholder.
 
 ## Continuation plan
 
-1. **Milestone 3 economy**: resource deposits per province, factories with inputs/outputs,
-   construction queue, national stockpiles and shortages, a simple world market with prices and
-   trade agreements; ledger history charts.
+1. **Milestone 3 follow-ups**: trade agreements and per-partner tariffs, AI sanctions, a gas and
+   renewable energy split.
 2. **Milestone 4**: relations values and trust, alliance/NAP/military-access diplomacy with AI
    evaluation, separate peace, stability-driven unrest and government changes, events (data-driven).
 3. **Milestone 5**: technology tree in data files, era progression, a 1914 and a 1936 scenario

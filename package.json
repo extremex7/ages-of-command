@@ -8,7 +8,7 @@
     "start": "node tools/serve.mjs 8080",
     "test": "node --test tests/*.test.mjs",
     "bench": "node tools/bench.mjs",
-    "build:map": "python3 tools/build_map.py && python3 tools/build_scenarios.py"
+    "build:map": "python3 tools/build_map.py && python3 tools/build_scenarios.py && node tools/build_economy.mjs"
   },
   "license": "UNLICENSED"
 }

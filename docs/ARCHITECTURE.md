@@ -39,9 +39,9 @@ src/map (Canvas) ──── reads state + static map; never drives simulation
 ## Simulation clock (`sim.js`)
 
 One tick = one day. Daily: recruitment, movement, battle detection/resolution, sieges,
-organisation recovery. AI: each country thinks every 7 days, staggered by country index so ~1/7
-of countries run per tick. Monthly (1st of month): economy, reinforcement, AI peace evaluation,
-country aggregate caches. The renderer has no influence on the clock; the UI loop runs ticks
+organisation recovery, construction. AI: each country thinks every 7 days, staggered by country index so ~1/7
+of countries run per tick. Monthly (1st of month): production, world market, consumption and
+their effects, budget, reinforcement, AI peace evaluation, AI investment, country caches. The renderer has no influence on the clock; the UI loop runs ticks
 within a per-frame time budget, so fast-forward cannot freeze the interface.
 
 ## Systems
@@ -52,9 +52,15 @@ within a per-frame time budget, so fast-forward cannot freeze the interface.
   funds the army; unit upkeep scales with the country's price level. Negative treasury is debt
   with interest. Occupied provinces are not taxable for the owner; occupiers requisition a share.
   Every figure lands in a per-country ledger shown in tooltips.
+- **Industry and trade** (`industry.js`, details in ECONOMY.md): per-province building levels and
+  deposits (typed arrays), national stockpiles per good, monthly production in data order,
+  a world market whose flows are computed from per-exporter and per-importer factors (no pairwise
+  loop), world prices from supply/demand, CPI, unemployment, construction queue with slots, and
+  army supply. Province GDP = calibrated services + industrial value added, so the start matches
+  the scenario and the economy moves it from there.
 - **Military** (`military.js`, `pathfind.js`, `combat.js`): armies are stacks of division-type
   units with strength and organisation. A* over the adjacency graph with travel-time costs
-  (terrain, infrastructure via development, strait/sea-lane penalties) and access rules
+  (terrain, province infrastructure, strait/sea-lane penalties, fuel supply for armour) and access rules
   (own, allied, or enemy territory). Battles run for days: damage from unit attack/defence,
   terrain modifiers per unit type, defender terrain and fort bonuses, **combat width** (only part
   of a large stack fights), organisation and bounded randomness. Losers retreat to a friendly
@@ -97,8 +103,10 @@ append-only registry so they stay stable.
 
 ## Saves (`save.js`)
 
-JSON with typed arrays as base64 (~300–400 KB for a modern-world campaign). Versioned with
-step-by-step migrations (`MIGRATIONS[v]`), validated against the loaded map (unknown countries,
+JSON in which every typed array (province fields, building levels, stockpiles) is base64
+(~850 KB for a modern-world campaign; browser slots are gzip-compressed to ~280 KB). Versioned with
+step-by-step migrations (`MIGRATIONS[v]`; v2 → v3 installs the scenario's economy into old saves),
+validated against the loaded map and rules (unknown countries,
 wrong array lengths, missing fields are rejected with a message; removed unit types and invalid
 army locations are dropped; a larger newer map extends province arrays). Browser slots use
 localStorage with rotation of autosaves; export/import as files works without storage.

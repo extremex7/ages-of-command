@@ -13,10 +13,29 @@ Adding a new key adds a recruitable unit everywhere in the UI.
 
 ## Balance — `data/rules/balance.json`
 
-Sections `economy`, `population`, `combat`, `siege`, `war`, `ai`. Notable values:
+Sections `economy`, `population`, `combat`, `siege`, `war`, `ai`, `industry`. Notable values:
 `economy.devBase/devGrowth` (productivity curve), `combat.width` per terrain,
 `combat.defenderTerrain`, `siege.baseDays/fortDays/devDays`, `war.truceDays`,
-`ai.baseWarChance`, `ai.powerRatioForWar`.
+`ai.baseWarChance`, `ai.powerRatioForWar`, and in `industry` the workforce shares, price
+elasticity and limits, shortage penalties, army consumption, infrastructure and construction-slot
+rules (all explained in [ECONOMY.md](ECONOMY.md)).
+
+## Goods — `data/rules/goods.json`
+
+Each key is a good id: `name`, `tier` (display only), `price` (B per unit, > 0), `demand` (units per
+million people per month at development 80), `incomeExp` (how demand scales with income), and
+`stockMonths` (stockpile target). A new good is traded and shown automatically; give it a building
+that produces it and, if people should consume it, a `demand` above 0.
+
+## Buildings — `data/rules/buildings.json`
+
+Each key is a building id, run in file order every month: `name`, `out` and `in` (good → units per
+level per month), `workers` per level, `cost` (B at price level 1), `goods` consumed when
+construction starts, `days`, `maxLevel` (≤ 255), optional `deposit` (resource name; levels cannot
+exceed the province's deposit), `fertility: true` (scales with farmland), `minDev`.
+Put producers before their consumers so this month's output is available downstream.
+Changing the number of buildings or resources makes older saves of that mod refuse to load with a
+message (their arrays no longer match).
 
 ## Scenarios — `data/scenarios/*.json` + `index.json`
 
@@ -34,7 +53,12 @@ Sections `economy`, `population`, `combat`, `siege`, `war`, `ai`. Notable values
 }
 ```
 
-- `provinces` maps a stable province id to `[ownerTag, population, development 0–100, fort 0–5]`.
+- `provinces` maps a stable province id to `[ownerTag, population, development 0–100, fort 0–5,
+  infrastructure 0–10]` (infrastructure is optional; default development / 11).
+- `economy` (optional): `{ "deposits": { "798": { "timber": 2 } }, "buildings": { "798": { "farm": 4,
+  "factory": 3 } } }`. Unknown building or resource names are ignored. Without it the scenario
+  starts with no industry. `node tools/build_economy.mjs <scenario>` generates it from
+  `tools/resource_table.csv`.
   Province ids are listed in `data/map/world.json` (`provinces[].id`, `name`, `iso`) and never change.
 - `gov` is one of `republic, federal_republic, parliamentary, const_monarchy, abs_monarchy,
   one_party, military, theocracy`.

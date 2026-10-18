@@ -64,7 +64,7 @@ export function detectBattles(state, map) {
   }
 }
 
-function sideStats(state, ids, role, terrain, rules, p) {
+export function sideStats(state, ids, role, terrain, rules, p) {
   const U = rules.units, B = rules.balance.combat;
   let units = 0, dmg = 0, tough = 0, org = 0, men = 0;
   const armies = ids.map((id) => armyById(state, id)).filter(Boolean);

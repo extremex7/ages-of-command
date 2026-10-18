@@ -94,3 +94,10 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover { background: var(-
 .paused-flag { color: var(--warn); font-size: 0.8em; }
 @media (max-width: 1000px) { .topbar .opt { display: none; } }
 a { color: var(--accent); }
+
+/* economy */
+table.t.small { font-size: 0.88em; }
+table.t.small td, table.t.small th { padding: 0.18em 0.25em; }
+.build-grid { display: flex; flex-wrap: wrap; gap: 0.3em; }
+.build-grid button { padding: 0.25em 0.5em; font-size: 0.88em; }
+canvas.spark { display: block; margin: 0.25em 0 0.4em; background: #171a1f; border: 1px solid var(--line); border-radius: 3px; max-width: 100%; }

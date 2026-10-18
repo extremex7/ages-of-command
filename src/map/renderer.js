@@ -140,7 +140,7 @@ export class MapRenderer {
     const map = this.map, ctx = this.cacheCtx, c = this.cam, dpr = this.dpr, m = this.profile.margin;
     const W = this.cache.width, H = this.cache.height;
     if (this.colorsDirty || !this.colors) {
-      this.colors = provinceColors(this.mode, state, map, this.focus);
+      this.colors = provinceColors(this.mode, state, map, this.focus, this.rules);
       this.buildCountryBorders(state);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);

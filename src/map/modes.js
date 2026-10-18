@@ -2,6 +2,7 @@
 // backed by real simulation data are offered.
 import { TERRAINS } from '../core/mapdata.js';
 import { atWar, allied, friendly } from '../core/relations.js';
+import { provinceGdp } from '../core/state.js';
 
 export const MAP_MODES = [
   { id: 'political', name: 'Political', key: 'p', tip: 'Country ownership. Stripes mark provinces occupied by another country.' },
@@ -9,10 +10,15 @@ export const MAP_MODES = [
   { id: 'population', name: 'Population', key: 'o', tip: 'Population density (people per km²), log scale.' },
   { id: 'development', name: 'Development', key: 'v', tip: 'Development index 0–100: drives productivity per person and infrastructure speed.' },
   { id: 'economy', name: 'Economy', key: 'g', tip: 'Annual provincial GDP (log scale).' },
+  { id: 'resources', name: 'Resources', key: 'x', tip: 'Largest natural-resource deposit in each province (brighter = larger).' },
+  { id: 'industry', name: 'Industry', key: 'k', tip: 'Industrial value added per year (log scale): farms, mines, power and factories.' },
+  { id: 'infrastructure', name: 'Infrastructure', key: 'f', tip: 'Infrastructure level 0–10: building efficiency and movement speed.' },
   { id: 'military', name: 'Military', key: 'r', tip: 'Fronts: your side, enemies, and provinces under siege.' },
   { id: 'diplomacy', name: 'Diplomacy', key: 'y', tip: 'Relations to the selected (or your) country: allies, enemies, truces.' },
 ];
 
+const RES_COLORS = { oil: '#1f1f1f', coal: '#6b5640', iron: '#b5582a', uranium: '#6fbf2f', rare_earths: '#9b45b8', timber: '#3f7a3a' };
+const RES_WEIGHT = { oil: 3, uranium: 4, rare_earths: 4, iron: 1.5, coal: 1.4, timber: 0.12 }; // minerals show over forests
 const TERRAIN_COLORS = { plains: '#a9c18a', hills: '#b9a878', mountains: '#8c7f73', forest: '#5f8a5a', desert: '#e0cc94', tundra: '#c7d0cf' };
 
 function ramp(t, a, b) {
@@ -28,7 +34,7 @@ export function hex(h) {
   return v;
 }
 
-export function provinceColors(mode, state, map, focus) {
+export function provinceColors(mode, state, map, focus, rules) {
   const out = new Array(map.count);
   const C = state.countries;
   const P = state.prov;
@@ -43,9 +49,24 @@ export function provinceColors(mode, state, map, focus) {
       }
       case 'development': out[i] = ramp3(P.dev[i] / 100, '#7a3b3b', '#d8c46a', '#3b7a5a'); break;
       case 'economy': {
-        const g = (P.pop[i] * 400 * Math.pow(1.06, P.dev[i])) / 1e9;
+        const g = provinceGdp(state, i, rules.balance.economy);
         out[i] = ramp3((Math.log10(g + 0.01) + 1) / 4.3, '#efeae0', '#7fb0c8', '#1f4e79'); break;
       }
+      case 'resources': {
+        const ec = state.econ, R = ec.resources.length;
+        let best = -1, bv = 0;
+        for (let r = 0; r < R; r++) {
+          const v = ec.dep[i * R + r] * (RES_WEIGHT[ec.resources[r]] ?? 1);
+          if (v > bv) { bv = v; best = r; }
+        }
+        out[i] = best < 0 ? '#d6d1c6' : ramp(0.35 + Math.min(1, ec.dep[i * R + best] / 8) * 0.65, '#e4dfd4', RES_COLORS[ec.resources[best]] || '#888');
+        break;
+      }
+      case 'industry': {
+        const v = state.econ.va[i] * 12;
+        out[i] = v <= 0.001 ? '#e9e5dc' : ramp3((Math.log10(v) + 0.5) / 3.8, '#efe3c4', '#d08a4a', '#6a2a1a'); break;
+      }
+      case 'infrastructure': out[i] = ramp3(P.infra[i] / 10, '#d9cbb0', '#9ab07a', '#2f6f5a'); break;
       case 'military': {
         const me = focus >= 0 ? focus : -1;
         const ctl = P.controller[i];
@@ -84,4 +105,7 @@ export const MODE_LEGENDS = {
   population: [['< 1 /km²', '#f4efe3'], ['~30 /km²', '#d9a05b'], ['1000+ /km²', '#7a2e2e']],
   development: [['Low', '#7a3b3b'], ['Medium', '#d8c46a'], ['High', '#3b7a5a']],
   economy: [['Small', '#efeae0'], ['Medium', '#7fb0c8'], ['Large', '#1f4e79']],
+  resources: [['Oil', '#1f1f1f'], ['Coal', '#6b5640'], ['Iron ore', '#b5582a'], ['Uranium', '#6fbf2f'], ['Rare earths', '#9b45b8'], ['Timber', '#3f7a3a'], ['None', '#d6d1c6']],
+  industry: [['None', '#e9e5dc'], ['~1B/yr', '#efe3c4'], ['~30B/yr', '#d08a4a'], ['1T+/yr', '#6a2a1a']],
+  infrastructure: [['0', '#d9cbb0'], ['5', '#9ab07a'], ['10', '#2f6f5a']],
 };

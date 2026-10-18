@@ -30,6 +30,7 @@ export class Client {
     this.index = buildIndex(game.map);
     this.build();
     this.renderer = new MapRenderer(this.canvas, game.map);
+    this.renderer.rules = game.rules;
     this.renderer.setProfile(data.settings.profile);
     this.renderer.fit();
     if (game.state.player >= 0) this.focusCountry(game.state.player, false);

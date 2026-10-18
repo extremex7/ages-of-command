@@ -67,6 +67,31 @@ const after = await page.evaluate((id) => {
 }, moved.id);
 console.log('after run: days advanced', after.day - r.day, 'army at', after.loc, 'target', moved.target, 'tick ms', after.tickMs.toFixed(2), 'base render ms', after.base.baseMs.toFixed(1));
 await page.screenshot({ path: out + '04-after.png' });
+// economy: industry tab, build in the capital, economy tab, embargo, economic map modes
+await page.keyboard.press('u');
+await page.waitForTimeout(200);
+await page.screenshot({ path: out + '07-industry.png' });
+const before = await page.evaluate(() => { const c = window.__client, s = c.state; c.focusProvince(s.countries[s.player].capital); return s.construction.filter((p) => p.owner === s.player).length; });
+await page.waitForTimeout(300);
+await page.locator('.prov-panel .build-grid button:not([disabled])').first().click();
+const built = await page.evaluate(() => { const s = window.__client.state; return s.construction.filter((p) => p.owner === s.player).map((p) => p.kind + ':' + p.b); });
+console.log('construction queue', before, '->', built.length, built.slice(-1));
+if (built.length !== before + 1) errors.push('build button did not queue a project');
+await page.screenshot({ path: out + '08-province-build.png' });
+await page.keyboard.press('e');
+await page.waitForTimeout(200);
+await page.screenshot({ path: out + '09-economy.png' });
+const emb = await page.evaluate(() => {
+  const c = window.__client, s = c.state;
+  c.view.selectedCountry = s.countries.findIndex((x) => x.tag === 'DEU'); c.setTab('country');
+  return true;
+});
+await page.waitForTimeout(200);
+await page.click('.panel button:has-text("Embargo")');
+const embargoed = await page.evaluate(() => { const s = window.__client.state; return s.countries[s.player].econ.embargo.map((k) => s.countries[k].tag); });
+console.log('embargoes', embargoed);
+if (!embargoed.includes('DEU')) errors.push('embargo button did not work');
+for (const [k, n] of [['x', '10-resources'], ['k', '11-industry'], ['f', '12-infrastructure']]) { await page.keyboard.press(k); await page.waitForTimeout(300); await page.screenshot({ path: out + n + '.png' }); }
 // map modes + zoom
 for (const k of ['t', 'o', 'v', 'g', 'r', 'y', 'p']) { await page.keyboard.press(k); await page.waitForTimeout(150); }
 await page.mouse.move(683, 400);

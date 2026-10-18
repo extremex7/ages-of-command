@@ -12,10 +12,12 @@ import { atWar, allied } from '../core/relations.js';
 import { warScore, canDeclareWar, makePeace } from '../core/war.js';
 import { countryNeighbours } from '../core/ai.js';
 import { declareDialog } from './dialogs.js';
+import { economyTab, industryTab, provinceEconomy, embargoButton } from './economy_ui.js';
 
 export const TABS = [
   { id: 'country', name: 'Nation', key: 'n', tip: 'Overview of the selected country, or yours.' },
-  { id: 'economy', name: 'Economy', key: 'e', tip: 'Budget, taxes and spending.' },
+  { id: 'economy', name: 'Economy', key: 'e', tip: 'Budget, taxes, tariffs, indicators and history.' },
+  { id: 'industry', name: 'Industry', key: 'u', tip: 'Goods, production, construction and trade.' },
   { id: 'military', name: 'Military', key: 'm', tip: 'Recruit units, manage armies, battle reports.' },
   { id: 'diplomacy', name: 'Diplomacy', key: 'd', tip: 'Wars, peace, alliances, neighbours.' },
   { id: 'log', name: 'Events', key: 'l', tip: 'Notification history.' },
@@ -32,7 +34,7 @@ function bar(v, cls = '') {
 }
 
 export function renderPanel(cl, el) {
-  const fn = { country: countryTab, economy: economyTab, military: militaryTab, diplomacy: diplomacyTab, log: logTab, ai: aiTab }[cl.tab];
+  const fn = { country: countryTab, economy: economyTab, industry: industryTab, military: militaryTab, diplomacy: diplomacyTab, log: logTab, ai: aiTab }[cl.tab];
   mount(el, fn(cl));
 }
 
@@ -68,39 +70,11 @@ function countryTab(cl) {
     h('div', { tip: 'Stability' }, bar(c.stability / 100, c.stability < 35 ? 'var(--bad)' : '')),
     !mine && s.player >= 0 && c.alive && h('div.row', { style: { marginTop: '0.8em' } },
       h('button.danger', { disabled: !!why, tip: why || `Declare war on ${c.name}`, on: { click: () => declareDialog(cl, k) } }, 'Declare war…'),
-      h('button', { on: { click: () => { cl.renderer.mode = 'diplomacy'; cl.renderer.focus = k; cl.renderer.invalidate(); cl.renderModes(); } } }, 'Show relations')),
+      h('button', { on: { click: () => { cl.renderer.mode = 'diplomacy'; cl.renderer.focus = k; cl.renderer.invalidate(); cl.renderModes(); } } }, 'Show relations'),
+      embargoButton(cl, k)),
     !mine && c.alive && h('div.row', { style: { marginTop: '0.5em' } },
       h('button', { tip: 'Take control of this country from now on. The country you leave is run by the AI.', on: { click: () => { cl.setSpeed(0); cl.startPlaying(k); } } }, `Play as ${c.name}`)),
     mine && h('p.note', 'Tip: right-click a province with armies selected to move them. Space pauses, keys 1–5 set speed.'));
-}
-
-function economyTab(cl) {
-  const s = cl.state, me = s.player;
-  if (me < 0) return h('p.muted', 'Observer mode: choose a country to manage its economy.');
-  const c = s.countries[me], L = c.ledger, E = cl.game.rules.balance.economy;
-  const apply = () => { computeLedgers(s, cl.game.map, cl.game.rules); cl.uiDirty = true; cl.requestFrame(); };
-  const tax = h('input', { type: 'range', min: E.minTax * 100, max: E.maxTax * 100, value: Math.round(c.tax * 100), on: { input: (e) => { c.tax = +e.target.value / 100; apply(); } } });
-  const civ = h('input', { type: 'range', min: 50, max: 95, value: Math.round(c.civilShare * 100), on: { input: (e) => { c.civilShare = +e.target.value / 100; apply(); } } });
-  const map = cl.game.map;
-  const provs = map.ids.filter((i) => s.prov.owner[i] === me).sort((a, b) => provinceGdp(s, b, E) - provinceGdp(s, a, E)).slice(0, 8);
-  return h('div',
-    h('h3', 'Monthly budget'),
-    L ? h('table.t',
-      h('tr', h('td', { tip: 'Sum of provincial GDP this month (population × productivity from development).' }, 'GDP this month'), h('td.n', money(L.gdpMonth))),
-      L.gdpLost > 0 && h('tr', h('td.muted', 'of which occupied (untaxable)'), h('td.n.bad', money(L.gdpLost))),
-      h('tr', h('td', { tip: 'Taxable GDP × tax rate × efficiency. Efficiency falls with low stability.' }, `Tax revenue (eff. ${pct(L.efficiency)})`), h('td.n.good', money(L.taxRevenue))),
-      L.requisition > 0 && h('tr', h('td', 'Requisitions (occupied land)'), h('td.n.good', money(L.requisition))),
-      h('tr', h('td', { tip: 'Administration, services, welfare and infrastructure. Higher spending raises stability.' }, 'Civil spending'), h('td.n.bad', '−' + money(L.civil))),
-      h('tr', h('td', { tip: 'Upkeep of every unit (and half for units in training), scaled by your price level.' }, `Military upkeep (price level ${c.cache.priceLevel.toFixed(2)})`), h('td.n.bad', '−' + money(L.military))),
-      L.interest > 0 && h('tr', h('td', { tip: `${pct(E.debtInterestYear)} per year on negative treasury.` }, 'Debt interest'), h('td.n.bad', '−' + money(L.interest))),
-      h('tr', h('th', 'Net'), h('th.n', { className: L.net < 0 ? 'bad' : 'good' }, signedMoney(L.net)))) : h('p.muted', 'No budget yet.'),
-    h('h4', `Tax rate: ${pct(c.tax)}`), tax,
-    h('p.muted', `Above 30% stability drifts down. Stability now ${Math.round(c.stability)}.`),
-    h('h4', `Civil spending: ${pct(c.civilShare)} of tax revenue`), civ,
-    h('p.muted', 'The rest of the tax revenue is your military budget. Spending under 70% erodes stability.'),
-    h('h4', 'Largest provincial economies'),
-    h('table.t', provs.map((i) => h('tr.click', { on: { click: () => cl.focusProvince(i) } }, h('td', map.name[i]), h('td.n', money(provinceGdp(s, i, E)) + '/yr')))),
-    h('p.note', 'Planned for Milestone 3: industries, resources, trade, construction and price markets. The current model is GDP-based taxation.'));
 }
 
 function militaryTab(cl) {
@@ -266,6 +240,7 @@ export function renderProvince(cl, el) {
       'Province ID', String(p)),
     s.prov.siegeBy[p] >= 0 && h('div', h('div.warn', `Siege by ${C[s.prov.siegeBy[p]].name}: ${pct(s.prov.siege[p])} (base ${Math.round(siegeDays(s, R, p))} days for one unit)`), bar(s.prov.siege[p], 'var(--warn)')),
     battle && h('div.bad', `Battle in progress (day ${battle.days})`),
+    provinceEconomy(cl, p),
     here.length > 0 && h('h4', 'Armies here'),
     here.map((a) => h('div.row.spread', h('span', flagCanvas(C[a.owner]), ' ', a.name), h('span.muted', `${unitCount(a)} units · ${pct(a.org)} org`))),
     canRec && h('div', h('h4', 'Recruit here'), h('div.row', Object.entries(R.units).map(([t, u]) => {

@@ -118,7 +118,7 @@ function newCountryEcon(G, tariff) {
   const f32 = () => new Float32Array(G);
   return {
     stock: new Float32Array(G), // the only per-good array the next month depends on
-    prod: f32(), need: f32(), imp: f32(), exp: f32(), sat: f32(), // this month, for reports
+    prod: f32(), need: f32(), imp: f32(), exp: f32(), sat: f32(), inSat: f32(), // this month, for reports
     buildUse: new Float32Array(G), // goods recently taken by construction (smoothed), added to need
     tariff, embargo: [], battleUse: 0,
     supplyMun: 1, supplyFuel: 1, gdpMult: 1, living: 1, foodSat: 1, unemployment: 0.05,
@@ -137,6 +137,7 @@ export function initEconomy(state, map, rules, scenario) {
     bld: new Uint8Array(N * X.B), dep: new Uint8Array(N * X.R),
     sf: new Float32Array(N).fill(1), va: new Float32Array(N), iw: new Float32Array(N),
     prices: Float64Array.from(X.goods, (g) => g.price), ratio0: new Float64Array(X.G),
+    resources: [...X.resources], buildingCount: X.B, // for map modes and save checks
   };
   const S = scenario.economy || {};
   for (const [id, rec] of Object.entries(S.buildings || {})) {
@@ -271,7 +272,7 @@ export function industryMonth(state, map, rules, opts = {}) {
   for (const c of alive) {
     const e = c.econ, st = e.stock, k = c.idx;
     e.prod.fill(0); e.need.fill(0); e.imp.fill(0); e.exp.fill(0);
-    const indNeed = new Float64Array(G);
+    const indNeed = new Float64Array(G), indGot = new Float64Array(G);
     for (const b of X.buildings) {
       const p = pot[k * B + b.i];
       if (!p) continue;
@@ -283,9 +284,10 @@ export function industryMonth(state, map, rules, opts = {}) {
       }
       f = Math.max(0, f);
       fac[k * B + b.i] = f;
-      for (const [g, a] of b.inp) st[g] = Math.max(0, st[g] - p * a * f);
+      for (const [g, a] of b.inp) { st[g] = Math.max(0, st[g] - p * a * f); indGot[g] += p * a * f; }
       for (const [g, a] of b.out) { const v = p * a * f; st[g] += v; e.prod[g] += v; }
     }
+    for (let g = 0; g < G; g++) e.inSat[g] = indNeed[g] > 0 ? indGot[g] / indNeed[g] : 1;
     popDemand(rules, c, tmp); popD.set(tmp, k * G);
     milDemand(state, rules, c, tmp, counts); milD.set(tmp, k * G);
     for (let g = 0; g < G; g++) { e.need[g] = popD[k * G + g] + milD[k * G + g] + indNeed[g] + e.buildUse[g]; e.buildUse[g] *= 0.5; }

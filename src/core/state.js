@@ -3,7 +3,7 @@
 import { parseDate } from './calendar.js';
 import { seedState } from './rng.js';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export function createState({ map, scenario, rules, playerTag = null, seed = 'aoc3', settings = {} }) {
   const N = map.count;
@@ -29,6 +29,7 @@ export function createState({ map, scenario, rules, playerTag = null, seed = 'ao
       fort: new Uint8Array(N),
       siege: new Float32Array(N),
       siegeBy: new Int16Array(N).fill(-1),
+      infra: new Uint8Array(N),
     },
     armies: [],
     battles: [],
@@ -36,6 +37,7 @@ export function createState({ map, scenario, rules, playerTag = null, seed = 'ao
     alliances: [],
     offers: [],
     recruit: [],
+    construction: [],
     log: [],
     reports: [],
     aiLog: [],
@@ -62,6 +64,7 @@ export function createState({ map, scenario, rules, playerTag = null, seed = 'ao
     state.prov.pop[i] = rec[1] || 0;
     state.prov.dev[i] = rec[2] || 1;
     state.prov.fort[i] = rec[3] || 0;
+    state.prov.infra[i] = rec[4] ?? Math.max(0, Math.min(10, Math.round((rec[2] || 1) / 11)));
   }
   for (const a of scenario.alliances || []) {
     state.alliances.push({ id: state.nextId++, name: a.name, members: a.members.map((t) => tagIndex.get(t)).filter((x) => x != null) });
@@ -139,7 +142,7 @@ export function refreshCountryCache(state, map, rules) {
     const prod = E.devBase * Math.pow(E.devGrowth, avgDev);
     c.cache = {
       provinces: n[k], pop: pop[k], gdp: gdp[k], avgDev, occupied: occupied[k],
-      priceLevel: 0.35 + 0.65 * Math.min(1.5, prod / refProd),
+      priceLevel: (0.35 + 0.65 * Math.min(1.5, prod / refProd)) * (c.econ ? Math.max(0.5, Math.min(3, c.econ.cpi)) : 1),
       maxManpower: pop[k] * rules.balance.population.manpowerShare,
       armyPower: armyStr[k],
     };
@@ -147,9 +150,24 @@ export function refreshCountryCache(state, map, rules) {
   }
 }
 
-// Annual GDP of a province in billions.
+// Annual GDP of a province in billions: services (population × productivity from
+// development, calibrated per province, minus the workforce employed in industry, scaled by
+// national energy/fuel supply) plus industrial value added. See docs/ECONOMY.md.
 export function provinceGdp(state, i, E) {
-  return (state.prov.pop[i] * E.devBase * Math.pow(E.devGrowth, state.prov.dev[i])) / 1e9;
+  const base = (state.prov.pop[i] * E.devBase * Math.pow(E.devGrowth, state.prov.dev[i])) / 1e9;
+  const ec = state.econ;
+  if (!ec) return base;
+  const o = state.prov.owner[i];
+  const m = o >= 0 ? state.countries[o].econ.gdpMult : 1;
+  return base * ec.sf[i] * (1 - ec.iw[i]) * m + ec.va[i] * 12;
+}
+
+// The parts of provinceGdp, for tooltips.
+export function provinceGdpParts(state, i, E) {
+  const base = (state.prov.pop[i] * E.devBase * Math.pow(E.devGrowth, state.prov.dev[i])) / 1e9;
+  const ec = state.econ, o = state.prov.owner[i];
+  const m = o >= 0 ? state.countries[o].econ.gdpMult : 1;
+  return { base, factor: ec.sf[i], industryShare: ec.iw[i], supply: m, services: base * ec.sf[i] * (1 - ec.iw[i]) * m, industry: ec.va[i] * 12 };
 }
 
 export function armyPower(a, rules) {

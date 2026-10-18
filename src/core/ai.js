@@ -6,6 +6,7 @@ import { atWar, allied, enemiesOf, friendly, isAtWar, canEnter } from './relatio
 import { recruit, canRecruit, orderMove, recruitCost } from './military.js';
 import { declareWar, canDeclareWar, warScore, demandCost, evaluatePeace, makePeace, provinceValue } from './war.js';
 import { rand } from './rng.js';
+import { constructionSlots, projectCost, canBuild, startProject, provinceLabour, devEff, infraEff, buildingEff, fertilityMap } from './industry.js';
 
 const nbCache = new WeakMap();
 
@@ -259,4 +260,113 @@ export function aiPeace(state, map, rules) {
   }
   // expire stale offers
   state.offers = state.offers.filter((o) => state.day - o.day < 30 && state.wars.some((w) => w.id === o.war));
+}
+
+// Monthly economic AI, every other month per country: invest in what the country lacks most
+// (by value of the gap between need and production), placing each building where it would be
+// most efficient per unit of cost; improve infrastructure when nothing is missing.
+export function aiEconomy(state, map, rules) {
+  if (!state.econ) return;
+  const month = Math.floor((state.day - state.startDay) / 30.44);
+  for (const c of state.countries) {
+    if (!c.alive || !c.econ || !c.ledger) continue;
+    if (c.idx === state.player && !c.automate) continue;
+    if ((c.idx + month) % 2) continue;
+    aiBuild(state, map, rules, c);
+  }
+}
+
+function inputAvailability(e, b) {
+  let f = 1, worst = -1;
+  for (const [g] of b.inp) {
+    const a = e.need[g] > 0 ? Math.min(1, (e.prod[g] + e.imp[g]) / e.need[g]) : 1;
+    if (a < f) { f = a; worst = g; }
+  }
+  return { f, worst };
+}
+
+function bestSite(state, map, rules, c, b) {
+  const X = rules.econ, P = state.prov, fert = fertilityMap(map);
+  const B = X.buildings[b];
+  let best = -1, bestScore = 0;
+  for (const i of countryProvinces(state, map, c.idx)) {
+    if (P.controller[i] !== c.idx) continue;
+    const L = state.econ.bld[i * X.B + b];
+    if (L >= B.maxLevel) continue;
+    if (B.dep >= 0 && L >= state.econ.dep[i * X.R + B.dep]) continue;
+    if (B.minDev && P.dev[i] < B.minDev) continue;
+    if (B.fertility && fert[i] < 0.25) continue;
+    const lab = provinceLabour(state, rules, i);
+    const labF = Math.min(1, lab.avail / (lab.need + B.workers));
+    if (labF < 0.6) continue;
+    const eff = labF * infraEff(P.infra[i], rules) * buildingEff(B, devEff(P.dev[i], rules), fert[i]);
+    const score = eff / (1 + 0.04 * L);
+    if (score > bestScore) { bestScore = score; best = i; }
+  }
+  return best;
+}
+
+const provCache = new WeakMap();
+function countryProvinces(state, map, k) {
+  const ver = state.mapVersion || 0;
+  let c = provCache.get(state);
+  if (!c || c.ver !== ver) {
+    c = { ver, lists: state.countries.map(() => []) };
+    for (const i of map.ids) if (state.prov.owner[i] >= 0) c.lists[state.prov.owner[i]].push(i);
+    provCache.set(state, c);
+  }
+  return c.lists[k];
+}
+
+function aiBuild(state, map, rules, c) {
+  const X = rules.econ, L = c.ledger, e = c.econ, prices = state.econ.prices;
+  const active = state.construction.reduce((n, p) => n + (p.owner === c.idx), 0);
+  if (active >= constructionSlots(state, rules, c.idx)) return;
+  const reserve = Math.max(L.revenue * 2, L.military * 4);
+  if (c.treasury <= reserve || L.net < -0.05 * L.revenue) return;
+  const gaps = [];
+  for (const g of X.goods) {
+    const gap = e.need[g.i] - e.prod[g.i];
+    if (gap > 0 && X.producers[g.i].length) gaps.push({ g: g.i, value: gap * prices[g.i] });
+  }
+  // armies short of munitions come first: it is a military emergency, not a market signal
+  if (e.supplyMun < 0.9 && 'munitions' in X.gi) for (const x of gaps) if (x.g === X.gi.munitions) x.value *= 20;
+  gaps.sort((a, b) => b.value - a.value);
+  let started = 0;
+  for (const { g, value } of gaps.slice(0, 4)) {
+    if (started >= 2) break;
+    for (const b of X.producers[g]) {
+      const B = X.buildings[b];
+      const inp = inputAvailability(e, B);
+      let bb = b, why = '';
+      if (e.prod[g] > 0 && inp.f < 0.7 && inp.worst >= 0 && X.producers[inp.worst].length) {
+        bb = X.producers[inp.worst][0]; // fix the bottleneck input first
+        why = ` (input for ${B.name.toLowerCase()})`;
+      }
+      const site = bestSite(state, map, rules, c, bb);
+      if (site < 0) continue;
+      const cost = projectCost(state, map, rules, c.idx, site, 'building', bb);
+      if (c.treasury - cost.total < reserve) return;
+      if (canBuild(state, map, rules, c.idx, site, 'building', bb)) continue;
+      startProject(state, map, rules, c.idx, site, 'building', bb);
+      aiLog(state, c.idx, `Building ${X.buildings[bb].name} in ${map.name[site]}${why}: ${X.goods[g].name.toLowerCase()} shortfall worth ${value.toFixed(1)}B/month, cost ${cost.total.toFixed(1)}B.`);
+      started++;
+      break;
+    }
+  }
+  if (started) return;
+  // nothing missing: improve infrastructure where most industry is
+  let best = -1, bv = 0;
+  for (const i of countryProvinces(state, map, c.idx)) {
+    if (state.prov.infra[i] >= Math.min(10, 3 + state.prov.dev[i] / 12)) continue;
+    let lv = 0;
+    for (let b = 0; b < X.B; b++) lv += state.econ.bld[i * X.B + b];
+    if (lv > bv) { bv = lv; best = i; }
+  }
+  if (best >= 0 && !canBuild(state, map, rules, c.idx, best, 'infra')) {
+    const cost = projectCost(state, map, rules, c.idx, best, 'infra');
+    if (c.treasury - cost.total < reserve) return;
+    startProject(state, map, rules, c.idx, best, 'infra');
+    aiLog(state, c.idx, `Improving infrastructure in ${map.name[best]} (${bv} building levels there), cost ${cost.total.toFixed(1)}B.`);
+  }
 }

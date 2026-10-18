@@ -17,7 +17,28 @@ export function listSlots() {
 }
 function writeSlots(list) { return set('slots', JSON.stringify(list)); }
 
-export function writeSave(name, data, info) {
+// Saves are gzip-compressed (about 4× smaller) when the browser supports CompressionStream,
+// stored as base64 with a "gz:" prefix; older plain-JSON slots still load.
+async function gzip(text) {
+  const stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
+  const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return 'gz:' + btoa(s);
+}
+async function gunzip(data) {
+  const s = atob(data.slice(3));
+  const bytes = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i);
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new Response(stream).text();
+}
+
+export async function writeSave(name, text, info) {
+  let data = text;
+  if (typeof CompressionStream !== 'undefined') {
+    try { data = await gzip(text); } catch { data = text; }
+  }
   const ok = set('save.' + name, data);
   if (!ok) return 'Browser storage is full or unavailable. Use "Export file" instead.';
   const list = listSlots().filter((s) => s.name !== name);
@@ -25,7 +46,11 @@ export function writeSave(name, data, info) {
   writeSlots(list);
   return null;
 }
-export function readSave(name) { return get('save.' + name); }
+export async function readSave(name) {
+  const data = get('save.' + name);
+  if (data && data.startsWith('gz:')) return gunzip(data);
+  return data;
+}
 export function deleteSave(name) { del('save.' + name); writeSlots(listSlots().filter((s) => s.name !== name)); }
 
 export function rotateAutosaves(keep) {

@@ -68,24 +68,30 @@ function sideStats(state, ids, role, terrain, rules, p) {
   const U = rules.units, B = rules.balance.combat;
   let units = 0, dmg = 0, tough = 0, org = 0, men = 0;
   const armies = ids.map((id) => armyById(state, id)).filter(Boolean);
+  let supply = 0;
   for (const a of armies) {
     const n = unitCount(a);
     units += n;
     org += a.org * n;
     men += armyMen(a, rules);
+    // supply: munitions shortages weaken every unit, fuel shortages weaken armour
+    const e = state.countries[a.owner].econ;
+    const mun = e ? 0.6 + 0.4 * e.supplyMun : 1, fuel = e ? 0.5 + 0.5 * e.supplyFuel : 1;
+    supply += mun * n;
+    if (e) e.battleUse += n * rules.balance.industry.munitionsPerUnitBattleDay;
     for (const t in a.units) {
       const k = a.units[t];
       if (!k) continue;
       const u = U[t];
       const base = role === 'att' ? u.attack * (u.terrain[terrain] ?? 1) : u.defense;
-      dmg += k * a.str * base * (0.35 + 0.65 * a.org) * (1 + a.exp * 0.25);
+      dmg += k * a.str * base * (0.35 + 0.65 * a.org) * (1 + a.exp * 0.25) * mun * (t === 'armor' ? fuel : 1);
       tough += k * u.toughness;
     }
   }
   if (role === 'def') dmg *= (B.defenderTerrain[terrain] ?? 1) * (1 + B.fortBonus * state.prov.fort[p]);
   const width = B.width[terrain] ?? 10;
   const engaged = units > 0 ? Math.min(1, width / units) : 0;
-  return { armies, units, dmg: dmg * engaged, tough: Math.max(0.5, tough * engaged), org: units ? org / units : 0, men, engaged, width };
+  return { armies, units, dmg: dmg * engaged, tough: Math.max(0.5, tough * engaged), org: units ? org / units : 0, men, engaged, width, supply: units ? supply / units : 1 };
 }
 
 export function resolveBattles(state, map, rules) {
@@ -186,6 +192,7 @@ function battleFactors(b, A, D, terrain, fort, rules) {
   f.push(`Daily damage at the end: attackers ${A.dmg.toFixed(1)}, defenders ${D.dmg.toFixed(1)}.`);
   f.push(`Organisation at the end: attackers ${Math.round(A.org * 100)}%, defenders ${Math.round(D.org * 100)}%.`);
   if (b.viaStrait) f.push('Attackers crossed water and fought at a penalty for the first days.');
+  if (A.supply < 0.99 || D.supply < 0.99) f.push(`Munitions supply: attackers ${Math.round(A.supply * 100)}%, defenders ${Math.round(D.supply * 100)}% of full strength (shortages cut damage by up to 40%).`);
   return f;
 }
 

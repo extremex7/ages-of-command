@@ -40,7 +40,7 @@ class Heap {
 
 export function stepDays(map, state, from, edgeIdx, speedKmDay) {
   const to = map.adj[edgeIdx];
-  const infra = 1 + Math.min(100, state.prov.dev[to]) / 200;
+  const infra = 1 + state.prov.infra[to] * 0.05; // roads and rail: up to +50% at level 10
   return (map.adjKm[edgeIdx] * EDGE_FACTOR[map.adjKind[edgeIdx]]) / (speedKmDay * SPEED_BY_T[map.terrain[to]] * infra);
 }
 

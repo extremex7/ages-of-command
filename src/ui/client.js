@@ -354,10 +354,10 @@ export class Client {
     for (const id of [...this.view.selectedArmies]) if (!s.armies.some((a) => a.id === id)) this.view.selectedArmies.delete(id);
   }
 
-  autosave() {
+  async autosave() {
     const s = this.state;
     const name = `autosave-${dateString(s.day)}`;
-    const err = writeSave(name, saveGame(this.game, { savedAt: Date.now(), label: name }), this.slotInfo());
+    const err = await writeSave(name, saveGame(this.game, { savedAt: Date.now(), label: name }), this.slotInfo());
     if (err) this.toast(err, true);
     rotateAutosaves(s.settings.autosaveKeep ?? 3);
   }
@@ -367,8 +367,8 @@ export class Client {
     return { savedAt: Date.now(), date: formatDate(s.day), country: s.player >= 0 ? s.countries[s.player].name : 'Observer', scenario: s.scenarioName };
   }
 
-  quickSave() {
-    const err = writeSave('quicksave', saveGame(this.game, { savedAt: Date.now() }), this.slotInfo());
+  async quickSave() {
+    const err = await writeSave('quicksave', saveGame(this.game, { savedAt: Date.now() }), this.slotInfo());
     this.toast(err || 'Game saved to slot "quicksave".', !!err);
   }
 

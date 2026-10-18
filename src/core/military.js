@@ -3,10 +3,14 @@ import { newArmy, unitCount, log, refreshCountryCache } from './state.js';
 import { canEnter, atWar, friendly } from './relations.js';
 import { findPath, stepDays, edgeIndex } from './pathfind.js';
 
-export function armySpeed(a, rules) {
+// Slowest unit's speed; armies with armour slow down when the country is short of fuel.
+export function armySpeed(a, rules, state = null) {
   let s = Infinity;
   for (const t in a.units) if (a.units[t] > 0) s = Math.min(s, rules.units[t].speed);
-  return s === Infinity ? 20 : s;
+  if (s === Infinity) return 20;
+  const e = state?.countries[a.owner]?.econ;
+  if (e && a.units.armor > 0) s *= 0.7 + 0.3 * e.supplyFuel;
+  return s;
 }
 
 export function armyMen(a, rules) {
@@ -81,7 +85,7 @@ export function orderMove(state, map, rules, armyId, dest) {
   if (a.battle) return 'Army is in battle';
   if (dest === a.loc) { a.path = []; a.prog = 0; return null; }
   if (!canEnter(state, a.owner, dest)) return 'No military access to that province';
-  const path = findPath(map, state, a.owner, a.loc, dest, armySpeed(a, rules));
+  const path = findPath(map, state, a.owner, a.loc, dest, armySpeed(a, rules, state));
   if (!path) return 'No route to that province';
   if (a.path.length && a.path[0] !== path[0]) a.prog = 0;
   a.path = path;
@@ -99,7 +103,7 @@ export function processMovement(state, map, rules) {
     }
     const e = edgeIndex(map, a.loc, next);
     if (e < 0) { a.path = []; a.prog = 0; continue; }
-    const need = stepDays(map, state, a.loc, e, armySpeed(a, rules));
+    const need = stepDays(map, state, a.loc, e, armySpeed(a, rules, state));
     a.prog += 1 / Math.max(1, need);
     if (a.prog >= 1) {
       a.prog = 0;

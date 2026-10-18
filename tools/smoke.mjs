@@ -5,7 +5,7 @@ import { formatDate } from '../src/core/calendar.js';
 const rd = (p) => JSON.parse(fs.readFileSync(new URL('../' + p, import.meta.url)));
 let t = performance.now();
 const map = decodeMap(rd('data/map/world.json'));
-const rules = makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'));
+const rules = makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'), rd('data/rules/goods.json'), rd('data/rules/buildings.json'));
 const scenario = rd('data/scenarios/modern_2026.json');
 const game = newGame({ map, scenario, rules, playerTag: null, seed: 'smoke' });
 console.log('load ms', (performance.now() - t).toFixed(0));

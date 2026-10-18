@@ -20,12 +20,13 @@ async function boot() {
   const t0 = performance.now();
   applyUiScale();
   try {
-    const [world, units, balance, index] = await Promise.all([
-      json('data/map/world.json'), json('data/rules/units.json'), json('data/rules/balance.json'), json('data/scenarios/index.json'),
+    const [world, units, balance, goods, buildings, index] = await Promise.all([
+      json('data/map/world.json'), json('data/rules/units.json'), json('data/rules/balance.json'),
+      json('data/rules/goods.json'), json('data/rules/buildings.json'), json('data/scenarios/index.json'),
     ]);
     const t1 = performance.now();
     data.map = decodeMap(world);
-    data.rules = makeRules(units, balance);
+    data.rules = makeRules(units, balance, goods, buildings);
     data.scenarios = index.scenarios;
     data.timings.fetch = t1 - t0;
     data.timings.decode = performance.now() - t1;
@@ -121,8 +122,9 @@ function loadScreen() {
     h('div.row', h('button', { on: { click: mainMenu } }, 'Back')))));
 }
 
-function loadSlot(name) {
-  const text = readSave(name);
+async function loadSlot(name) {
+  let text = null;
+  try { text = await readSave(name); } catch { return alertMsg('This save slot is damaged and cannot be read.'); }
   if (!text) return alertMsg('Save not found.');
   loadText(text);
 }

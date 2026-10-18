@@ -8,7 +8,7 @@ export function data() {
   if (!cached) {
     cached = {
       map: decodeMap(rd('data/map/world.json')),
-      rules: makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json')),
+      rules: makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'), rd('data/rules/goods.json'), rd('data/rules/buildings.json')),
       scenario: rd('data/scenarios/modern_2026.json'),
     };
   }

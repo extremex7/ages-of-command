@@ -31,10 +31,10 @@ export function saveDialog(cl) {
   const s = cl.state;
   const name = h('input', { value: `${s.player >= 0 ? s.countries[s.player].tag : 'OBS'}-${formatDate(s.day).replace(/\s/g, '-')}`, style: { width: '100%' } });
   const msg = h('p.muted');
-  const doSave = () => {
+  const doSave = async () => {
     const n = name.value.trim().replace(/[^\w\- ]/g, '').slice(0, 40);
     if (!n) { msg.textContent = 'Enter a name.'; return; }
-    const err = writeSave(n, saveGame(cl.game, { savedAt: Date.now(), label: n }), cl.slotInfo());
+    const err = await writeSave(n, saveGame(cl.game, { savedAt: Date.now(), label: n }), cl.slotInfo());
     msg.textContent = err || `Saved "${n}".`;
     msg.className = err ? 'bad' : 'good';
   };

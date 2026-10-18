@@ -2,8 +2,10 @@
 // debt interest -> treasury. Every figure is kept in a ledger so the UI can explain it.
 import { provinceGdp, refreshCountryCache, log } from './state.js';
 import { isAtWar } from './relations.js';
+import { industryMonth, recordHistory } from './industry.js';
 
-export function militaryUpkeep(state, c, rules) {
+export function militaryUpkeep(state, c, rules, all = null) {
+  if (all) return all[c.idx] * c.cache.priceLevel;
   const U = rules.units;
   let up = 0;
   for (const a of state.armies) {
@@ -12,6 +14,14 @@ export function militaryUpkeep(state, c, rules) {
   }
   for (const r of state.recruit) if (r.owner === c.idx) up += U[r.type].upkeep * 0.5;
   return up * c.cache.priceLevel;
+}
+
+// Base upkeep (before price level) of every country's armies and recruits, in one pass.
+function allUpkeep(state, rules) {
+  const U = rules.units, up = new Float64Array(state.countries.length);
+  for (const a of state.armies) for (const t in a.units) up[a.owner] += a.units[t] * U[t].upkeep;
+  for (const r of state.recruit) up[r.owner] += U[r.type].upkeep * 0.5;
+  return up;
 }
 
 export function taxEfficiency(c, rules) {
@@ -33,26 +43,30 @@ export function computeLedgers(state, map, rules) {
     else if (ctl >= 0) requisition[ctl] += g * 0.25 * 0.3; // occupiers extract a fraction
     gdpOwned[o] += g;
   }
+  const ups = allUpkeep(state, rules);
   for (const c of state.countries) {
     if (!c.alive) { c.ledger = null; continue; }
     const k = c.idx;
     const eff = taxEfficiency(c, rules);
     const taxRevenue = gdpControlled[k] * c.tax * eff;
-    const revenue = taxRevenue + requisition[k];
+    const tariffs = c.econ ? c.econ.tariffRev : 0;
+    const revenue = taxRevenue + requisition[k] + tariffs;
     const civil = taxRevenue * c.civilShare;
-    const military = militaryUpkeep(state, c, rules);
+    const military = militaryUpkeep(state, c, rules, ups);
     const interest = c.treasury < 0 ? (-c.treasury * E.debtInterestYear) / 12 : 0;
     c.ledger = {
       gdpMonth: gdpOwned[k], gdpLost: gdpOwned[k] - gdpControlled[k], efficiency: eff,
-      taxRevenue, requisition: requisition[k], revenue, civil, military, interest,
+      taxRevenue, requisition: requisition[k], tariffs, revenue, civil, military, interest,
+      construction: c.econ ? c.econ.spentConstruction || 0 : 0,
       net: revenue - civil - military - interest,
     };
   }
 }
 
 export function monthlyEconomy(state, map, rules) {
-  const E = rules.balance.economy, P = rules.balance.population;
+  const E = rules.balance.economy, P = rules.balance.population, I = rules.balance.industry;
   refreshCountryCache(state, map, rules);
+  if (state.econ) industryMonth(state, map, rules);
   computeLedgers(state, map, rules);
   for (const c of state.countries) {
     if (!c.alive || !c.ledger) continue;
@@ -65,18 +79,39 @@ export function monthlyEconomy(state, map, rules) {
     if (c.treasury < 0) target -= E.negativeTreasuryStabilityPenalty * Math.min(10, -c.treasury / Math.max(1, L.revenue));
     if (isAtWar(state, c.idx)) target -= 5;
     if (c.cache.provinces) target -= 25 * (c.cache.occupied / c.cache.provinces);
+    const ee = c.econ;
+    if (ee) {
+      // shortages, unemployment and inflation (see docs/ECONOMY.md)
+      ee.stabilityParts = {
+        food: -I.foodShortageStability * (1 - ee.foodSat),
+        goods: -I.goodsShortageStability * (1 - ee.living),
+        jobs: -I.unemploymentStability * Math.max(0, ee.unemployment - 0.06) * 100,
+        prices: -Math.min(15, I.inflationStability * Math.max(0, ee.inflation - 0.05) * 100),
+      };
+      for (const k in ee.stabilityParts) target += ee.stabilityParts[k];
+      ee.spentConstruction = 0;
+    }
     target = Math.max(5, Math.min(95, target));
     c.stability += (target - c.stability) * 0.08;
     // manpower regenerates toward the cap
     const cap = c.cache.maxManpower;
     c.manpower = Math.min(cap, c.manpower + cap * P.manpowerRegenMonth);
   }
-  // population growth (occupied provinces stagnate)
+  // population growth (occupied provinces stagnate; hunger slows or reverses it) and
+  // development growth (driven by living standards and civil spending)
   const g = P.growthYear / 12;
+  const C = state.countries;
   for (const i of map.ids) {
-    if (state.prov.owner[i] < 0) continue;
-    if (state.prov.controller[i] === state.prov.owner[i]) state.prov.pop[i] *= 1 + g;
+    const o = state.prov.owner[i];
+    if (o < 0 || state.prov.controller[i] !== o) continue;
+    const ee = C[o].econ;
+    if (!ee) { state.prov.pop[i] *= 1 + g; continue; }
+    const fs = ee.foodSat;
+    state.prov.pop[i] *= 1 + g * (2 * fs - 1) - (fs < 0.5 ? (0.5 - fs) * 0.01 : 0);
+    const d = state.prov.dev[i];
+    if (d < 100) state.prov.dev[i] = Math.min(100, d + I.devGrowthMonth * ee.living * (C[o].civilShare / 0.75) * Math.max(0.2, 1.3 - d / 100));
   }
+  if (state.econ) recordHistory(state);
 }
 
 // Called once at game start for scenarios flagged autoBudget: sets each country's civil share

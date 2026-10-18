@@ -6,6 +6,8 @@ import { detectBattles, resolveBattles } from './combat.js';
 import { monthlyEconomy } from './economy.js';
 import { aiTick, aiPeace } from './ai.js';
 import { refreshCountryCache } from './state.js';
+import { processConstruction } from './industry.js';
+import { aiEconomy } from './ai.js';
 
 export function tick(game) {
   const { state, map, rules } = game;
@@ -18,6 +20,7 @@ export function tick(game) {
   resolveBattles(state, map, rules);
   processSieges(state, map, rules);
   dailyRecovery(state, rules);
+  processConstruction(state, map, rules);
   const t1 = typeof performance !== 'undefined' ? performance.now() : 0;
   aiTick(state, map, rules);
   const t2 = typeof performance !== 'undefined' ? performance.now() : 0;
@@ -26,6 +29,7 @@ export function tick(game) {
     monthlyEconomy(state, map, rules);
     monthlyMilitary(state, map, rules);
     aiPeace(state, map, rules);
+    aiEconomy(state, map, rules);
     refreshCountryCache(state, map, rules);
   }
   const t3 = typeof performance !== 'undefined' ? performance.now() : 0;

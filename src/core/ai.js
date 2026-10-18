@@ -89,12 +89,27 @@ function pickUnitType(state, rules, c) {
 // share of upkeep, then a role in it.
 const SEA_MIX = [['capital', 3], ['screen', 4], ['nsub', 2], ['sub', 2], ['carrier', 1]];
 const AIR_MIX = [['fighter', 5], ['attack', 3], ['drone', 2], ['bomber', 1]];
+// Upkeep by domain and units by role for every country, built once a day (the AI asks per country).
+const forceCache = new WeakMap();
+function forceTotals(state, rules) {
+  let f = forceCache.get(state);
+  if (f && f.day === state.day && f.n === state.armies.length + state.fleets.length * 1e4 + state.wings.length * 1e8) return f;
+  const U = rules.units, C = state.countries.length;
+  f = { day: state.day, n: state.armies.length + state.fleets.length * 1e4 + state.wings.length * 1e8, land: new Float64Array(C), sea: new Float64Array(C), air: new Float64Array(C), roles: { sea: state.countries.map(() => ({})), air: state.countries.map(() => ({})) } };
+  for (const a of state.armies) for (const t in a.units) f.land[a.owner] += a.units[t] * U[t].upkeep;
+  for (const [list, d] of [[state.fleets, 'sea'], [state.wings, 'air']]) {
+    for (const x of list) {
+      const r = f.roles[d][x.owner];
+      for (const t in x.units) { f[d][x.owner] += x.units[t] * U[t].upkeep; r[U[t].role] = (r[U[t].role] || 0) + x.units[t]; }
+    }
+  }
+  forceCache.set(state, f);
+  return f;
+}
+
 function pickDomain(state, rules, c) {
-  const up = { land: 0, sea: 0, air: 0 };
-  const U = rules.units;
-  for (const a of state.armies) if (a.owner === c.idx) for (const t in a.units) up.land += a.units[t] * U[t].upkeep;
-  for (const f of state.fleets) if (f.owner === c.idx) for (const t in f.units) up.sea += f.units[t] * U[t].upkeep;
-  for (const w of state.wings) if (w.owner === c.idx) for (const t in w.units) up.air += w.units[t] * U[t].upkeep;
+  const F = forceTotals(state, rules);
+  const up = { land: F.land[c.idx], sea: F.sea[c.idx], air: F.air[c.idx] };
   const tot = up.land + up.sea + up.air || 1;
   const dev = Math.min(1, c.cache.avgDev / 60);
   const want = { land: 1, sea: c.cache.ports > 0 ? 0.25 + 0.15 * dev + (c.cache.ports / Math.max(1, c.cache.provinces) > 0.6 ? 0.15 : 0) : 0, air: 0.3 * dev };
@@ -109,8 +124,7 @@ function pickDomain(state, rules, c) {
   const b = bestUnits(state, rules, c.idx, best);
   const mix = best === 'sea' ? SEA_MIX : AIR_MIX;
   // the role most below its weight in the current force
-  const have = {};
-  for (const x of best === 'sea' ? state.fleets : state.wings) if (x.owner === c.idx) for (const t in x.units) have[U[t].role] = (have[U[t].role] || 0) + x.units[t];
+  const have = F.roles[best][c.idx];
   let pick = null, pv = Infinity;
   for (const [role, w] of mix) {
     if (!b[role]) continue;
@@ -126,11 +140,12 @@ function manageRecruitment(state, map, rules, c) {
   if (!L) return;
   const war = isAtWar(state, c.idx);
   const budget = L.taxRevenue * (1 - c.civilShare - (c.research?.share ?? 0)) + L.requisition - L.interest;
+  const share = war ? 1.05 : rules.balance.ai.targetArmyShare;
+  if (L.military >= budget * share) return; // no room for any new unit: skip choosing one
   const { domain, type } = pickDomain(state, rules, c);
   if (!type) return;
   const cost = recruitCost(state, rules, c.idx, type);
   const upkeep = rules.units[type].upkeep * c.cache.priceLevel;
-  const share = war ? 1.05 : rules.balance.ai.targetArmyShare;
   if (L.military + upkeep > budget * share) return;
   if (c.treasury < cost.money * (war ? 1 : 1.5)) return;
   let site = c.capital;

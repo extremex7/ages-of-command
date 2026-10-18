@@ -39,9 +39,11 @@ export function initStrategic(state, map, rules, scenario) {
   }
 }
 
+// The largest programme the starting arsenal already meets: it is kept (warheads above a programme's
+// target are only dismantled under arms control), not built up further.
 function programmeFor(n) {
   let best = 'minimal';
-  for (const [k, v] of Object.entries(PROGRAMMES)) if (v && n >= v * 0.6) best = k;
+  for (const [k, v] of Object.entries(PROGRAMMES)) if (v && n >= v) best = k;
   return best;
 }
 

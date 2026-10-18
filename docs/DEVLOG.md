@@ -193,3 +193,103 @@ Rules: [TECHNOLOGY.md](TECHNOLOGY.md), [SCENARIOS.md](SCENARIOS.md).
 - There is no scenario editor or colonisation.
 - Navy, air and space technologies have only general effects until Milestone 6.
 - The war AI ends the Great War early.
+
+## 2026-10-18 — Session 5: Milestone 6, navies, air forces, logistics and strategic capabilities
+
+**Built.**
+- **Sea zones**: `tools/build_seas.py` rasterises the oceans on a 0.5° grid and grows 99 named
+  zones from seed points by sailing distance. It adds 200 links with 8 hand-listed straits and
+  canals (chokepoint provinces; Suez from 1869, Panama from 1914), ports for 986 coastal
+  provinces and the zone of each of the 444 straits and sea lanes. The grid is saved for map
+  picking and the naval map mode.
+- **Navies** (`naval.js`): 16 ship types in 6 roles. Fleets sail, dock and repair. Naval battles
+  sink ships; submarines avoid battle unless detected. Sea control and blockades, commerce
+  raiding that cuts each coastal country's trade factor, carriers, shore bombardment, and armies
+  that embark, sail and land, losing transports in hostile waters. Enemy-held waters close
+  straits and sea lanes to land armies.
+- **Air** (`air.js`): 12 aircraft types in 4 roles. Wings sit at bases and have a range and a
+  mission. Air superiority decides how much close air support reaches a land battle; strategic
+  bombing is monthly, against interceptors.
+- **Logistics** (`supply.js`): per-country supply maps (home land, allies, depots, sea supply),
+  overcrowding, attrition, and effects on combat, organisation and reinforcement; depots for
+  the player and the AI.
+- **Strategic** (`strategic.js`): nuclear programmes, warheads and missiles; delivery by
+  missile, missile submarine or bomber; interception; strikes with fallout and nuclear winter;
+  launch on warning; deterrence in AI war decisions; an arms-control treaty. Also cyber
+  operations, four satellite kinds with effects, anti-satellite weapons and debris, and
+  (fictional) orbital stations and off-world settlements.
+- **Data**: 31 new units (16 ships, 12 aircraft, 3 fictional land units, each with a `domain`)
+  and 13 new technologies (4 fictional). 19 strategic events and 64 events for the two future
+  scenarios. Starting forces for every scenario come from `tools/forces/*.csv` through
+  `tools/build_forces.mjs`.
+- **Scenarios**: Flashpoint 2035 and Orbital Age 2085, both speculative fiction, built with a new
+  "base" mode of `tools/build_history.mjs` on top of the Modern World.
+- **UI**: an Army/Navy/Air recruitment switch, fleet and air wing cards, right-click orders for
+  fleets and wings, forces drawn on the map, supply bars, depot controls, a Strategic tab, a
+  nuclear strike confirmation, and Naval and Supply map modes.
+- **Saves**: format v6 with a migration from v5.
+
+Rules: [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md), [STRATEGIC.md](STRATEGIC.md).
+
+**Decisions.**
+- Sea zones are derived from the coastline rather than drawn by hand, so they line up with the
+  province map. The 0.5° grid is coarse, so narrow straits and canals are listed by hand with
+  the provinces that command them.
+- Armies need no transport ships. Sea control decides whether they can cross, which keeps the
+  model simple and still makes navies matter for invasions.
+- One ship or aircraft unit stands for a group (4 destroyers, 24 fighters) so real order-of-battle
+  counts fit the game's unit scale. Starting forces are capped at 15% of a typical tax revenue,
+  as land armies were capped in Milestone 5.
+- The AI recruits in whichever domain (land, sea, air) is furthest below its target share of
+  upkeep, then the role most below its weight in a fixed mix.
+- Nuclear use by the AI is limited to survival: heavy occupation or a lost capital, with far
+  lower odds against an enemy that can retaliate. Deterrence works through the war decision: the
+  AI will not attack a nuclear power without a deterrent of its own.
+- Starting arsenals keep the largest programme level they already meet, so they are not built
+  up toward the next level. Only arms control dismantles warheads.
+- Starting satellites are capped at 12 per kind (three times full coverage). Beyond full
+  coverage extra satellites only add upkeep.
+- Fictional technologies, units and scenarios are flagged in the data and labelled in docs and
+  in game text. Fictional technologies are given at a start only in scenarios marked `fictional`.
+
+**Problems found and fixed.**
+- **History builder (Milestone 5)**: a variable named `cap`, the upkeep cap, shadowed the
+  capital. The first army stack of every historical country was placed at a bogus province id
+  (the upkeep number) instead of the capital. Fixed while factoring the army code out into
+  `placeArmy`; the upkeep cap is now `limit`.
+- **Token units**: tiny countries always got one line unit even when its upkeep was far beyond
+  what they could pay. They now get none when one unit costs more than 1.5× their upkeep limit.
+- **Very large air forces** (thousands of drones in 2085) became hundreds of small wings and slowed
+  the daily air pass. The forces builder now packs each type into at most about 6 wings
+  (wing size max(6, ⌈units ÷ 6⌉)).
+- **Supply after reload**: supply maps were first kept in a cache outside the state. A reloaded
+  game rebuilt them mid-period from changed facts and drifted from the running game. The maps
+  are now quantised to bytes and saved in `state.supplyCache`.
+- **Country caches on load**: `deserialize` rebuilt the country caches on every load, and the AI
+  reads them, so a game reloaded mid-month diverged from the running one. Caches are now kept
+  from the save and rebuilt only when a migration, a map extension or a technology remap makes
+  them stale.
+- **Save validation** stripped every army path node at or above the province count. Those nodes
+  are sea zones, so armies at sea lost their route on reload. The save/load determinism test with
+  armies at sea found it; validation now keeps zone nodes and checks them against the zone count.
+
+**Results.**
+- **Tests**: 118 pass, 39 of them new. They cover sea zones and ports, canals and chokepoints,
+  fleet movement and docking, naval battles and peace, blockades, submarine raiding, amphibious
+  movement and transport losses, close air support, air superiority, range, missions, strategic
+  bombing and rebasing, supply (depth, corridors, attrition, depots, crowding), nuclear strikes,
+  launch on warning, arms control, cyber odds, satellites, ASAT and debris, nuclear winter, AI
+  deterrence, strategic events, determinism at sea and in the air, save/load mid-war with armies
+  at sea, the v5 → v6 migration, save validation of forces, and the future scenarios.
+- **Browser check**: `tests/browser/m6.mjs` covers the new interface in the Modern World and both
+  future scenarios.
+- **Performance**: about 2.4 ms per simulated day in the Modern World, against 1.46 ms for
+  Milestone 5 in the same session. At 4× CPU throttle in the browser, map interaction stays at
+  30 FPS or above, but maximum-speed simulation roughly halves (PERFORMANCE.md).
+
+**Not done (honest gaps).**
+- There are no transport ships or capacity, no naval mines and no aircraft attacking fleets.
+- The AI plans no amphibious invasions and builds no ballistic missile submarines.
+- Supply has no goods cost.
+- Wing experience is never gained, and warheads are not assigned to launchers.
+- Simulation throughput in the browser at maximum speed is about half of Milestone 5's.

@@ -72,7 +72,7 @@ function helpDialog(cl) {
 export function reportDialog(cl, id) {
   const r = cl.state.reports.find((x) => x.id === id);
   if (!r) return;
-  open(cl, h('h2', `Battle of ${r.provName}`), h('p.muted', `${formatDate(r.day)} · ${r.days} days`),
+  open(cl, h('h2', r.naval ? `Naval battle in the ${r.provName}` : `Battle of ${r.provName}`), h('p.muted', `${formatDate(r.day)} · ${r.days} days`),
     kvbox( 'Attackers', r.attackers.join(', '), 'Defenders', r.defenders.join(', '), 'Winner', r.winner === 'att' ? 'Attackers' : 'Defenders',
       'Attacker losses', people(r.casualties[0]), 'Defender losses', people(r.casualties[1]), r.surrendered ? 'Surrendered (encircled)' : '', r.surrendered ? people(r.surrendered) : ''),
     h('h4', 'Why'), h('ul', r.factors.map((f) => h('li', f))));

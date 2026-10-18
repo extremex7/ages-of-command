@@ -1,6 +1,7 @@
 # Performance
 
-All numbers below were measured on 2026-10-18 after Milestone 5 (research, eras and historical scenarios; earlier milestones' columns kept for comparison), in the build container (4 vCPU cloud VM, headless
+All numbers below were measured on 2026-10-18; the Milestone 6 section is the newest, earlier
+milestones' sections are kept for comparison. Measured, in the build container (4 vCPU cloud VM, headless
 Chromium with software rasterisation, 1366×768, device scale 1). They are **not** measurements on
 real minimum-spec hardware; the 4× CPU-throttled run is an emulation of a slower machine.
 
@@ -11,6 +12,43 @@ npm run bench                                   # simulation only (Node)
 npm start & node tests/browser/bench.mjs        # browser, per profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs     # emulated 4x slower CPU
 ```
+
+## Milestone 6 (simulation, Node, seed `bench-1`)
+
+`node tools/bench.mjs 3 1` (3 years, AI aggression 1), Modern World, same machine and session:
+
+| Build | Time per game day | Daily tick p50 / p99 | Monthly tick p50 |
+| --- | --- | --- | --- |
+| Milestone 6 | ~2.4 ms | ~1.4 / ~6.7 ms | ~19.8 ms |
+| Milestone 5, re-measured in the same session | 1.46 ms | 0.68 ms (p50) | — |
+| Orbital Age 2085, M6, AI aggression 2 | ~1.96 ms | — | — |
+
+Milestone 6 costs about 0.9 ms per game day (+65%) in the Modern World and roughly doubles the
+daily tick. The new daily work is fleet movement and naval battles, per-zone sea presence, air
+support in every land battle, and the supply pass for every army (supply maps are flood fills per
+country, rebuilt every 5 days or when relations or depots change). The monthly tick adds
+blockades, strategic bombing and the strategic pass (warheads, cyber, satellites, space and the
+strategic AI). Measures already taken: supply maps are cached and quantised, relations are looked
+up once per map instead of per edge, sea presence is cached per day, the AI's force totals are
+computed once a day for all countries, very large starting air forces are packed into fewer,
+larger wings (Orbital Age 2085 has 363 wings, not thousands), and starting satellites are capped
+at 12 per kind. Save sizes below have not been re-measured for Milestone 6.
+
+Browser after M6 (Modern World, `CPU_THROTTLE=4 node tests/browser/bench.mjs`, headless
+Chromium, 1366×768), two M6 runs against one M5 run on the same machine:
+
+| Profile (4× slower CPU) | FPS while panning/zooming, M6 runs | M5 | p95 frame, M6 runs | M5 | Max-speed sim (5 s), M6 runs | M5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Low | 33.3 / 43.4 | 46.5 | 73 / 46 ms | 41 ms | 181 / 266 days | 327 days |
+| Balanced | 35.0 / 30.4 | 35.3 | — | — | — | — |
+| High | 30.8 / 31.6 | 35.5 | — | — | — | — |
+
+JS heap 23–36 MB; 0 frames while paused and idle. Runs are noisy, but Milestone 6 roughly halves
+simulation throughput at maximum speed and costs some frame rate. Map interaction stays at or
+above 30 FPS in every profile in this emulation.
+
+Note that the M5 build measured 1.08 ms per day in the earlier session and 1.46 ms in this one:
+compare numbers from the same session only.
 
 ## Milestone 5 (simulation, Node, seed `bench-1`, AI aggression 1, 10 years)
 
@@ -100,18 +138,20 @@ now ignore relation changes (`src/ui/client.js`).
 
 | Item | Size |
 | --- | --- |
-| Whole game (code + data, uncompressed, without screenshots) | ~5.1 MB |
+| Whole game (code + data, uncompressed, without screenshots) | ~6.2 MB |
 | `data/map/world.json` | 3.0 MB (0.9 MB gzip; the dev server gzips) |
-| Modern World scenario (incl. economy and diplomacy) | 275 KB (49 KB gzip) |
-| Historical scenarios (117, 1914, 1936, 1962) | 80–222 KB each (16–44 KB gzip) |
-| Technology tree | 46 KB (9 KB gzip) |
+| `data/map/seas.json` (Milestone 6) | 71 KB (22 KB gzip) |
+| Modern World scenario (incl. economy, diplomacy and, since M6, forces) | 303 KB (52 KB gzip; 275 KB / 49 KB in M5) |
+| Historical scenarios (117, 1914, 1936, 1962) | 81–247 KB each (16–46 KB gzip) |
+| Future scenarios (2035, 2085) | 327 KB and 351 KB (55 KB and 54 KB gzip) |
+| Technology tree | 50 KB (10 KB gzip) |
 
 ## Provisional targets and status
 
 | Target | Status |
 | --- | --- |
-| ≥30 FPS map interaction on minimum spec | Met in emulation (45 FPS low profile at 4× throttle); needs real-hardware validation |
+| ≥30 FPS map interaction on minimum spec | Met in emulation (M6: 30–43 FPS at 4× throttle, the lowest run 30.4 FPS); needs real-hardware validation |
 | Idle CPU ≈ 0 when paused | Met (no frames scheduled) |
-| Install < 500 MB | Met (~5 MB without screenshots) |
-| Modest RAM | Met (~18–68 MB JS heap in the browser) |
+| Install < 500 MB | Met (~6 MB without screenshots) |
+| Modest RAM | Met (~18–68 MB JS heap in the browser; 23–36 MB at 4× throttle in M6) |
 | Fast-forward without freezing UI | Met (ticks run within a per-frame time budget) |

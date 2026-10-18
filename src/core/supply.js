@@ -4,12 +4,10 @@
 // step and faster where infrastructure (roads and rail) is poor. Too many troops in one
 // province exceed what it can feed. Low supply cuts combat strength and organisation recovery
 // and causes attrition. Constants: the `supply` section of balance.json; docs/LOGISTICS.md.
-import { friendly, atWar, canEnter, isAtWar } from './relations.js';
+import { friendly, atWar, hasAccess, isAtWar } from './relations.js';
 import { portZonesOf } from './mapdata.js';
 import { hostileSea, laneOpen, zoneBalance } from './naval.js';
 import { unitCount, log, aiLog } from './state.js';
-
-const mapCache = new WeakMap();
 
 // Supply quality of a province on the country's own network.
 export function homeSupply(rules, infra) {
@@ -17,43 +15,80 @@ export function homeSupply(rules, infra) {
   return Math.min(1, S.homeBase + S.homePerInfra * infra);
 }
 
-// Supply level by province for country k (Float32Array; 0 where unreachable), rebuilt every few
-// days or when borders or relations change.
+// Supply level by province for country k, 0 where unreachable. Maps are rebuilt every few days,
+// when relations change (a new war, an alliance) or when a depot is built or removed; captured
+// provinces and sea control are read when a map is built, so they show at the next refresh. The maps are kept in state.supplyCache, quantised
+// to bytes, and saved with the game, so a reloaded game reads the same values the running one
+// would (a fresh rebuild after loading could differ from a map built earlier in the same period).
 export function supplyMap(state, map, rules, k) {
   const S = rules.balance.supply;
-  let cache = mapCache.get(state);
-  const key = `${Math.floor(state.day / S.refreshDays)}:${state.mapVersion || 0}:${state.relVersion || 0}:${state.fleetVer || 0}`;
-  if (!cache || cache.key !== key) { cache = { key, by: new Map() }; mapCache.set(state, cache); }
-  let m = cache.by.get(k);
-  if (m) return m;
+  const bucket = Math.floor(state.day / S.refreshDays), mv = state.supplyVer || 0, rv = state.relVersion || 0;
+  let cache = state.supplyCache;
+  if (!cache || cache.bucket !== bucket || cache.mv !== mv || cache.rv !== rv) cache = state.supplyCache = { bucket, mv, rv, maps: {} };
+  let q = cache.maps[k];
+  if (!q) q = cache.maps[k] = quantise(buildSupplyMap(state, map, rules, k));
+  return q;
+}
+
+// For display (the supply map mode): the current map if the simulation has built one, otherwise
+// a fresh one that is not stored, so looking at the map never changes what the simulation sees.
+export function supplyView(state, map, rules, k) {
+  const S = rules.balance.supply, cache = state.supplyCache;
+  const fresh = cache && cache.bucket === Math.floor(state.day / S.refreshDays) && cache.mv === (state.supplyVer || 0) && cache.rv === (state.relVersion || 0);
+  return (fresh && cache.maps[k]) || quantise(buildSupplyMap(state, map, rules, k));
+}
+
+// Byte levels (0..255) as a 0..1 lookup; built once.
+export const SUPPLY_LEVEL = Float32Array.from({ length: 256 }, (_, i) => i / 255);
+
+function quantise(m) {
+  const q = new Uint8Array(m.length);
+  for (let i = 0; i < m.length; i++) q[i] = Math.round(Math.min(1, m[i]) * 255);
+  return q;
+}
+
+function buildSupplyMap(state, map, rules, k) {
+  const S = rules.balance.supply;
   const N = map.count, P = state.prov;
-  m = new Float32Array(N);
+  const m = new Float32Array(N);
+  // k's relation to every country, looked up once instead of per province and edge
+  const C = state.countries.length, fr = new Uint8Array(C + 1), en = new Uint8Array(C + 1), acc = new Uint8Array(C + 1);
+  for (let c = 0; c < C; c++) { fr[c] = friendly(state, k, c) ? 1 : 0; en[c] = atWar(state, k, c) ? 1 : 0; acc[c] = c === k || hasAccess(state, k, c) ? 1 : 0; }
+  const isFr = (c) => c >= 0 && fr[c] === 1, isEn = (c) => c >= 0 && en[c] === 1;
+  const enter = (v) => {
+    const own = P.owner[v], ctl = P.controller[v];
+    if (own < 0) return false;
+    if (ctl === k || own === k || isEn(ctl) || isEn(own)) return true;
+    return ctl >= 0 && acc[ctl] === 1 && acc[own] === 1;
+  };
   // sources: own and allied home land, depots, open ports
   const queue = [];
   const push = (i, v) => { if (v > m[i] + 1e-6) { m[i] = v; queue.push(i); } };
   for (const i of map.ids) {
     const ctl = P.controller[i];
-    if (ctl < 0 || !friendly(state, k, ctl) || P.owner[i] !== ctl) continue;
-    if (ctl !== k && atWar(state, k, ctl)) continue;
+    if (!isFr(ctl) || P.owner[i] !== ctl) continue;
+    if (ctl !== k && isEn(ctl)) continue;
     push(i, homeSupply(rules, P.infra[i]) * (ctl === k ? 1 : S.alliedSource));
   }
   for (const d of state.countries[k].depots || []) if (P.controller[d] === k) push(d, Math.max(m[d], S.depot));
   // sea supply: a coast on open water is reachable from home ports
   const hasPort = state.countries[k].cache?.ports > 0;
   if (hasPort && map.sea.Z) {
+    const zoneVal = new Float32Array(map.sea.Z);
+    for (let z = 0; z < map.sea.Z; z++) {
+      if (hostileSea(state, map, rules, k, z)) continue;
+      zoneVal[z] = S.sea + (zoneBalance(state, map, rules, k, z).own > 0 ? S.seaEscorted : 0);
+    }
     for (const i of map.ids) {
       if (m[i] >= S.sea) continue;
-      const ctl = P.controller[i];
-      if (ctl < 0 || (!friendly(state, k, ctl) && !atWar(state, k, ctl))) continue;
       const zs = portZonesOf(map, i);
       if (!zs.length) continue;
+      const ctl = P.controller[i];
+      const enemy = isEn(ctl);
+      if (ctl < 0 || (!isFr(ctl) && !enemy)) continue;
       let best = 0;
-      for (const z of zs) {
-        if (hostileSea(state, map, rules, k, z)) continue;
-        const b = zoneBalance(state, map, rules, k, z);
-        best = Math.max(best, S.sea + (b.own > 0 ? S.seaEscorted : 0));
-      }
-      if (best > 0) push(i, best * (atWar(state, k, ctl) ? S.enemyStep : 1));
+      for (const z of zs) if (zoneVal[z] > best) best = zoneVal[z];
+      if (best > 0) push(i, best * (enemy ? S.enemyStep : 1));
     }
   }
   // spread: through friendly-controlled or neutral (with access) land, one step into enemy land
@@ -61,18 +96,17 @@ export function supplyMap(state, map, rules, k) {
     const u = queue[qi];
     const vu = m[u];
     if (vu < S.floor) continue;
-    if (atWar(state, k, P.controller[u])) continue; // supply does not pass through enemy-held land
+    if (isEn(P.controller[u])) continue; // supply does not pass through enemy-held land
     for (let e = map.adjStart[u]; e < map.adjStart[u + 1]; e++) {
       const v = map.adj[e];
       if (map.adjKind[e] > 0 && !laneOpen(state, map, rules, k, e)) continue;
       const ctl = P.controller[v];
-      const enemy = atWar(state, k, ctl);
-      if (!enemy && ctl >= 0 && !friendly(state, k, ctl) && !canEnter(state, k, v)) continue;
+      const enemy = isEn(ctl);
+      if (!enemy && ctl >= 0 && !isFr(ctl) && !enter(v)) continue;
       const step = (S.stepBase + S.stepPerInfra * P.infra[v]) * (map.adjKind[e] > 0 ? S.waterStep : 1) * (enemy ? S.enemyStep : 1);
       push(v, vu * step);
     }
   }
-  cache.by.set(k, m);
   return m;
 }
 
@@ -85,7 +119,7 @@ export function armySupply(state, map, rules, a, byLoc = null) {
   let lvl;
   const ctl = P.controller[a.loc];
   if (ctl === a.owner && P.owner[a.loc] === a.owner && !isAtWar(state, a.owner)) lvl = homeSupply(rules, P.infra[a.loc]);
-  else lvl = supplyMap(state, map, rules, a.owner)[a.loc];
+  else lvl = SUPPLY_LEVEL[supplyMap(state, map, rules, a.owner)[a.loc]];
   return Math.max(S.minimum, lvl * crowding(state, rules, a, byLoc ? byLoc.get(a.loc) : state.armies));
 }
 
@@ -155,7 +189,7 @@ export function buildDepot(state, map, rules, k, p) {
   const c = state.countries[k];
   c.treasury -= depotCost(state, rules, k);
   (c.depots ||= []).push(p);
-  state.mapVersion = (state.mapVersion || 0) + 1;
+  state.supplyVer = (state.supplyVer || 0) + 1;
   return null;
 }
 
@@ -164,7 +198,7 @@ export function removeDepot(state, k, p) {
   const i = (c.depots || []).indexOf(p);
   if (i < 0) return 'No depot there';
   c.depots.splice(i, 1);
-  state.mapVersion = (state.mapVersion || 0) + 1;
+  state.supplyVer = (state.supplyVer || 0) + 1;
   return null;
 }
 
@@ -174,12 +208,13 @@ export function monthlyDepots(state, map, rules) {
     if (!c.depots?.length) continue;
     const before = c.depots.length;
     c.depots = c.depots.filter((p) => state.prov.controller[p] === c.idx);
+    if (c.depots.length < before) state.supplyVer = (state.supplyVer || 0) + 1;
     if (c.depots.length < before && c.idx === state.player) log(state, 'military', 'A supply depot was lost to the enemy.');
   }
 }
 
 export function aiDepots(state, map, rules, c) {
-  if (!isAtWar(state, c.idx)) { if (c.depots?.length) c.depots = []; return; }
+  if (!isAtWar(state, c.idx)) { if (c.depots?.length) { c.depots = []; state.supplyVer = (state.supplyVer || 0) + 1; } return; }
   const S = rules.balance.supply;
   // the worst-supplied army in enemy territory: put a depot in the controlled province nearest it
   let worst = null;

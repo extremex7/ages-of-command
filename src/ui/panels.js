@@ -16,6 +16,9 @@ import { economyTab, industryTab, provinceEconomy, embargoButton } from './econo
 import { diplomacyTab, relationsSection } from './diplomacy_ui.js';
 import { governmentTab } from './government_ui.js';
 import { govType } from '../core/government.js';
+import { portZonesOf } from '../core/mapdata.js';
+import { fleetsSection, wingsSection, provinceForces, supplyLine } from './forces_ui.js';
+import { strategicTab, nuclearButton } from './strategic_ui.js';
 
 export const TABS = [
   { id: 'country', name: 'Nation', key: 'n', tip: 'Overview of the selected country, or yours, and your relations with it.' },
@@ -23,7 +26,8 @@ export const TABS = [
   { id: 'economy', name: 'Economy', key: 'e', tip: 'Budget, taxes, tariffs, indicators and history.' },
   { id: 'industry', name: 'Industry', key: 'u', tip: 'Goods, production, construction and trade.' },
   { id: 'research', name: 'Research', key: 'a', tip: 'Technologies, research spending and the technology tree.' },
-  { id: 'military', name: 'Military', key: 'm', tip: 'Recruit units, manage armies, battle reports.' },
+  { id: 'military', name: 'Military', key: 'm', tip: 'Recruit units; manage armies, fleets and air wings; battle reports.' },
+  { id: 'strategic', name: 'Strategic', key: 'z', tip: 'Nuclear weapons, cyber operations, satellites and space.' },
   { id: 'diplomacy', name: 'Diplomacy', key: 'd', tip: 'Proposals, wars and peace, treaties, organisations, relations.' },
   { id: 'log', name: 'Events', key: 'l', tip: 'Notification history.' },
   { id: 'ai', name: 'AI', key: 'i', tip: 'AI decisions with reasons, and performance timings.' },
@@ -39,7 +43,7 @@ function bar(v, cls = '') {
 }
 
 export function renderPanel(cl, el) {
-  const fn = { country: countryTab, government: governmentTab, economy: economyTab, industry: industryTab, research: researchTab, military: militaryTab, diplomacy: diplomacyTab, log: logTab, ai: aiTab }[cl.tab];
+  const fn = { country: countryTab, government: governmentTab, economy: economyTab, industry: industryTab, research: researchTab, military: militaryTab, strategic: strategicTab, diplomacy: diplomacyTab, log: logTab, ai: aiTab }[cl.tab];
   mount(el, fn(cl));
 }
 
@@ -86,30 +90,45 @@ function countryTab(cl) {
     mine && h('p.note', 'Tip: right-click a province with armies selected to move them. Space pauses, keys 1–5 set speed.'));
 }
 
+const DOMAINS = [['land', 'Army'], ['sea', 'Navy'], ['air', 'Air']];
+
 function militaryTab(cl) {
   const s = cl.state, me = s.player, map = cl.game.map, R = cl.game.rules;
   if (me < 0) return h('div', h('p.muted', 'Observer mode.'), reportsList(cl));
   const c = s.countries[me];
+  const domain = cl.view.milDomain || 'land';
   const sel = cl.view.selected;
-  const site = sel >= 0 && s.prov.owner[sel] === me && s.prov.controller[sel] === me ? sel : c.capital;
-  const usable = Object.keys(R.units).filter((t) => !s.tech || canUseUnit(s, R, me, t));
-  const newest = new Set(Object.values(s.tech ? bestUnits(s, R, me) : {}));
-  const locked = Object.keys(R.units).filter((t) => !usable.includes(t));
-  const recruitRow = usable.map((t) => [t, R.units[t]]).map(([t, u]) => {
+  const ok = (p) => p >= 0 && s.prov.owner[p] === me && s.prov.controller[p] === me && (domain !== 'sea' || portZonesOf(map, p).length > 0);
+  let site = ok(sel) ? sel : ok(c.capital) ? c.capital : -1;
+  if (site < 0 && domain === 'sea') site = map.ids.find((i) => ok(i)) ?? -1;
+  const inDomain = (t) => (R.units[t].domain || 'land') === domain;
+  const usable = Object.keys(R.units).filter((t) => inDomain(t) && (!s.tech || canUseUnit(s, R, me, t)));
+  const newest = new Set(Object.values(s.tech ? bestUnits(s, R, me, domain) : {}));
+  const locked = Object.keys(R.units).filter((t) => inDomain(t) && !usable.includes(t));
+  // warships and aircraft: only the newest type of each role unless asked (a modern navy does not build galleys)
+  const showOld = domain === 'land' || cl.view.showOldUnits;
+  const listed = showOld ? usable : usable.filter((t) => newest.has(t));
+  const recruitRow = listed.map((t) => [t, R.units[t]]).map(([t, u]) => {
     const cost = recruitCost(s, R, me, t);
-    const why = canRecruit(s, map, R, me, site, t);
+    const why = site < 0 ? 'No coastal province with a port' : canRecruit(s, map, R, me, site, t);
+    const stats = domain === 'land' ? `Attack ${u.attack}, defence ${u.defense}, speed ${u.speed} km/day, ${u.men.toLocaleString()} men`
+      : domain === 'sea' ? `Attack ${u.attack}, defence ${u.defense}${u.raid ? `, raiding ${u.raid}` : ''}${u.asw ? `, anti-submarine ${u.asw}` : ''}, ${u.speed} km/day, one unit = ${u.group || 1} ships`
+        : `Air ${u.air || 0}, ground attack ${u.attack || 0}${u.bomb ? `, bombing ${u.bomb}` : ''}, range ${(u.range || 0).toLocaleString()} km, one unit = ${u.group || 1} aircraft`;
     return h('tr',
-      h('td', { tip: `${u.name} (${u.role || 'line'})\nAttack ${u.attack}, defence ${u.defense}, speed ${u.speed} km/day, ${u.men.toLocaleString()} men\nUpkeep ${money(u.upkeep * c.cache.priceLevel)}/month` }, u.name, newest.has(t) ? null : h('span.muted', ' (outdated)')),
+      h('td', { tip: `${u.name} (${u.role || 'line'})${u.fictional ? ' — fictional technology' : ''}\n${stats}\nUpkeep ${money(u.upkeep * c.cache.priceLevel)}/month` }, u.name, newest.has(t) ? null : h('span.muted', ' (outdated)')),
       h('td.n', money(cost.money)), h('td.n', people(cost.men)), h('td.n', cost.days + 'd'),
       h('td', h('button', { disabled: !!why, tip: why || `Recruit in ${map.name[site]}`, on: { click: () => { const e = recruit(s, map, R, me, site, t); if (e) cl.toast(e, true); cl.uiDirty = true; cl.requestFrame(); } } }, '+')));
   });
   const queue = s.recruit.filter((r) => r.owner === me);
   const armies = s.armies.filter((a) => a.owner === me);
   const selected = armies.filter((a) => cl.view.selectedArmies.has(a.id));
+  const siteNote = domain === 'sea' ? 'Shipyard' : domain === 'air' ? 'Airfield' : 'Training site';
   return h('div',
+    h('div.row', DOMAINS.map(([d, n]) => h('button' + (d === domain ? '.on' : ''), { on: { click: () => { cl.view.milDomain = d; cl.uiDirty = true; cl.requestFrame(); } } }, n))),
     h('h3', 'Recruit'),
-    h('div.muted', `Training site: ${site >= 0 ? map.name[site] : 'none'} (select one of your provinces to change)`),
+    h('div.muted', `${siteNote}: ${site >= 0 ? map.name[site] : 'none'} (select one of your provinces to change${domain === 'sea' ? '; must be coastal' : ''})`),
     h('table.t', h('tr', h('th', 'Unit'), h('th.n', 'Cost'), h('th.n', 'Men'), h('th.n', 'Time'), h('th', '')), recruitRow),
+    listed.length < usable.length && h('a', { href: '#', on: { click: (e) => { e.preventDefault(); cl.view.showOldUnits = true; cl.uiDirty = true; cl.requestFrame(); } } }, `Show ${usable.length - listed.length} older types`),
     locked.length > 0 && h('div.muted', { style: { marginTop: '0.3em', fontSize: '0.9em' } }, 'Not yet available: ' + locked.map((t) => `${R.units[t].name} (${R.tech.list[R.tech.unitTech[t]].name})`).join(', ')),
     queue.length > 0 && h('div.muted', { style: { marginTop: '0.4em' } }, `In training: ${queue.map((r) => `${R.units[r.type].short} ${r.days}d`).join(', ')}`),
     h('h3', { style: { marginTop: '1em' } }, `Armies (${armies.length})`),
@@ -118,8 +137,10 @@ function militaryTab(cl) {
       h('button', { disabled: selected.length !== 1, on: { click: () => { const e = splitArmy(s, selected[0].id); if (e) cl.toast(e, true); cl.uiDirty = true; } } }, 'Split'),
       h('button', { on: { click: () => { for (const a of selected) { a.path = []; a.prog = 0; } cl.uiDirty = true; } } }, 'Stop'),
       modernizeButton(cl, selected),
-      h('span.muted', 'Right-click the map to move')),
+      h('span.muted', 'Right-click the map to move; overseas targets are reached by sea')),
     armies.length ? armies.map((a) => armyCard(cl, a)) : h('p.muted', 'No armies.'),
+    fleetsSection(cl),
+    wingsSection(cl),
     reportsList(cl));
 }
 
@@ -140,13 +161,18 @@ function armyCard(cl, a) {
   const sel = cl.view.selectedArmies.has(a.id);
   let status = 'Holding';
   if (a.battle) status = 'In battle!';
-  else if (a.path.length) status = `Moving to ${map.name[a.path[a.path.length - 1]]} (${a.path.length} steps)`;
+  else if (a.path.length) {
+    const dest = a.path[a.path.length - 1];
+    const sea = a.path.filter((n) => n >= map.count).length;
+    status = `Moving to ${dest >= map.count ? 'the ' + map.sea.zones[dest - map.count].name : map.name[dest]} (${a.path.length} steps${sea ? `, ${sea} by sea` : ''})`;
+  }
   else if (s.prov.siegeBy[a.loc] === a.owner) status = `Besieging (${pct(s.prov.siege[a.loc])})`;
   const u = a.units;
   return h('div.army-card' + (sel ? '.sel' : ''), { on: { click: (e) => {
-    if (!e.shiftKey) cl.view.selectedArmies.clear();
+    if (!e.shiftKey) { cl.view.selectedArmies.clear(); cl.view.selectedFleets.clear(); cl.view.selectedWings.clear(); }
     cl.view.selectedArmies.add(a.id);
-    cl.renderer.centerOn(map.x[a.loc], map.y[a.loc]);
+    const [x, y] = cl.renderer.armyXY(a);
+    cl.renderer.centerOn(x, y);
     cl.view.selected = a.loc;
     cl.uiDirty = true; cl.requestFrame();
   } } },
@@ -154,6 +180,7 @@ function armyCard(cl, a) {
     h('div.muted', `${Object.entries(u).map(([t, n]) => `${n} ${R.units[t].short}`).join(' · ')} · ${people(armyMen(a, R))} men`),
     h('div.row', { style: { gap: '0.4em' } }, h('span.muted', 'Str'), h('div', { style: { flex: 1 }, tip: `Strength ${pct(a.str)}: share of full manpower. Reinforced monthly in friendly territory.` }, bar(a.str)),
       h('span.muted', 'Org'), h('div', { style: { flex: 1 }, tip: `Organisation ${pct(a.org)}: combat readiness. Lost in battle, recovers daily.` }, bar(a.org, 'var(--blue)'))),
+    supplyLine(cl, a),
     h('div', { className: a.battle ? 'bad' : 'muted' }, status));
 }
 
@@ -198,7 +225,7 @@ export function renderProvince(cl, el) {
   el.classList.remove('hidden');
   const C = s.countries, own = s.prov.owner[p], ctl = s.prov.controller[p];
   const E = R.balance.economy;
-  const here = s.armies.filter((a) => a.loc === p);
+  const here = s.armies.filter((a) => a.loc === p && !(a.sea >= 0));
   const me = s.player;
   const canRec = me >= 0 && own === me && ctl === me;
   const battle = s.battles.find((b) => b.prov === p);
@@ -218,10 +245,12 @@ export function renderProvince(cl, el) {
       'Province ID', String(p)),
     s.prov.siegeBy[p] >= 0 && h('div', h('div.warn', `Siege by ${C[s.prov.siegeBy[p]].name}: ${pct(s.prov.siege[p])} (base ${Math.round(siegeDays(s, R, p))} days for one unit)`), bar(s.prov.siege[p], 'var(--warn)')),
     battle && h('div.bad', `Battle in progress (day ${battle.days})`),
+    nuclearButton(cl, p),
     provinceEconomy(cl, p),
     here.length > 0 && h('h4', 'Armies here'),
     here.map((a) => h('div.row.spread', h('span', flagCanvas(C[a.owner]), ' ', a.name), h('span.muted', `${unitCount(a)} units · ${pct(a.org)} org`))),
-    canRec && h('div', h('h4', 'Recruit here'), h('div.row', Object.entries(R.units).filter(([t]) => !s.tech || canUseUnit(s, R, me, t)).map(([t, u]) => {
+    provinceForces(cl, p),
+    canRec && h('div', h('h4', 'Recruit here'), h('div.row', Object.entries(R.units).filter(([t, u]) => (!s.tech || canUseUnit(s, R, me, t)) && (u.domain !== 'sea' || portZonesOf(map, p).length > 0)).map(([t, u]) => {
       const why = canRecruit(s, map, R, me, p, t);
       const cost = recruitCost(s, R, me, t);
       return h('button', { disabled: !!why, tip: why || `${u.name}: ${money(cost.money)}, ${people(cost.men)} men, ${cost.days} days`, on: { click: () => { const e = recruit(s, map, R, me, p, t); if (e) cl.toast(e, true); cl.uiDirty = true; cl.requestFrame(); } } }, '+' + u.short);

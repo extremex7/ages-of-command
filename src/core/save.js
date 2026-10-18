@@ -105,6 +105,9 @@ export function deserialize(text, map, rules, scenario = null) {
   try { s = typeof text === 'string' ? JSON.parse(text, reviver) : text; } catch (e) { throw new Error('Save file is not valid JSON'); }
   if (!s || typeof s !== 'object' || !Number.isInteger(s.version)) throw new Error('Not an AOC3 save file');
   if (s.version > SAVE_VERSION) throw new Error(`Save is from a newer game version (${s.version} > ${SAVE_VERSION})`);
+  // the saved country caches are kept (the AI reads them; a mid-month rebuild would differ from
+  // the running game's) unless the save was migrated, the map grew or the technologies changed
+  let staleCache = s.version < SAVE_VERSION;
   while (s.version < SAVE_VERSION) {
     const m = MIGRATIONS[s.version];
     if (!m) throw new Error(`No migration from save version ${s.version}`);
@@ -114,6 +117,7 @@ export function deserialize(text, map, rules, scenario = null) {
   // newer map with extra provinces: extend arrays (new provinces start unowned)
   const prov = s.prov;
   if (prov.owner.length < map.count) {
+    staleCache = true;
     const old = prov.owner.length;
     for (const k in prov) {
       const n = new prov[k].constructor(map.count);
@@ -130,7 +134,11 @@ export function deserialize(text, map, rules, scenario = null) {
     }
   }
   s.mapProvinceCount = map.count;
+  // saved supply maps stay valid across the relations rebuild below (see supply.js)
+  const sc = s.supplyCache;
+  const keepSupply = sc && typeof sc === 'object' && sc.maps && Object.values(sc.maps).every((q) => q instanceof Uint8Array && q.length === map.count) && sc.rv === (s.relVersion || 0);
   touchRelations(s);
+  if (keepSupply) sc.rv = s.relVersion; else delete s.supplyCache;
   if (s.countries.some((c) => !c.cache)) refreshCountryCache(s, map, rules);
   if (s.needsEconomy) {
     if (!scenario) throw new Error('This save predates the economy; loading it needs its scenario');
@@ -147,9 +155,9 @@ export function deserialize(text, map, rules, scenario = null) {
     if (!scenario) throw new Error('This save predates technology; loading it needs its scenario');
     delete s.needsTech;
     initTechnology(s, map, rules, scenario);
-  } else remapTech(s, rules);
+  } else if (remapTech(s, rules)) staleCache = true;
   refreshAllTech(s, rules);
-  refreshCountryCache(s, map, rules);
+  if (staleCache) refreshCountryCache(s, map, rules);
   return s;
 }
 
@@ -264,4 +272,5 @@ function remapTech(s, rules) {
     if (!(r.share >= 0)) r.share = rules.balance.research.defaultShare;
     r.bank = r.bank || 0;
   }
+  return !same;
 }

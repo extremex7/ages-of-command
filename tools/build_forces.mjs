@@ -25,6 +25,7 @@ const COLS = {
   nsubs: ['sea', 'nsub'], ssbns: ['sea', 'ssbn'], fighters: ['air', 'fighter'], bombers: ['air', 'bomber'],
   attack: ['air', 'attack'], drones: ['air', 'drone'],
 };
+const SAT_MAX = 3 * rd('data/rules/balance.json').strategic.satCoverage; // per kind
 const SAT_SPLIT = { recon: 0.4, comms: 0.3, nav: 0.15, warning: 0.15 };
 const SAT_TECH = { recon: 'satellites', comms: 'satellites', nav: 'gps', warning: 'satellites' };
 
@@ -147,6 +148,9 @@ function build(id) {
         if (n) { s[k] = n; left -= n; }
       }
       if (left > 0) s.recon = (s.recon || 0) + left;
+      // the game counts military constellations: beyond a few times full coverage
+      // (balance.strategic.satCoverage) extra satellites only add upkeep, so large counts are capped
+      for (const k in s) s[k] = Math.min(s[k], SAT_MAX);
       c.sats = s;
     }
     if (row.stations) c.stations = row.stations;

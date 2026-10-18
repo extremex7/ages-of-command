@@ -36,10 +36,31 @@ src/map (Canvas) ──── reads state + static map; never drives simulation
   are exact and the simulation is deterministic for a given seed and command sequence.
 - **Rules** (`data/rules/*.json`): unit stats, balance constants, goods, buildings, governments
   and technologies, validated on load (`rules.js`, `technology.js`).
+- **Sea zones** (`map.sea`, decoded by `mapdata.js` from `data/map/seas.json`): 99 zones, zone
+  links in CSR form (`start/adj/km/link`) with chokepoints and canal years, the zones of each
+  coastal province (`portStart/portZones`, and `zoneProvs` the other way), the zone each strait
+  or sea lane crosses (`laneZone`, per province-graph edge) and the 0.5° zone grid for picking.
+  Path nodes ≥ `map.count` stand for sea zones (`map.count + zone`) in army paths.
 
 ## Simulation clock (`sim.js`)
 
-One tick = one day. Daily: recruitment, movement, battle detection/resolution, sieges,
+Order of one tick since Milestone 6:
+
+| Step | Daily | Monthly (1st of the month, after the AI) |
+| --- | --- | --- |
+| 1 | `processRecruitment` (land units join armies, ships fleets, aircraft wings) | `navalTrade` (blockade and raiding → trade factor) |
+| 2 | `processMovement` (armies, including at sea) | `strategicBombing` |
+| 3 | `processFleets` (sailing, docking, repair) | `monthlyEconomy` (production, market, budget) |
+| 4 | `processWings` (lost bases, repair) | `monthlyStrategic` (warheads, missiles, cyber, space, debris, winter, strategic AI) |
+| 5 | `detectBattles`, `detectNavalBattles` | `monthlyDepots` (lost depots) |
+| 6 | `dailySupply` (supply levels, attrition) | `monthlyResearch` |
+| 7 | `resolveBattles` (with air and naval support), `resolveNavalBattles` | `monthlyMilitary` (reinforcement) |
+| 8 | `processSieges`, `dailyRecovery` | war scores, `monthlyGovernment`, `monthlyDiplomacy` |
+| 9 | `dailyStrategic` (queued retaliation strikes) | `aiPeace`, `aiEconomy` |
+| 10 | `processConstruction`, `dailyEvents` | `refreshCountryCache` |
+| 11 | `aiTick` (incl. fleets; wings and depots about every 28 days), `aiDiplomacy` | |
+
+In words: one tick = one day. Daily: recruitment, movement, battle detection/resolution, sieges,
 organisation recovery, construction, events (each country checked once a month, spread across
 days; events queued by a `trigger` run the next day), AI diplomacy (each country every 3 months, spread across days). AI military: each country thinks every 7 days, staggered by country index so ~1/7
 of countries run per tick. Monthly (1st of month): production, world market, consumption and
@@ -96,6 +117,20 @@ co-belligerents can sign a separate peace; white peace is accepted when the othe
   normalised effect multipliers, unlocked goods, buildings and units, waived building inputs and
   the era — lives in `c.tfx`, derived and rebuilt on load. Research is monthly; the diffusion
   discount uses neighbour sets and a per-day cached world GDP share per technology.
+- **Navies** (`naval.js`, rules in NAVY_AIR.md): fleets (`state.fleets`) sail between zones and
+  dock in ports; per-zone presence and control are derived once a day (cached on `state.day` and
+  a fleet version counter, never saved). Naval battles (`state.navalBattles`), submarine
+  detection, blockades and raiding, chokepoints and canals. Armies at sea (`a.sea`) and the
+  sea-aware pathfinder (`findSeaPath` in `pathfind.js`) live in `military.js`/`pathfind.js`.
+- **Air** (`air.js`): wings (`state.wings`) at base provinces with a range and a mission; air
+  combat and close air support feed `combat.js`; monthly strategic bombing.
+- **Logistics** (`supply.js`, rules in LOGISTICS.md): per-country supply maps by flood fill,
+  quantised to bytes and kept in `state.supplyCache` (saved, for deterministic reloads); daily
+  army supply and attrition; depots.
+- **Strategic** (`strategic.js`, rules in STRATEGIC.md): `c.strat` per country and
+  `state.strategic` for the world: nuclear programmes, delivery, interception, strikes and
+  retaliation, nuclear winter and fallout, cyber operations, satellites, ASAT and debris, space
+  projects, and the strategic AI (run inside `monthlyStrategic`).
 - **AI diplomacy** (`ai_diplomacy.js`): rivals, treaty review, one treaty sought per round,
   embargoes, blocs, influence spending; every decision logged.
 - **AI** (`ai.js`): budget management (tax/spending), recruitment within its military budget,
@@ -104,7 +139,9 @@ co-belligerents can sign a separate peace; white peace is accepted when the othe
   propensity and the AI-aggressiveness setting, army planning
   (engage invaders it can beat, finish sieges, take high-value enemy provinces, recover when
   weak, man the border with the strongest neighbour in peacetime), and monthly peace offers
-  sized to its war score. Decisions are logged with reasons (AI tab).
+  sized to its war score. Decisions are logged with reasons (AI tab). Since Milestone 6 it also
+  splits recruitment between land, sea and air by target upkeep shares, moves fleets and wings,
+  places depots, and will not attack a nuclear power without a deterrent of its own.
 
 ## Rendering (`src/map/renderer.js`)
 
@@ -138,12 +175,28 @@ builder then seeds industry, copying deposits from the Modern World and placing 
 each owner has the technology for. All scenarios share one map, so province ids, the renderer and
 saves need nothing scenario-specific.
 
+## Sea zone pipeline (`tools/build_seas.py`)
+
+Natural Earth 50m land → 0.5° water grid → 99 zones grown from hand-placed seeds by sailing
+distance → links from touching cells plus hand-listed straits and canals (chokepoint provinces,
+opening years) → each coastal province's zones → the zone of each strait and sea lane → the
+run-length encoded grid. Details in NAVY_AIR.md.
+
+## Forces pipeline (`tools/build_forces.mjs`)
+
+`tools/forces/<id>.csv` (real counts) → units of the newest type per role at each country's
+technology year, capped by upkeep → fleets in its largest ports, missile submarines at sea, air
+wings at the capital and largest cities, warheads, missiles and satellites written into the
+scenario. `tools/build_history.mjs` runs it for every scenario with a table. Details in
+tools/forces/README.md.
+
 ## Saves (`save.js`)
 
 JSON in which every typed array (province fields, building levels, stockpiles) is base64
 (~1.1 MB for a modern-world campaign; browser slots are gzip-compressed to ~260–320 KB). Versioned with
 step-by-step migrations (`MIGRATIONS[v]`; v2 → v3 installs the scenario's economy into old saves; v3 → v4 installs governments and the
-scenario's treaties and blocs; v4 → v5 installs the scenario's starting technologies; unknown
+scenario's treaties and blocs; v4 → v5 installs the scenario's starting technologies; v5 → v6 adds empty
+fleets, wings, naval battles, strategic capabilities and depots, and puts every army on land; unknown
 government types or policies fall back to defaults and a changed technology file is remapped by id),
 validated against the loaded map and rules (unknown countries,
 wrong array lengths, missing fields are rejected with a message; removed unit types and invalid

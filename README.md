@@ -12,6 +12,17 @@ research and history** (a 119-technology tree across 13 eras, research and diffu
 and modernisation, four historical scenarios from 117 AD to 1962, and 129 dated historical and
 world events that need their premises and allow alternate history).
 
+**Milestone 6, navies, air, logistics and strategic weapons:** navies on 99 sea zones derived from
+the coastline (fleets, naval battles, submarines, carriers, sea control, blockades and commerce
+raiding, chokepoints and canals, armies carried by sea), air wings (air superiority, close air
+support, strategic bombing, interceptors), supply lines with depots and attrition, and strategic
+capabilities (nuclear programmes, delivery, missile defence, retaliation, deterrence in AI war
+decisions, arms control, nuclear winter, cyber operations, satellites, anti-satellite weapons and
+fictional space projects), with starting forces for every scenario and two speculative-fiction
+scenarios, Flashpoint 2035 and Orbital Age 2085. The interface has fleet and air-wing cards with
+map orders, a Strategic tab, a nuclear strike confirmation, depots, and Naval and Supply map
+modes. What is still missing is listed in [docs/FEATURES.md](docs/FEATURES.md).
+
 ![status](https://img.shields.io/badge/status-prototype-orange)
 
 ## Run it
@@ -25,13 +36,16 @@ npm start            # serves the game at http://localhost:8080/
 ```
 
 Open the URL, choose **New Game**, pick a scenario (Modern World, Height of Rome 117, The Great
-War 1914, The Gathering Storm 1936, The Cold War 1962), then **Choose country**, click a country
+War 1914, The Gathering Storm 1936, The Cold War 1962, or the fictional Flashpoint 2035 and
+Orbital Age 2085), then **Choose country**, click a country
 and **Play as …**.
 Press **Space** to start time. To build, select one of your provinces and use **Build here** in
 the province panel; the **Industry** tab shows your goods, trade and construction queue.
 Select another country to see your relations with it and propose treaties; the **Government**
 tab shows your factions, elections and policies; the **Research** tab sets research spending,
-the current project and queue, and opens the technology tree.
+the current project and queue, and opens the technology tree. In the **Military** tab, switch
+between Army, Navy and Air to build warships and aircraft; the **Strategic** tab handles nuclear
+programmes, cyber operations, satellites and space.
 
 > The game must be served over http(s); opening `index.html` from disk will not work because
 > browsers block `fetch` of local files.
@@ -40,25 +54,26 @@ the current project and queue, and opens the technology tree.
 
 | Input | Action |
 | --- | --- |
-| Left click | Select province / army (Shift adds armies to the selection) |
-| Right click | Move the selected armies (pathfinding picks the route) |
+| Left click | Select province / army / fleet / air wing (Shift adds to the selection) |
+| Right click | Move the selected armies (by land or sea); sail fleets to a sea zone or dock them in a friendly port; rebase wings to a province |
 | Drag, arrow keys | Pan · Mouse wheel, `+` `−` zoom |
 | `Space` · `1`–`5` | Pause/resume · game speed (1, 3, 8, 20 days/s, max) |
-| `P T O V G X K F R Y J Q` | Map modes: political, terrain, population, development, economy, resources, industry, infrastructure, military, diplomacy (opinion), government, technology (era) |
-| `N B E U A M D L I` | Tabs: nation, government, economy, industry, research, military, diplomacy, events, AI/performance |
+| `P T O V G X K F R Y J Q S W` | Map modes: political, terrain, population, development, economy, resources, industry, infrastructure, military, diplomacy (opinion), government, technology (era), naval (sea control), supply |
+| `N B E U A M Z D L I` | Tabs: nation, government, economy, industry, research, military, strategic, diplomacy, events, AI/performance |
 | `C` · `H` | Centre on your capital · show whole world |
 | `Ctrl+S` | Quick save · `Esc` clears selection / closes dialogs |
 
 ## Test
 
 ```bash
-npm test                            # 79 unit/integration tests of the simulation (node:test)
+npm test                            # unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
 node tools/econ_report.mjs 5        # world market and national indicators over 5 years of AI play
 npm start &                         # then, with Playwright available:
 node tests/browser/e2e.mjs          # boots the game, plays, recruits, moves, builds, uses politics, diplomacy and research, saves, reloads, plays 1914
+node tests/browser/m6.mjs           # Milestone 6 interface: navies, air wings, supply, Strategic tab
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -70,8 +85,10 @@ The generated files in `data/` are committed. To regenerate them from source dat
 ```bash
 ./tools/fetch_source.sh             # downloads Natural Earth admin-0/admin-1 (public domain) via npm
 python3 -m pip install shapely      # Shapely 2.1+ (coverage simplification)
-npm run build:map                   # data/map/world.json, data/scenarios/*.json (incl. economy)
-npm run build:history               # historical scenarios from tools/history/*.json (no downloads needed)
+npm run build:map                   # world.json, seas.json, the Modern World scenario (economy, diplomacy, forces)
+npm run build:seas                  # only data/map/seas.json (sea zones; needs the Natural Earth download)
+npm run build:history               # scenarios from tools/history/*.json, with forces and economy (no downloads needed)
+npm run build:forces                # only the starting navies, air forces and strategic forces from tools/forces/*.csv
 ```
 
 Province IDs are kept stable by `data/map/province_registry.json` (append-only), so saves keep
@@ -83,18 +100,19 @@ working across map rebuilds.
 index.html, styles/        browser entry point and UI styles
 src/core/                  simulation (pure JS, no DOM): calendar, rng, mapdata, state, economy,
                            industry (production, market, construction), military, pathfind,
-                           combat, war, relations, diplomacy, government, events, technology, ai,
-                           ai_diplomacy, sim (clock), save, rules
+                           combat, naval, air, supply, strategic, war, relations, diplomacy,
+                           government, events, technology, ai, ai_diplomacy, sim (clock), save, rules
 src/map/                   Canvas 2D renderer, map modes, spatial index / picking
 src/ui/                    menus, HUD, panels, dialogs, local save slots
-data/map/                  generated world map (2,358 provinces) + stable id registry
+data/map/                  generated world map (2,358 provinces), sea zones (seas.json) + stable id registry
 data/rules/                units.json, balance.json, goods.json, buildings.json, governments.json, technologies.json — editable game rules
-data/events/               domestic, world and historical events + index.json
+data/events/               domestic, world, historical, strategic and future-scenario events + index.json
 data/scenarios/            scenario files + index.json
-tools/                     map/scenario/economy pipeline, history/ scenario definitions + build_history.mjs, dev server, benchmark, economy report
+tools/                     map/seas/scenario/economy pipeline, history/ scenario definitions + build_history.mjs,
+                           forces/ starting-force tables + build_forces.mjs, dev server, benchmark, economy report
 tests/                     node:test suites; tests/browser/ Playwright end-to-end + benchmark
-docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOLOGY, SCENARIOS, FEATURES (checklist), DEVLOG,
-                           PERFORMANCE, MODDING
+docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOLOGY, SCENARIOS, NAVY_AIR, LOGISTICS,
+                           STRATEGIC, FEATURES (checklist), DEVLOG, PERFORMANCE, MODDING
 ```
 
 ## Documentation
@@ -105,9 +123,12 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 - [docs/GOVERNMENT.md](docs/GOVERNMENT.md) — government types, factions, elections, coups, policies, events
 - [docs/TECHNOLOGY.md](docs/TECHNOLOGY.md) — technology tree, research formulas, eras, unit and building gating
 - [docs/SCENARIOS.md](docs/SCENARIOS.md) — the historical scenarios, how they are built, historical events
+- [docs/NAVY_AIR.md](docs/NAVY_AIR.md) — sea zones, fleets, naval combat, blockades, amphibious movement, air wings, bombing
+- [docs/LOGISTICS.md](docs/LOGISTICS.md) — supply network, attrition, depots
+- [docs/STRATEGIC.md](docs/STRATEGIC.md) — nuclear weapons and deterrence, cyber, satellites, space
 - [docs/FEATURES.md](docs/FEATURES.md) — implemented / partial / planned checklist and the continuation plan
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — measured numbers and how to reproduce them
-- [docs/MODDING.md](docs/MODDING.md) — data formats for units, balance, goods, buildings, governments, events and scenarios
+- [docs/MODDING.md](docs/MODDING.md) — data formats for units, balance, goods, buildings, governments, events, sea zones, forces and scenarios
 - [docs/DEVLOG.md](docs/DEVLOG.md) — development log
 
 ## Data sources and honesty notes
@@ -122,3 +143,8 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 - Historical scenarios: borders are approximated with modern admin-1 provinces; population, GDP
   and army figures are rounded Maddison-style estimates including colonies. Each scenario lists
   its approximations on the New Game screen and in [docs/SCENARIOS.md](docs/SCENARIOS.md).
+- Starting navies, air forces, warheads and satellites (`tools/forces/*.csv`) are rounded public
+  figures (IISS, SIPRI and fleet lists), capped by an upkeep rule.
+- **Flashpoint 2035 and Orbital Age 2085 are speculative fiction.** Their borders changes,
+  populations, economies, forces, events and the technologies flagged `fictional` are invented to
+  make a playable future, not forecasts.

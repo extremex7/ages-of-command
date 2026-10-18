@@ -4,6 +4,8 @@ import { TERRAINS } from '../core/mapdata.js';
 import { atWar, allied, friendly } from '../core/relations.js';
 import { provinceGdp } from '../core/state.js';
 import { opinion, overlordOf } from '../core/diplomacy.js';
+import { zoneController, seaPresence } from '../core/naval.js';
+import { supplyView, SUPPLY_LEVEL } from '../core/supply.js';
 
 export const MAP_MODES = [
   { id: 'political', name: 'Political', key: 'p', tip: 'Country ownership. Stripes mark provinces occupied by another country.' },
@@ -17,6 +19,8 @@ export const MAP_MODES = [
   { id: 'military', name: 'Military', key: 'r', tip: 'Fronts: your side, enemies, and provinces under siege.' },
   { id: 'diplomacy', name: 'Diplomacy', key: 'y', tip: 'Opinion of each country toward the selected (or your) country, red to green; allies blue, enemies dark red, subjects purple.' },
   { id: 'technology', name: 'Technology', key: 'q', tip: 'Each country\'s era (from its known technologies); lighter = more technologies within that era.' },
+  { id: 'naval', name: 'Naval', key: 's', tip: 'Sea control: who holds each sea zone with fleets at sea (yours, allies, enemies, others); contested zones are amber.' },
+  { id: 'supply', name: 'Supply', key: 'w', tip: 'Supply level for your armies in each province (refreshed every few days). Below the attrition line armies lose men.' },
   { id: 'government', name: 'Government', key: 'j', tip: 'Form of government: democracies, autocracies, theocracies and military rule; darker = lower stability.' },
 ];
 
@@ -64,10 +68,18 @@ export function provinceColors(mode, state, map, focus, rules) {
       return ramp3((opinion(state, map, rules, k, focus) + 100) / 200, '#c4544a', '#e3ddd0', '#5a9a4a');
     });
   }
+  const sup = mode === 'supply' && focus >= 0 && rules ? supplyView(state, map, rules, focus) : null;
   for (const i of map.ids) {
     const o = P.owner[i];
     if (o < 0) { out[i] = '#555'; continue; }
     switch (mode) {
+      case 'naval': out[i] = ramp(0.6, C[o].color, '#d6d1c6'); break;
+      case 'supply': {
+        if (!sup) { out[i] = '#cfcac0'; break; }
+        const v = SUPPLY_LEVEL[sup[i]];
+        out[i] = v <= 0 ? '#6a6a6a' : ramp3(v, '#b8443a', '#e0c050', '#4f9a4a');
+        break;
+      }
       case 'terrain': out[i] = TERRAIN_COLORS[TERRAINS[map.terrain[i]]]; break;
       case 'population': {
         const d = P.pop[i] / Math.max(1, map.area[i]);
@@ -122,6 +134,22 @@ export function provinceColors(mode, state, map, focus, rules) {
   return out;
 }
 
+// Naval mode: a colour per sea zone (null = open water nobody holds).
+export function zoneColors(state, map, rules, focus) {
+  const pres = seaPresence(state, map, rules), C = state.countries;
+  return map.sea.zones.map((z, i) => {
+    if (!pres[i]?.some((e) => e[1] > 0)) return null; // empty, or only submarines (they cannot hold a zone)
+    const k = zoneController(state, map, rules, i);
+    if (k < 0) return '#d9a441';
+    if (focus >= 0) {
+      if (k === focus) return '#3f78c4';
+      if (friendly(state, focus, k)) return '#7fa8d8';
+      if (atWar(state, focus, k)) return '#c4443a';
+    }
+    return C[k].color;
+  });
+}
+
 function atWarAny(state, c) {
   return state.wars.some((w) => w.attackers.includes(c) || w.defenders.includes(c));
 }
@@ -137,5 +165,7 @@ export const MODE_LEGENDS = {
   resources: [['Oil', '#1f1f1f'], ['Coal', '#6b5640'], ['Iron ore', '#b5582a'], ['Uranium', '#6fbf2f'], ['Rare earths', '#9b45b8'], ['Timber', '#3f7a3a'], ['None', '#d6d1c6']],
   industry: [['None', '#e9e5dc'], ['~1B/yr', '#efe3c4'], ['~30B/yr', '#d08a4a'], ['1T+/yr', '#6a2a1a']],
   infrastructure: [['0', '#d9cbb0'], ['5', '#9ab07a'], ['10', '#2f6f5a']],
+  naval: [['Your sea control', '#3f78c4'], ['Allied', '#7fa8d8'], ['Enemy', '#c4443a'], ['Contested', '#d9a441'], ['Other country', '#9a9a9a'], ['Open water', '#9fb7c6']],
+  supply: [['Full', '#4f9a4a'], ['Half', '#e0c050'], ['Low (attrition)', '#b8443a'], ['None', '#6a6a6a']],
   technology: [['Ancient', '#6a4a3a'], ['Industrial', '#c8b86a'], ['Future', '#4a8ab8']],
 };

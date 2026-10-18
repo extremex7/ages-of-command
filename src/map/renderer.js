@@ -3,7 +3,8 @@
 // borders, coastline) is drawn into an offscreen cache and only re-rendered when colours
 // change or the camera settles after a pan/zoom; while moving, the cached bitmap is
 // transformed instead. Dynamic overlays (selection, armies, labels) are cheap and drawn on top.
-import { provinceColors } from './modes.js';
+import { provinceColors, zoneColors } from './modes.js';
+import { projectLonLat } from '../core/mapdata.js';
 import { hex } from './modes.js';
 
 const OCEAN = '#9fb7c6', OCEAN_DARK = '#1d2833';
@@ -141,6 +142,7 @@ export class MapRenderer {
     const W = this.cache.width, H = this.cache.height;
     if (this.colorsDirty || !this.colors) {
       this.colors = provinceColors(this.mode, state, map, this.focus, this.rules);
+      this.zoneFill = this.mode === 'naval' && map.sea.Z ? zoneColors(state, map, this.rules, this.focus) : null;
       this.buildCountryBorders(state);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -149,6 +151,13 @@ export class MapRenderer {
     const ox = this.vw * m, oy = this.vh * m;
     const z = c.z * dpr;
     ctx.setTransform(z, 0, 0, z, (ox + this.vw / 2 - c.cx * c.z) * dpr, (oy + this.vh / 2 - c.cy * c.z) * dpr);
+    if (this.zoneFill) {
+      // sea zones from the 0.5° grid, tinted by who controls them; land is drawn on top
+      const paths = this.zonePaths();
+      ctx.globalAlpha = 0.6;
+      this.zoneFill.forEach((col, i) => { if (col) { ctx.fillStyle = col; ctx.fill(paths[i]); } });
+      ctx.globalAlpha = 1;
+    }
     const vx0 = c.cx - (this.vw / 2 + ox) / c.z, vx1 = c.cx + (this.vw / 2 + ox) / c.z;
     const vy0 = c.cy - (this.vh / 2 + oy) / c.z, vy1 = c.cy + (this.vh / 2 + oy) / c.z;
     const lod = this.lod();
@@ -201,6 +210,28 @@ export class MapRenderer {
     this.colorsDirty = false;
     this.stats.baseMs = performance.now() - t0;
     this.stats.baseRenders++;
+  }
+
+  // One Path2D per sea zone, built once from the zone grid (runs of equal cells per row).
+  zonePaths() {
+    if (this._zonePaths) return this._zonePaths;
+    const map = this.map, G = map.sea.grid, paths = map.sea.zones.map(() => new Path2D());
+    for (let r = 0; r < G.rows; r++) {
+      const lat0 = G.lat0 + r * G.res, lat1 = lat0 + G.res;
+      const y1 = projectLonLat(map, 0, lat0)[1], y0 = projectLonLat(map, 0, lat1)[1];
+      let c0 = 0;
+      for (let c = 1; c <= G.cols; c++) {
+        const z = G.cells[r * G.cols + c0];
+        if (c < G.cols && G.cells[r * G.cols + c] === z) continue;
+        if (z >= 0) {
+          const x0 = projectLonLat(map, -180 + c0 * G.res, 0)[0], x1 = projectLonLat(map, -180 + c * G.res, 0)[0];
+          paths[z].rect(x0, y0, x1 - x0 + 0.3, y1 - y0 + 0.3);
+        }
+        c0 = c;
+      }
+    }
+    this._zonePaths = paths;
+    return paths;
   }
 
   stripes(color, z) {
@@ -276,6 +307,18 @@ export class MapRenderer {
     return needBase;
   }
 
+  // World position of a path node: provinces below map.count, sea zones above it.
+  nodeXY(n) {
+    const map = this.map;
+    if (n < map.count) return [map.x[n], map.y[n]];
+    const z = map.sea.zones[n - map.count];
+    return [z.x, z.y];
+  }
+
+  armyXY(a) { return a.sea >= 0 ? this.nodeXY(this.map.count + a.sea) : this.nodeXY(a.loc); }
+
+  fleetXY(f) { return f.port >= 0 ? this.nodeXY(f.port) : this.nodeXY(this.map.count + f.zone); }
+
   onScreen(i) {
     const c = this.cam, b = this.map.bbox;
     const hw = this.vw / 2 / c.z, hh = this.vh / 2 / c.z;
@@ -299,6 +342,15 @@ export class MapRenderer {
         ctx.fillStyle = 'rgba(25,25,30,0.85)';
         const name = state.countries[L.c].name.toUpperCase();
         ctx.strokeText(name, sx, sy); ctx.fillText(name, sx, sy);
+      }
+    }
+    if (this.mode === 'naval' && c.z >= 0.9) {
+      ctx.font = 'italic 500 11px system-ui, sans-serif';
+      ctx.fillStyle = this.dark ? 'rgba(210,225,240,0.85)' : 'rgba(20,45,70,0.8)';
+      for (const z of map.sea.zones) {
+        const [sx, sy] = this.worldToScreen(z.x, z.y);
+        if (sx < 0 || sy < 0 || sx > this.vw || sy > this.vh) continue;
+        ctx.fillText(z.name, sx, sy - 18);
       }
     }
     if (c.z >= 2.2) {
@@ -330,9 +382,9 @@ export class MapRenderer {
       if (!view.selectedArmies.has(a.id) || !a.path.length) continue;
       ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
       ctx.beginPath();
-      let [sx, sy] = this.worldToScreen(map.x[a.loc], map.y[a.loc]);
+      let [sx, sy] = this.worldToScreen(...this.armyXY(a));
       ctx.moveTo(sx, sy);
-      for (const p of a.path) { [sx, sy] = this.worldToScreen(map.x[p], map.y[p]); ctx.lineTo(sx, sy); }
+      for (const p of a.path) { [sx, sy] = this.worldToScreen(...this.nodeXY(p)); ctx.lineTo(sx, sy); }
       ctx.stroke(); ctx.setLineDash([]);
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(sx, sy, 3.5, 0, Math.PI * 2); ctx.fill();
     }
@@ -340,14 +392,15 @@ export class MapRenderer {
     for (const a of state.armies) {
       const mineOrSel = a.owner === state.player || view.selectedArmies.has(a.id) || a.owner === view.selectedCountry;
       if (small && !mineOrSel && !battleProvs.has(a.loc)) continue;
-      let [sx, sy] = this.worldToScreen(map.x[a.loc], map.y[a.loc]);
+      let [sx, sy] = this.worldToScreen(...this.armyXY(a));
       if (a.path.length && a.prog > 0) {
-        const [nx, ny] = this.worldToScreen(map.x[a.path[0]], map.y[a.path[0]]);
+        const [nx, ny] = this.worldToScreen(...this.nodeXY(a.path[0]));
         sx += (nx - sx) * a.prog; sy += (ny - sy) * a.prog;
       }
       if (sx < -30 || sy < -20 || sx > this.vw + 30 || sy > this.vh + 20) continue;
-      const k = stackOffset.get(a.loc) || 0;
-      stackOffset.set(a.loc, k + 1);
+      const at = a.sea >= 0 ? map.count + a.sea : a.loc;
+      const k = stackOffset.get(at) || 0;
+      stackOffset.set(at, k + 1);
       sy -= 8 + k * 15;
       let n = 0;
       for (const t in a.units) n += a.units[t];
@@ -359,6 +412,11 @@ export class MapRenderer {
       ctx.strokeStyle = sel ? '#fff8d0' : 'rgba(0,0,0,0.75)';
       ctx.lineWidth = sel ? 2.5 : 1;
       roundRect(ctx, x, y, w, h, 3); ctx.fill(); ctx.stroke();
+      if (a.sea >= 0) {
+        // embarked: a hull line under the counter
+        ctx.strokeStyle = '#e8f0ff'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x - 2, y + h + 2); ctx.lineTo(x + 2, y + h + 5); ctx.lineTo(x + w - 2, y + h + 5); ctx.lineTo(x + w + 2, y + h + 2); ctx.stroke();
+      }
       if (!small) {
         // organisation bar
         ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(x + 2, y + h - 3, w - 4, 2);
@@ -372,16 +430,116 @@ export class MapRenderer {
         ctx.strokeStyle = '#ffdf5a'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(x - 9, y - 1); ctx.lineTo(x - 2, y + h + 1); ctx.moveTo(x - 2, y - 1); ctx.lineTo(x - 9, y + h + 1); ctx.stroke();
       }
-      this.armyHits.push({ id: a.id, x: x - 2, y: y - 2, w: w + 4, h: h + 4 });
+      this.armyHits.push({ kind: 'army', id: a.id, x: x - 2, y: y - 2, w: w + 4, h: h + 4 });
+    }
+    this.drawFleets(state, view);
+    this.drawWings(state, view);
+  }
+
+  // Fleets: a hull shape with the ship count, at sea in their zone or beside their port.
+  drawFleets(state, view) {
+    const ctx = this.ctx, C = state.countries, small = this.cam.z < 0.6;
+    const stack = new Map();
+    for (const f of state.fleets) {
+      if (!view.selectedFleets?.has(f.id) || !f.path.length) continue;
+      ctx.strokeStyle = 'rgba(200,230,255,0.9)'; ctx.lineWidth = 2; ctx.setLineDash([3, 4]);
+      ctx.beginPath();
+      let [sx, sy] = this.worldToScreen(...this.fleetXY(f));
+      ctx.moveTo(sx, sy);
+      for (const z of f.path) { [sx, sy] = this.worldToScreen(...this.nodeXY(this.map.count + z)); ctx.lineTo(sx, sy); }
+      if (f.dock >= 0) { [sx, sy] = this.worldToScreen(...this.nodeXY(f.dock)); ctx.lineTo(sx, sy); }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    for (const f of state.fleets) {
+      const mine = f.owner === state.player || view.selectedFleets?.has(f.id) || f.owner === view.selectedCountry;
+      if (small && !mine && !f.battle) continue;
+      let [sx, sy] = this.worldToScreen(...this.fleetXY(f));
+      if (f.path.length && f.prog > 0 && f.port < 0) {
+        const [nx, ny] = this.worldToScreen(...this.nodeXY(this.map.count + f.path[0]));
+        sx += (nx - sx) * f.prog; sy += (ny - sy) * f.prog;
+      }
+      if (sx < -30 || sy < -20 || sx > this.vw + 30 || sy > this.vh + 20) continue;
+      const key = f.port >= 0 ? 'p' + f.port : 'z' + f.zone;
+      const k = stack.get(key) || 0;
+      stack.set(key, k + 1);
+      if (f.port >= 0) sx += 16; // beside the port's army counters
+      sy += 8 + k * 14;
+      let n = 0;
+      for (const t in f.units) n += f.units[t];
+      const label = String(n);
+      const w = small ? 14 : 20 + label.length * 5, h = small ? 8 : 12;
+      const x = sx - w / 2, y = sy - h / 2;
+      const sel = view.selectedFleets?.has(f.id);
+      ctx.fillStyle = C[f.owner].color;
+      ctx.strokeStyle = sel ? '#fff8d0' : f.port >= 0 ? 'rgba(0,0,0,0.75)' : 'rgba(230,240,255,0.95)';
+      ctx.lineWidth = sel ? 2.5 : 1.2;
+      ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x + w + 4, y); ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      if (!small) {
+        const [r, g, b] = hex(C[f.owner].color);
+        ctx.fillStyle = r * 0.3 + g * 0.59 + b * 0.11 > 150 ? '#111' : '#fff';
+        ctx.font = '600 9px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(label, sx, sy);
+      }
+      if (f.battle) {
+        ctx.strokeStyle = '#ffdf5a'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x - 12, y - 1); ctx.lineTo(x - 6, y + h + 1); ctx.moveTo(x - 6, y - 1); ctx.lineTo(x - 12, y + h + 1); ctx.stroke();
+      }
+      this.armyHits.push({ kind: 'fleet', id: f.id, x: x - 5, y: y - 2, w: w + 10, h: h + 4 });
     }
   }
 
-  armyAt(sx, sy) {
+  // Air wings: one aircraft mark per country and base (with the number of wings), drawn when
+  // zoomed in or selected.
+  drawWings(state, view) {
+    const ctx = this.ctx, C = state.countries, map = this.map;
+    const groups = new Map();
+    for (const w of state.wings) {
+      const sel = view.selectedWings?.has(w.id);
+      const mine = w.owner === state.player || w.owner === view.selectedCountry;
+      if (!sel && (this.cam.z < 1 || !mine)) continue;
+      const key = w.owner * 1e5 + w.base;
+      let g = groups.get(key);
+      if (!g) groups.set(key, (g = { owner: w.owner, base: w.base, ids: [], sel: false, active: false }));
+      g.ids.push(w.id);
+      if (sel) g.sel = true;
+      if (w.mission !== 'idle') g.active = true;
+    }
+    const stack = new Map();
+    for (const g of groups.values()) {
+      let [sx, sy] = this.worldToScreen(map.x[g.base], map.y[g.base]);
+      if (sx < -20 || sy < -20 || sx > this.vw + 20 || sy > this.vh + 20) continue;
+      const k = stack.get(g.base) || 0;
+      stack.set(g.base, k + 1);
+      sx -= 20 + k * 24; sy -= 6;
+      ctx.fillStyle = C[g.owner].color;
+      ctx.strokeStyle = g.sel ? '#fff8d0' : 'rgba(0,0,0,0.8)';
+      ctx.lineWidth = g.sel ? 2.2 : 1;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - 6); ctx.lineTo(sx + 2, sy - 1); ctx.lineTo(sx + 7, sy + 2); ctx.lineTo(sx + 2, sy + 2); ctx.lineTo(sx + 1, sy + 6);
+      ctx.lineTo(sx - 1, sy + 6); ctx.lineTo(sx - 2, sy + 2); ctx.lineTo(sx - 7, sy + 2); ctx.lineTo(sx - 2, sy - 1); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      if (!g.active) { ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fill(); }
+      if (g.ids.length > 1) {
+        ctx.font = '600 9px system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.fillStyle = '#fff';
+        ctx.strokeText(String(g.ids.length), sx + 7, sy - 4); ctx.fillText(String(g.ids.length), sx + 7, sy - 4);
+      }
+      this.armyHits.push({ kind: 'wing', id: g.ids[0], ids: g.ids, x: sx - 8, y: sy - 8, w: 22, h: 15 });
+    }
+  }
+
+  unitAt(sx, sy) {
     for (let k = this.armyHits.length - 1; k >= 0; k--) {
       const h = this.armyHits[k];
-      if (sx >= h.x && sx <= h.x + h.w && sy >= h.y && sy <= h.y + h.h) return h.id;
+      if (sx >= h.x && sx <= h.x + h.w && sy >= h.y && sy <= h.y + h.h) return h;
     }
-    return 0;
+    return null;
+  }
+
+  armyAt(sx, sy) {
+    const h = this.unitAt(sx, sy);
+    return h?.kind === 'army' ? h.id : 0;
   }
 }
 

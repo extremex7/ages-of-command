@@ -12,6 +12,9 @@ import { tick } from '../core/sim.js';
 import { formatDate, civilFromDays, dateString } from '../core/calendar.js';
 import { saveGame } from '../core/game.js';
 import { orderMove } from '../core/military.js';
+import { orderFleet, canDockAt, zoneController } from '../core/naval.js';
+import { rebaseWing } from '../core/air.js';
+import { zoneAt, portZonesOf } from '../core/mapdata.js';
 import { computeLedgers } from '../core/economy.js';
 import { isAtWar } from '../core/relations.js';
 import { flagCanvas } from './flags.js';
@@ -26,7 +29,7 @@ export class Client {
   constructor(root, data, game, opts) {
     this.root = root; this.data = data; this.game = game; this.opts = opts;
     this.mode = opts.mode; // 'pick' | 'play'
-    this.view = { hover: -1, selected: -1, selectedCountry: -1, selectedArmies: new Set(), highlight: null };
+    this.view = { hover: -1, selected: -1, selectedCountry: -1, selectedArmies: new Set(), selectedFleets: new Set(), selectedWings: new Set(), highlight: null };
     this.speed = 0; this.acc = 0; this.lastFrame = 0;
     this.tab = 'country';
     this.logSeen = game.state.logSeq || 0;
@@ -82,6 +85,8 @@ export class Client {
     if (L) {
       this.legendEl.style.display = '';
       mount(this.legendEl, L.map(([n, c]) => h('div', h('i', { style: { background: c } }), n)));
+      // the mode bar wraps onto two rows on narrow screens; keep the legend above it
+      requestAnimationFrame(() => { this.legendEl.style.bottom = `calc(${this.modesEl.offsetHeight}px + 1.1em)`; });
     } else this.legendEl.style.display = 'none';
   }
 
@@ -193,39 +198,75 @@ export class Client {
       } else this.hoverEl.style.display = 'none';
       this.requestFrame();
     }
+    // over the sea: the zone's name and who holds it
+    if (p < 0) {
+      const z = zoneAt(this.game.map, wx, wy);
+      if (z !== this.hoverZone) {
+        this.hoverZone = z;
+        if (z >= 0) {
+          const k = zoneController(this.state, this.game.map, this.game.rules, z);
+          this.hoverEl.textContent = this.game.map.sea.zones[z].name + (k >= 0 ? ` — controlled by ${this.state.countries[k].name}` : '');
+          this.hoverEl.style.display = '';
+        } else this.hoverEl.style.display = 'none';
+      }
+    } else this.hoverZone = -1;
   }
 
   click(sx, sy, shift) {
-    const armyId = this.mode === 'play' ? this.renderer.armyAt(sx, sy) : 0;
-    if (armyId) {
-      const a = this.state.armies.find((x) => x.id === armyId);
-      if (!shift) this.view.selectedArmies.clear();
-      if (this.view.selectedArmies.has(armyId) && shift) this.view.selectedArmies.delete(armyId);
-      else this.view.selectedArmies.add(armyId);
-      if (a.owner === this.state.player) this.setTab('military');
-      this.view.selected = a.loc;
+    const hit = this.mode === 'play' ? this.renderer.unitAt(sx, sy) : null;
+    if (hit) {
+      const v = this.view, s = this.state;
+      const sets = { army: v.selectedArmies, fleet: v.selectedFleets, wing: v.selectedWings };
+      const set = sets[hit.kind];
+      // one kind of force is selected at a time
+      if (!shift) for (const k in sets) sets[k].clear();
+      else for (const k in sets) if (k !== hit.kind) sets[k].clear();
+      const ids = hit.ids || [hit.id]; // a wing mark stands for every wing of that country at the base
+      if (set.has(hit.id) && shift) for (const id of ids) set.delete(id); else for (const id of ids) set.add(id);
+      const x = hit.kind === 'army' ? s.armies.find((a) => a.id === hit.id) : hit.kind === 'fleet' ? s.fleets.find((f) => f.id === hit.id) : s.wings.find((w) => w.id === hit.id);
+      if (x.owner === s.player) this.setTab('military');
+      if (hit.kind === 'army' && !(x.sea >= 0)) v.selected = x.loc;
+      else if (hit.kind === 'fleet' && x.port >= 0) v.selected = x.port;
+      else if (hit.kind === 'wing') v.selected = x.base;
       this.uiDirty = true;
       return;
     }
     const [wx, wy] = this.renderer.screenToWorld(sx, sy);
     const p = pickProvince(this.game.map, this.index, wx, wy);
     if (p < 0) { this.clearSelection(); return; }
-    // in the military tab, clicking a province with your armies selected keeps them selected
-    if (!shift) this.view.selectedArmies.clear();
+    // in the military tab, clicking a province with your forces selected keeps them selected
+    if (!shift) { this.view.selectedArmies.clear(); this.view.selectedFleets.clear(); this.view.selectedWings.clear(); this.view.highlight = null; }
     this.selectProvince(p);
   }
 
+  // Right-click orders the selected forces: armies march (by sea if needed), fleets sail to the
+  // clicked sea zone or dock in the clicked port, air wings rebase to the clicked province.
   rightClick(sx, sy) {
-    if (this.mode !== 'play' || !this.view.selectedArmies.size) return;
+    const v = this.view;
+    if (this.mode !== 'play' || !(v.selectedArmies.size || v.selectedFleets.size || v.selectedWings.size)) return;
+    const s = this.state, map = this.game.map, R = this.game.rules;
     const [wx, wy] = this.renderer.screenToWorld(sx, sy);
-    const p = pickProvince(this.game.map, this.index, wx, wy);
-    if (p < 0) return;
+    const p = pickProvince(map, this.index, wx, wy);
     const errs = [];
-    for (const id of this.view.selectedArmies) {
-      const a = this.state.armies.find((x) => x.id === id);
-      if (!a || a.owner !== this.state.player) continue;
-      const err = orderMove(this.state, this.game.map, this.game.rules, id, p);
+    for (const id of v.selectedArmies) {
+      const a = s.armies.find((x) => x.id === id);
+      if (!a || a.owner !== s.player || p < 0) continue;
+      const err = orderMove(s, map, R, id, p);
       if (err) errs.push(`${a.name}: ${err}`);
+    }
+    for (const id of v.selectedFleets) {
+      const f = s.fleets.find((x) => x.id === id);
+      if (!f || f.owner !== s.player) continue;
+      let err;
+      if (p >= 0) err = portZonesOf(map, p).length && canDockAt(s, map, f.owner, p) ? orderFleet(s, map, R, id, { prov: p }) : 'Fleets can only enter friendly ports; right-click the sea to sail';
+      else { const z = zoneAt(map, wx, wy); err = z >= 0 ? orderFleet(s, map, R, id, { zone: z }) : 'Right-click a sea zone'; }
+      if (err) errs.push(`${f.name}: ${err}`);
+    }
+    for (const id of v.selectedWings) {
+      const w = s.wings.find((x) => x.id === id);
+      if (!w || w.owner !== s.player || p < 0) continue;
+      const err = rebaseWing(s, map, R, id, p);
+      if (err) errs.push(`${w.name}: ${err}`);
     }
     if (errs.length) this.toast(errs[0], true);
     this.uiDirty = true;
@@ -240,7 +281,7 @@ export class Client {
   }
 
   clearSelection() {
-    this.view.selected = -1; this.view.selectedCountry = -1; this.view.selectedArmies.clear(); this.view.highlight = null;
+    this.view.selected = -1; this.view.selectedCountry = -1; this.view.selectedArmies.clear(); this.view.selectedFleets.clear(); this.view.selectedWings.clear(); this.view.highlight = null;
     if (this.renderer.mode === 'diplomacy') { this.renderer.focus = this.state.player; this.renderer.invalidate(); }
     this.uiDirty = true;
   }
@@ -314,7 +355,7 @@ export class Client {
       this.renderer.invalidate();
     }
     if (this.renderer.mode === 'diplomacy' && this.renderer.focus < 0) this.renderer.focus = s.player;
-    if (this.renderer.mode === 'military' && this.renderer.focus !== s.player) { this.renderer.focus = s.player; this.renderer.invalidate(); }
+    if (['military', 'naval', 'supply'].includes(this.renderer.mode) && this.renderer.focus !== s.player) { this.renderer.focus = s.player; this.renderer.invalidate(); }
     const tr = performance.now();
     this.renderer.draw(s, this.view);
     this.perf.frames++;
@@ -338,7 +379,7 @@ export class Client {
       const every = s.settings.autosaveMonths;
       if (every > 0 && this.mode === 'play' && (m - 1) % every === 0 && m !== this.lastMonth) this.autosave();
       this.lastMonth = m;
-    } else if (this.renderer.mode === 'military' && this.state.day % 5 === 0) this.renderer.invalidate();
+    } else if ((this.renderer.mode === 'military' || this.renderer.mode === 'naval' || this.renderer.mode === 'supply') && this.state.day % 5 === 0) this.renderer.invalidate();
   }
 
   afterTicks() {
@@ -369,6 +410,8 @@ export class Client {
     }
     // drop selections of armies that no longer exist
     for (const id of [...this.view.selectedArmies]) if (!s.armies.some((a) => a.id === id)) this.view.selectedArmies.delete(id);
+    for (const id of [...this.view.selectedFleets]) if (!s.fleets.some((f) => f.id === id)) this.view.selectedFleets.delete(id);
+    for (const id of [...this.view.selectedWings]) if (!s.wings.some((w) => w.id === id)) this.view.selectedWings.delete(id);
   }
 
   async autosave() {

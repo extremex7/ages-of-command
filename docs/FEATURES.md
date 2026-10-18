@@ -36,7 +36,7 @@ Nothing is marked ✅ if it is only a placeholder.
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| Movement between connected provinces | ✅ | Land, straits, sea lanes (sea lanes are a stand-in for naval transport) |
+| Movement between connected provinces | ✅ | Land, straits, sea lanes; since Milestone 6 also by sea through sea zones, and crossings close when enemy fleets hold the water |
 | Armies, recruitment, movement, combat | ✅ | Merge / split / stop |
 | War declarations, occupation, peace | ✅ | Alliances join defensively; truces |
 | Basic country AI, military interface | ✅ | |
@@ -102,7 +102,7 @@ See [TECHNOLOGY.md](TECHNOLOGY.md) and [SCENARIOS.md](SCENARIOS.md).
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| Technology tree with prerequisites (data file) | ✅ | 119 technologies, 13 eras from Ancient to Future, 13 fields; 13 speculative technologies |
+| Technology tree with prerequisites (data file) | ✅ | 119 technologies, 13 eras from Ancient to Future, 13 fields; 13 speculative technologies (132 and 17 after Milestone 6) |
 | Meaningful effects | ✅ | Farm, mine and industrial output, research, growth, combat, movement, siege, tax, construction; normalised so the 2026 balance is unchanged |
 | Research: spending, points, queue, diffusion | ✅ | Budget line; √ spending × education; neighbours and world adoption cut costs up to 65%; banking and switching rules |
 | Era progression | ✅ | Era from known technologies; sets mobilisable manpower; shown in the top bar, Nation tab and Technology map mode |
@@ -120,15 +120,55 @@ See [TECHNOLOGY.md](TECHNOLOGY.md) and [SCENARIOS.md](SCENARIOS.md).
 | Scenario editor UI | ⬜ | Scenarios are JSON definitions plus the builder |
 | Colonisation of unowned land | ⬜ | Unowned land is impassable in Height of Rome |
 | Technology trading / espionage | ⬜ | Diffusion models spread instead |
-| Navy, air and space technologies with their own systems | 🟡 | In the tree with general effects; the systems arrive in Milestone 6 |
+| Navy, air and space technologies with their own systems | ✅ | Done in Milestone 6: they unlock ships, aircraft, warheads, satellites and space projects |
 | More scenarios (e.g. 1444, 1815, 1861) | ⬜ | The format supports any date; each needs a definition file and events |
+
+## Milestone 6 — navies, air forces, logistics and strategic capabilities
+
+See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](STRATEGIC.md).
+
+| Feature | Status | Notes |
+| --- | --- | --- |
+| Sea zones from the coastline | ✅ | 99 zones, 200 links, ports for 986 provinces, 0.5° zone grid (`tools/build_seas.py`) |
+| Chokepoints and canals | ✅ | 8 straits and canals; Suez opens 1869, Panama 1914; closed to enemies of the controller |
+| Fleets: build, sail, dock, repair, merge, split | ✅ | 16 ship types in 6 roles from galleys to (fictional) railgun cruisers |
+| Naval battles with reports | ✅ | Daily exchange, sinking, retreat to port, war score |
+| Submarines, detection and commerce raiding | ✅ | Stealth vs anti-submarine search; raiding cuts trade |
+| Sea control and blockades | ✅ | Monthly trade factor from blockade and raiding |
+| Carriers and naval bombardment | ✅ | Carrier aviation in naval and land battles; shore bombardment eases landings |
+| Amphibious movement | ✅ | Embark, sail, land; transports sunk in hostile waters |
+| Air wings, bases, range, missions | ✅ | 12 aircraft types in 4 roles; superiority, support, bombing, idle |
+| Air combat and close air support in land battles | ✅ | Air share decides how much ground attack gets through |
+| Strategic bombing and interceptors | ✅ | Monthly; stealth bombers are harder to intercept |
+| AI navies and air forces | ✅ | Force mix by upkeep share, fleet hunting and blockades, wing missions and rebasing |
+| Supply network, attrition, crowding | ✅ | Per-country flood fill, sea supply, effects on combat, organisation, reinforcement |
+| Supply depots (player and AI) | ✅ | Limit by GDP, cost by price level |
+| Nuclear programmes, warheads, missiles | ✅ | Five programme levels; uranium and money |
+| Delivery, interception, missile defence | ✅ | Missiles, missile submarines, bombers; defence, warning satellites, hypersonics |
+| Nuclear strikes, fallout, nuclear winter | ✅ | Strike always behind a confirmation dialog |
+| Launch on warning, retaliation, deterrence in AI war decisions | ✅ | |
+| Arms control treaty | ✅ | Cap 1,550 warheads, dismantling, AI proposals |
+| Cyber operations | ✅ | Espionage, sabotage, disruption, disinformation with visible odds |
+| Satellites, anti-satellite weapons, debris | ✅ | Four kinds with effects; debris threatens everyone |
+| Space projects: stations and settlements | ✅ | Fictional technologies, labelled as such |
+| Strategic and future-scenario events | ✅ | 19 strategic, 35 (2035) and 29 (2085) events |
+| Starting forces for every scenario | ✅ | `tools/forces/*.csv` → fleets, wings, warheads, satellites |
+| Future scenarios Flashpoint 2035 and Orbital Age 2085 | ✅ | Speculative fiction, labelled; built on the Modern World with the builder's base mode |
+| Interface: Army/Navy/Air recruitment, fleet and wing cards, map orders, Strategic tab, depots, Naval and Supply map modes | ✅ | Browser check `tests/browser/m6.mjs` |
+| Save v6 with migration | ✅ | Supply maps saved for deterministic reloads |
+| Tests | ✅ | 39 new tests (118 in all) |
+| Transport ships and capacity, naval mines, port sizes | ⬜ | Any army can embark in a friendly port |
+| Aircraft attacking fleets, air control over sea zones | ⬜ | Air acts over land battles and bombing targets only |
+| AI-planned amphibious invasions; AI ballistic missile submarines | ⬜ | The AI goes by sea only when its normal orders find it faster; it keeps the SSBNs it starts with |
+| Supply that consumes goods; fleet and air supply | ⬜ | Supply levels have no goods cost |
+| Wing experience, warheads assigned to launchers | ⬜ | Fields exist but are not used |
 
 ## Later milestones
 
 | Area | Status |
 | --- | --- |
 | Scenario editor UI | ⬜ |
-| Navies, air forces, nuclear, cyber, space (M6) | ⬜ |
+| Navies, air forces, nuclear, cyber, space (M6) | ✅ See the Milestone 6 table |
 | Rivers, real terrain/elevation data | ⬜ Terrain is estimated from coarse regions |
 | Map projections other than Miller | ⬜ |
 | Multiplayer | ⬜ Deterministic core is the foundation |
@@ -147,7 +187,8 @@ See [TECHNOLOGY.md](TECHNOLOGY.md) and [SCENARIOS.md](SCENARIOS.md).
 
 - Terrain is estimated from latitude/longitude boxes; there are no rivers.
 - Province population/GDP within a country are spread by a model, not census data.
-- Islands are linked by "sea lanes" that land armies cross slowly; there are no fleets yet.
+- Islands are still linked by "sea lanes" that land armies cross without ships (when enemy
+  fleets do not hold them); longer voyages go through sea zones. There are no transport ships.
 - Flags are simplified patterns.
 - Low-end measurements come from a cloud container (software rendering, emulated CPU throttling),
   not from real minimum-spec hardware.
@@ -159,8 +200,8 @@ See [TECHNOLOGY.md](TECHNOLOGY.md) and [SCENARIOS.md](SCENARIOS.md).
 
 ## Continuation plan
 
-1. **Milestone 6**: navies (sea zones derived from the coastline), then air forces, nuclear
-   weapons, cyber and space, using the navy, air and space technologies already in the tree.
+1. **Milestone 6 follow-ups**: transport capacity, aircraft against fleets, AI amphibious
+   planning, supply with goods cost, winning back the simulation speed lost in M6.
 2. **Milestone 5 follow-ups**: a scenario editor UI, more start dates (1444, 1815, 1861),
    colonisation of unowned land, a war AI that sustains long wars, technology trading.
 3. **Milestone 4 follow-ups**: civil wars, the player's own bloc votes, UN-style votes and

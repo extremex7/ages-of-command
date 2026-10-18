@@ -93,3 +93,4 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover { background: var(-
 .chip { display: inline-block; padding: 0 0.45em; border-radius: 3px; background: var(--panel-2); border: 1px solid var(--line); font-size: 0.85em; }
 .paused-flag { color: var(--warn); font-size: 0.8em; }
 @media (max-width: 1000px) { .topbar .opt { display: none; } }
+a { color: var(--accent); }

@@ -69,6 +69,8 @@ function countryTab(cl) {
     !mine && s.player >= 0 && c.alive && h('div.row', { style: { marginTop: '0.8em' } },
       h('button.danger', { disabled: !!why, tip: why || `Declare war on ${c.name}`, on: { click: () => declareDialog(cl, k) } }, 'Declare war…'),
       h('button', { on: { click: () => { cl.renderer.mode = 'diplomacy'; cl.renderer.focus = k; cl.renderer.invalidate(); cl.renderModes(); } } }, 'Show relations')),
+    !mine && c.alive && h('div.row', { style: { marginTop: '0.5em' } },
+      h('button', { tip: 'Take control of this country from now on. The country you leave is run by the AI.', on: { click: () => { cl.setSpeed(0); cl.startPlaying(k); } } }, `Play as ${c.name}`)),
     mine && h('p.note', 'Tip: right-click a province with armies selected to move them. Space pauses, keys 1–5 set speed.'));
 }
 

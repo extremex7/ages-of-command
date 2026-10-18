@@ -15,10 +15,11 @@ export const TREATIES = {
   access: { name: 'Military access', mutual: false, tip: 'The grantor lets the other country\'s armies pass through its territory.' },
   guarantee: { name: 'Guarantee of independence', mutual: false, tip: 'The guarantor joins any war declared on the guaranteed country.' },
   trade: { name: 'Trade agreement', mutual: true, tip: 'No tariffs on goods traded between the two countries.' },
+  arms_control: { name: 'Arms control treaty', mutual: true, tip: 'Both nuclear powers cap their arsenals (see docs/STRATEGIC.md) and dismantle warheads above the cap.' },
   subject: { name: 'Subject', mutual: false, peaceOnly: true, tip: 'The subject follows its overlord into wars, cannot sign treaties and pays tribute.' },
   reparations: { name: 'Reparations', mutual: false, peaceOnly: true, tip: 'The payer transfers part of its tax revenue to the recipient each month.' },
 };
-export const PROPOSABLE = ['alliance', 'defensive', 'nap', 'access', 'guarantee', 'trade'];
+export const PROPOSABLE = ['alliance', 'defensive', 'nap', 'access', 'guarantee', 'trade', 'arms_control'];
 
 export function initDiplomacy(state, map, rules, scenario = null) {
   state.dip = { treaties: [], mods: [], refused: {}, modVer: 0 };
@@ -167,6 +168,9 @@ export function validateTreaty(state, map, rules, type, a, b) {
     case 'trade':
       if (C[a].econ?.embargo.includes(b) || C[b].econ?.embargo.includes(a)) return 'An embargo is in force';
       { const eb = sharedBloc(state, a, b, 'economic'); if (eb) return `Both already trade freely in ${eb.name}`; }
+      break;
+    case 'arms_control':
+      for (const k of [a, b]) if (!(C[k].strat?.warheads > 0)) return `${C[k].name} has no nuclear weapons`;
       break;
   }
   return null;
@@ -348,7 +352,7 @@ export function trust(state, rules, a, b, parts = null) {
 // ---------------------------------------------------------------------------------------------
 // proposals
 
-const BASE = { alliance: -40, defensive: -25, nap: -10, access: -15, trade: -5, guarantee: 0 };
+const BASE = { alliance: -40, defensive: -25, nap: -10, access: -15, trade: -5, guarantee: 0, arms_control: -5 };
 
 // Would `to` accept `type` proposed by `from`? Returns { accept, score, reasons: [[text, value]] }.
 export function evaluateTreaty(state, map, rules, type, from, to) {
@@ -361,7 +365,7 @@ export function evaluateTreaty(state, map, rules, type, from, to) {
   const add = (text, x) => { x = Math.round(x); if (!x) return; score += x; reasons.push([text, x]); };
   if (type === 'guarantee') return { accept: true, score: 1, reasons: [['A guarantee needs no acceptance', 0]] };
   if (T.rival === from) return { accept: false, score: -100, reasons: [['They consider you their rival', -100]] };
-  add({ alliance: 'Alliances are a big commitment', defensive: 'Defensive pacts are a commitment', nap: 'Reluctance to tie their hands', access: 'Foreign troops on their soil', trade: '' }[type] || 'Base', BASE[type]);
+  add({ alliance: 'Alliances are a big commitment', defensive: 'Defensive pacts are a commitment', nap: 'Reluctance to tie their hands', access: 'Foreign troops on their soil', trade: '', arms_control: 'Verification and lost flexibility' }[type] || 'Base', BASE[type]);
   const op = opinion(state, map, rules, to, from);
   add('Their opinion of you', op * 0.5);
   add('Their trust in you', (trust(state, rules, to, from) - 50) * 0.3);
@@ -395,6 +399,12 @@ export function evaluateTreaty(state, map, rules, type, from, to) {
     if (r === 'business') add('Business-friendly government', 10);
     if (r === 'nationalists') add('Protectionist government', -8);
     if (T.govt?.policies.economy === 'planned') add('Planned economy', -10);
+  } else if (type === 'arms_control') {
+    const cap = rules.balance.strategic.armsControlCap, mine = T.strat.warheads, theirs = F.strat.warheads;
+    add('Slows a costly arms race', 15);
+    if (theirs > cap) add('Caps their arsenal', 10);
+    if (mine > cap && theirs <= cap) add(`We would have to cut to ${cap} warheads`, -20);
+    if (T.rival === from) add('They are our rival', -10);
   }
   return { accept: score > 0, score, reasons };
 }

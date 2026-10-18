@@ -1,0 +1,33 @@
+tag,carriers,capital,screens,subs,nsubs,ssbns,fighters,bombers,attack,drones,warheads,icbms,satellites,note
+GBR,0,64,300,75,0,0,200,0,0,0,0,0,0,~20 dreadnoughts + 7 battlecruisers + ~37 pre-dreadnoughts; cruisers+destroyers; RFC+RNAS aeroplanes
+GER,0,39,175,28,0,0,250,0,0,0,0,0,0,13 dreadnoughts + 4 battlecruisers + ~22 pre-dreadnoughts; cruisers + large torpedo boats
+FRA,0,20,115,60,0,0,140,0,0,0,0,0,0,2 Courbet dreadnoughts + Danton/Liberte/Patrie and older pre-dreadnoughts
+RUS,0,10,60,25,0,0,240,0,0,0,0,0,0,Pre-dreadnoughts only (Gangut class not yet commissioned); ~244 aircraft
+AUH,0,15,28,6,0,0,50,0,0,0,0,0,0,3 Tegetthoff dreadnoughts + 9 pre-dreadnoughts + 3 Monarch coast battleships
+ITA,0,12,50,20,0,0,100,0,0,0,0,0,0,4 dreadnoughts + ~8 pre-dreadnoughts
+OTT,0,3,10,0,0,0,10,0,0,0,0,0,0,Two ex-German pre-dreadnoughts + Mesudiye; Goeben arrives Aug 1914
+USA,0,33,80,30,0,0,30,0,0,0,0,0,0,10 dreadnoughts + ~23 pre-dreadnoughts
+JAP,0,20,75,13,0,0,20,0,0,0,0,0,0,Kongo + Settsu class + pre-dreadnoughts and battlecruiser-rated armoured cruisers
+SPA,0,2,9,0,0,0,30,0,0,0,0,0,0,Espana dreadnought + Pelayo
+GRE,0,0,16,2,0,0,8,0,0,0,0,0,0,Averof armoured cruiser counted as screen; Kilkis/Lemnos bought July 1914
+NET,0,0,10,5,0,0,5,0,0,0,0,0,0,Coast defence ships and cruisers as screens
+SWE,0,0,12,7,0,0,10,0,0,0,0,0,0,Pansarskepp coast defence ships as screens
+NOR,0,0,6,4,0,0,5,0,0,0,0,0,0,Coast defence ships as screens
+DEN,0,0,3,6,0,0,3,0,0,0,0,0,0,Coast defence ships as screens
+POR,0,0,7,1,0,0,0,0,0,0,0,0,0,Cruisers and destroyers
+BRA,0,2,12,3,0,0,0,0,0,0,0,0,0,Minas Geraes and Sao Paulo dreadnoughts
+ARG,0,0,12,0,0,0,5,0,0,0,0,0,0,Rivadavia class not yet delivered; armoured cruisers as screens
+CHL,0,1,10,0,0,0,10,0,0,0,0,0,0,Capitan Prat; Almirante Latorre taken by Royal Navy
+AST,0,1,7,2,0,0,4,0,0,0,0,0,0,HMAS Australia battlecruiser; cruisers and River-class destroyers; AE1/AE2
+CAN,0,0,2,0,0,0,0,0,0,0,0,0,0,Niobe and Rainbow cruisers
+NZL,0,0,1,0,0,0,0,0,0,0,0,0,0,HMS Philomel
+CHN,0,0,8,0,0,0,0,0,0,0,0,0,0,Hai Chi/Hai Chou/Hai Yung class cruisers and gunboats
+ROM,0,0,1,0,0,0,20,0,0,0,0,0,0,Cruiser Elisabeta
+BUL,0,0,1,0,0,0,10,0,0,0,0,0,0,Torpedo gunboat Nadezhda
+SRB,0,0,0,0,0,0,10,0,0,0,0,0,0,Small aviation unit
+BEL,0,0,0,0,0,0,25,0,0,0,0,0,0,Aviation militaire
+SWI,0,0,0,0,0,0,10,0,0,0,0,0,0,Civil aircraft requisitioned
+PRU,0,0,2,2,0,0,0,0,0,0,0,0,0,Scout cruisers Grau and Bolognesi; Ferre and Palacios submarines
+CUB,0,0,1,0,0,0,0,0,0,0,0,0,0,Cruiser Cuba
+SIA,0,0,0,0,0,0,8,0,0,0,0,0,0,Aircraft bought 1913
+MEX,0,0,0,0,0,0,5,0,0,0,0,0,0,Revolution-era aircraft

@@ -7,6 +7,8 @@ import { atWar, friendly, warBetween } from './relations.js';
 import { unitCount, log } from './state.js';
 import { randRange } from './rng.js';
 import { armyMen } from './military.js';
+import { battleSupport, airCombatDay } from './air.js';
+import { satCover } from './strategic.js';
 
 function sideOf(battle, owner, state) {
   if (battle.att.some((id) => { const a = armyById(state, id); return a && friendly(state, a.owner, owner); })) return 'att';
@@ -22,6 +24,7 @@ export function detectBattles(state, map) {
   const byProv = new Map();
   for (const a of state.armies) {
     if (a.prog > 0 && a.path.length) continue; // in transit between provinces
+    if (a.sea >= 0) continue; // at sea
     let arr = byProv.get(a.loc);
     if (!arr) byProv.set(a.loc, (arr = []));
     arr.push(a);
@@ -77,7 +80,10 @@ export function sideStats(state, ids, role, terrain, rules, p) {
     // supply: munitions shortages weaken every unit, fuel shortages weaken armour
     const e = state.countries[a.owner].econ;
     const mun = e ? 0.6 + 0.4 * e.supplyMun : 1, fuel = e ? 0.5 + 0.5 * e.supplyFuel : 1;
-    const tech = state.countries[a.owner].tfx?.mult.combat ?? 1;
+    const co = state.countries[a.owner];
+    // technology, reconnaissance satellites, and supply (see docs/LOGISTICS.md)
+    const tech = (co.tfx?.mult.combat ?? 1) * (co.strat ? 1 + 0.04 * satCover(co, 'recon', rules) : 1)
+      * (1 - B.supplyWeight + B.supplyWeight * (a.supply ?? 1));
     let usesMun = 0;
     for (const t in a.units) {
       const k = a.units[t];
@@ -110,8 +116,14 @@ export function resolveBattles(state, map, rules) {
     const A = sideStats(state, b.att, 'att', terrain, rules, b.prov);
     const D = sideStats(state, b.def, 'def', terrain, rules, b.prov);
     let aDmg = A.dmg * randRange(state, 0.85, 1.15);
-    const dDmg = D.dmg * randRange(state, 0.85, 1.15);
-    if (b.viaStrait && b.days < 5) aDmg *= B.straitAttackPenalty;
+    let dDmg = D.dmg * randRange(state, 0.85, 1.15);
+    // air forces, carriers and warships offshore (see docs/NAVY_AIR.md)
+    const sup = battleSupport(state, map, rules, b, A.armies[0].owner, D.armies[0].owner);
+    const air = airCombatDay(state, rules, sup);
+    aDmg += air.extraA; dDmg += air.extraD;
+    b.air = air.tot > 0 || air.extraA || air.extraD ? { share: air.shareA, a: air.extraA, d: air.extraD } : null;
+    // landings: a penalty for the first days, eased by naval bombardment
+    if (b.viaStrait && b.days < 5) aDmg *= B.straitAttackPenalty + (1 - B.straitAttackPenalty) * Math.min(1, sup.aShore / 10) * rules.balance.naval.landingSupport;
     applyDamage(D.armies, (aDmg * B.damage) / D.tough, (aDmg * B.orgDamage) / Math.max(1, D.units), rules, b, 1);
     applyDamage(A.armies, (dDmg * B.damage) / A.tough, (dDmg * B.orgDamage) / Math.max(1, A.units), rules, b, 0);
     b.days++;
@@ -196,6 +208,9 @@ function battleFactors(b, A, D, terrain, fort, rules) {
   f.push(`Daily damage at the end: attackers ${A.dmg.toFixed(1)}, defenders ${D.dmg.toFixed(1)}.`);
   f.push(`Organisation at the end: attackers ${Math.round(A.org * 100)}%, defenders ${Math.round(D.org * 100)}%.`);
   if (b.viaStrait) f.push('Attackers crossed water and fought at a penalty for the first days.');
+  if (b.air) f.push(`Air and naval support: attackers held ${Math.round(b.air.share * 100)}% of the air; extra daily damage attackers ${b.air.a.toFixed(1)}, defenders ${b.air.d.toFixed(1)}.`);
+  const sup = (x) => x.armies.reduce((s, a) => s + (a.supply ?? 1), 0) / Math.max(1, x.armies.length);
+  if (sup(A) < 0.95 || sup(D) < 0.95) f.push(`Supply: attackers ${Math.round(sup(A) * 100)}%, defenders ${Math.round(sup(D) * 100)}% (low supply cuts damage by up to ${Math.round(rules.balance.combat.supplyWeight * 100)}%).`);
   if (A.supply < 0.99 || D.supply < 0.99) f.push(`Munitions supply: attackers ${Math.round(A.supply * 100)}%, defenders ${Math.round(D.supply * 100)}% of full strength (shortages cut damage by up to 40%).`);
   return f;
 }

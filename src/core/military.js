@@ -1,8 +1,12 @@
 // Armies: recruitment, orders, daily movement, sieges/occupation, reinforcement.
 import { newArmy, unitCount, log, refreshCountryCache } from './state.js';
 import { canEnter, atWar, friendly } from './relations.js';
-import { findPath, stepDays, edgeIndex } from './pathfind.js';
+import { findPath, findSeaPath, pathDays, stepDays, edgeIndex } from './pathfind.js';
 import { canUseUnit } from './technology.js';
+import { portZonesOf } from './mapdata.js';
+import { commissionShip, laneOpen, hostileSea, linkOpen } from './naval.js';
+import { commissionWing, canBase } from './air.js';
+import { satCover } from './strategic.js';
 
 // Slowest unit's speed, times the country's movement technology; armies with fuel-using units
 // (armour) slow down when the country is short of fuel.
@@ -13,6 +17,7 @@ export function armySpeed(a, rules, state = null) {
   const c = state?.countries[a.owner];
   if (c?.econ && fuel) s *= 0.7 + 0.3 * c.econ.supplyFuel;
   if (c?.tfx) s *= c.tfx.mult.movement;
+  if (c?.strat) s *= 1 + 0.05 * satCover(c, 'nav', rules);
   return s;
 }
 
@@ -26,18 +31,21 @@ export function armyMen(a, rules) {
 // technology; types without a technology are the oldest).
 // cached per country until the technology version changes (the AI asks often)
 const bestCache = new WeakMap();
-export function bestUnits(state, rules, k) {
+// domain: land (armies), sea (fleets) or air (wings); roles differ per domain.
+export function bestUnits(state, rules, k, domain = 'land') {
   let cache = bestCache.get(state);
   const ver = state.tech?.ver ?? 0;
   if (!cache || cache.ver !== ver || cache.rules !== rules) { cache = { ver, rules, by: new Map() }; bestCache.set(state, cache); }
-  let v = cache.by.get(k);
-  if (!v) { v = computeBestUnits(state, rules, k); cache.by.set(k, v); }
+  const key = domain === 'land' ? k : `${domain}${k}`;
+  let v = cache.by.get(key);
+  if (!v) { v = computeBestUnits(state, rules, k, domain); cache.by.set(key, v); }
   return v;
 }
 
-function computeBestUnits(state, rules, k) {
+function computeBestUnits(state, rules, k, domain) {
   const best = {};
   for (const [id, u] of Object.entries(rules.units)) {
+    if ((u.domain || 'land') !== domain) continue;
     if (!canUseUnit(state, rules, k, id)) continue;
     const t = rules.tech.unitTech[id];
     const yr = t == null ? -1e9 : rules.tech.list[t].year;
@@ -96,6 +104,9 @@ export function canRecruit(state, map, rules, country, prov, type, count = 1) {
   if (!Number.isInteger(count) || count < 1 || count > 20) return 'Invalid amount';
   if (!map.exists[prov]) return 'Invalid province';
   if (state.prov.owner[prov] !== country || state.prov.controller[prov] !== country) return 'You must own and control the province';
+  const domain = rules.units[type].domain || 'land';
+  if (domain === 'sea' && !portZonesOf(map, prov).length) return 'Warships are built in coastal provinces with a port';
+  if (domain === 'air' && state.prov.infra[prov] < (rules.balance.air.minInfra ?? 1)) return 'Aircraft need an airfield (infrastructure 1 or more)';
   for (const a of state.armies) if (a.loc === prov && atWar(state, a.owner, country)) return 'Enemy troops are present';
   const cost = recruitCost(state, rules, country, type, count);
   if (c.treasury < cost.money) return `Not enough money (need ${cost.money.toFixed(1)}B)`;
@@ -124,7 +135,14 @@ export function processRecruitment(state, map, rules) {
       if (r.owner === state.player) log(state, 'military', `Recruitment in ${map.name[r.prov]} was lost to occupation.`);
       continue;
     }
-    let army = state.armies.find((a) => a.owner === r.owner && a.loc === r.prov && !a.path.length && !a.battle);
+    const domain = rules.units[r.type].domain || 'land';
+    if (domain !== 'land') {
+      if (domain === 'sea') commissionShip(state, map, rules, r.owner, r.prov, r.type);
+      else commissionWing(state, map, rules, r.owner, r.prov, r.type);
+      if (r.owner === state.player) log(state, 'military', `${rules.units[r.type].name} ready in ${map.name[r.prov]}.`, { prov: r.prov });
+      continue;
+    }
+    let army = state.armies.find((a) => a.owner === r.owner && a.loc === r.prov && !a.path.length && !a.battle && !(a.sea >= 0));
     if (army) {
       const n = unitCount(army);
       army.str = (army.str * n + 1) / (n + 1);
@@ -140,25 +158,59 @@ export function processRecruitment(state, map, rules) {
   state.recruit = keep;
 }
 
-// Orders an army to move. Returns null or a reason.
+// Orders an army to move. Returns null or a reason. Armies go by land when they can; when there
+// is no land route, or the sea is much faster, they embark and sail (see findSeaPath).
 export function orderMove(state, map, rules, armyId, dest) {
   const a = state.armies.find((x) => x.id === armyId);
   if (!a) return 'No such army';
   if (!map.exists[dest]) return 'Invalid destination';
   if (a.battle) return 'Army is in battle';
-  if (dest === a.loc) { a.path = []; a.prog = 0; return null; }
+  if (dest === a.loc && !(a.sea >= 0)) { a.path = []; a.prog = 0; return null; }
   if (!canEnter(state, a.owner, dest)) return 'No military access to that province';
-  const path = findPath(map, state, a.owner, a.loc, dest, armySpeed(a, rules, state));
-  if (!path) return 'No route to that province';
+  const speed = armySpeed(a, rules, state);
+  const N = map.count;
+  let path = a.sea >= 0 ? null : findPath(map, state, a.owner, a.loc, dest, speed, 6000, rules);
+  const landDays = path ? pathDays(map, state, rules, a.loc, path, speed) : Infinity;
+  if (a.sea >= 0 || landDays > 30) {
+    // from sea: plan from the zone the army is in
+    const start = a.sea >= 0 ? N + a.sea : a.loc;
+    const sp = findSeaPath(map, state, rules, a.owner, start, dest, speed);
+    if (sp && (!path || pathDays(map, state, rules, start, sp, speed) < landDays * 0.67)) path = sp;
+  }
+  if (!path) return 'No route to that province (enemy fleets may hold the sea)';
   if (a.path.length && a.path[0] !== path[0]) a.prog = 0;
   a.path = path;
   return null;
 }
 
 export function processMovement(state, map, rules) {
+  const N = map.count, S = map.sea, NB = rules.balance.naval;
+  let lost = false;
   for (const a of state.armies) {
+    if (a.sea >= 0 && atSea(state, map, rules, a)) { lost = true; continue; }
     if (!a.path.length || a.battle) continue;
     const next = a.path[0];
+    let need;
+    if (next >= N || a.sea >= 0) {
+      // embarking, sailing or landing
+      if (a.sea >= 0 && next >= N) {
+        let e = -1;
+        for (let k = S.start[a.sea]; k < S.start[a.sea + 1]; k++) if (S.adj[k] === next - N) { e = k; break; }
+        if (e < 0 || !linkOpen(state, map, a.owner, S.link[e])) { a.path = []; a.prog = 0; continue; }
+        need = S.km[e] / NB.transportKmDay;
+      } else {
+        if (next < N && !canEnter(state, a.owner, next)) { a.path = []; a.prog = 0; continue; }
+        need = NB.embarkDays;
+      }
+      a.prog += 1 / Math.max(1, need);
+      if (a.prog >= 1) {
+        a.prog = 0;
+        a.path.shift();
+        if (next >= N) { a.sea = next - N; }
+        else { a.sea = -1; a.loc = next; a.arrived = state.day; a.lastEdgeKind = 2; }
+      }
+      continue;
+    }
     if (!canEnter(state, a.owner, next)) {
       a.path = []; a.prog = 0;
       if (a.owner === state.player) log(state, 'military', `${a.name} halted: no access to ${map.name[next]}.`);
@@ -166,7 +218,12 @@ export function processMovement(state, map, rules) {
     }
     const e = edgeIndex(map, a.loc, next);
     if (e < 0) { a.path = []; a.prog = 0; continue; }
-    const need = stepDays(map, state, a.loc, e, armySpeed(a, rules, state));
+    if (map.adjKind[e] > 0 && !laneOpen(state, map, rules, a.owner, e)) {
+      a.path = []; a.prog = 0;
+      if (a.owner === state.player) log(state, 'military', `${a.name} halted: enemy fleets hold the crossing to ${map.name[next]}.`, { prov: a.loc });
+      continue;
+    }
+    need = stepDays(map, state, a.loc, e, armySpeed(a, rules, state));
     a.prog += 1 / Math.max(1, need);
     if (a.prog >= 1) {
       a.prog = 0;
@@ -176,6 +233,26 @@ export function processMovement(state, map, rules) {
       a.lastEdgeKind = map.adjKind[e];
     }
   }
+  if (lost) state.armies = state.armies.filter((a) => !(a.sea >= 0 && a.str < 0.05));
+}
+
+// Troops at sea are at the mercy of whoever holds the water: transports in a zone the enemy
+// holds are sunk a little every day. An army left at sea without orders heads for the nearest
+// friendly coast.
+function atSea(state, map, rules, a) {
+  const NB = rules.balance.naval;
+  if (hostileSea(state, map, rules, a.owner, a.sea)) {
+    a.str = Math.max(0, a.str - NB.transportLossDay);
+    if (a.owner === state.player) log(state, 'military', `${a.name} is under attack at sea in the ${map.sea.zones[a.sea].name}.`, { important: true });
+    if (a.str < 0.05) { if (a.owner === state.player) log(state, 'military', `${a.name} was lost at sea.`, { important: true }); return true; }
+  }
+  if (!a.path.length) {
+    let best = -1;
+    for (const p of map.sea.zoneProvs[a.sea]) if (friendly(state, a.owner, state.prov.controller[p])) { best = p; break; }
+    if (best >= 0) a.path = [best];
+    else for (const p of map.sea.zoneProvs[a.sea]) if (canEnter(state, a.owner, p)) { a.path = [p]; break; }
+  }
+  return false;
 }
 
 export function siegeDays(state, rules, p) {
@@ -187,7 +264,7 @@ export function siegeDays(state, rules, p) {
 export function processSieges(state, map, rules) {
   const byProv = new Map();
   for (const a of state.armies) {
-    if (a.battle || a.path.length && a.prog > 0) continue;
+    if (a.battle || a.path.length && a.prog > 0 || a.sea >= 0) continue;
     let arr = byProv.get(a.loc);
     if (!arr) byProv.set(a.loc, (arr = []));
     arr.push(a);
@@ -249,7 +326,7 @@ export function setController(state, map, p, c) {
 export function monthlyMilitary(state, map, rules) {
   const R = rules.balance.combat;
   for (const a of state.armies) {
-    if (a.battle || a.str >= 1) continue;
+    if (a.battle || a.str >= 1 || a.sea >= 0 || (a.supply ?? 1) < rules.balance.supply.low) continue;
     const ctl = state.prov.controller[a.loc];
     if (!friendly(state, a.owner, ctl)) continue;
     const c = state.countries[a.owner];
@@ -267,12 +344,15 @@ function armyMenFull(a, rules) {
   return Math.max(1, m);
 }
 
+// Organisation recovers faster at home, with good supply and with communications satellites.
 export function dailyRecovery(state, rules) {
   const R = rules.balance.combat;
   for (const a of state.armies) {
-    if (a.battle) continue;
+    if (a.battle || a.sea >= 0) continue;
     const home = friendly(state, a.owner, state.prov.controller[a.loc]);
-    a.org = Math.min(1, a.org + R.orgRecoveryDay * (home ? 1 : 0.5));
+    const c = state.countries[a.owner];
+    const comms = c.strat ? 1 + 0.2 * satCover(c, 'comms', rules) : 1;
+    a.org = Math.min(1, a.org + R.orgRecoveryDay * (home ? 1 : 0.5) * (a.supply ?? 1) * comms);
   }
 }
 

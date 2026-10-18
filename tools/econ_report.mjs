@@ -9,7 +9,7 @@ import { formatDate } from '../src/core/calendar.js';
 const rd = (p) => JSON.parse(fs.readFileSync(new URL('../' + p, import.meta.url)));
 const years = +(process.argv[2] || 3);
 const tags = process.argv.slice(3).length ? process.argv.slice(3) : ['USA', 'CHN', 'DEU', 'JPN', 'IND', 'RUS', 'SAU', 'BRA', 'NGA', 'EGY', 'FRA', 'KOR'];
-const map = decodeMap(rd('data/map/world.json'));
+const map = decodeMap(rd('data/map/world.json'), rd('data/map/seas.json'));
 const rules = loadRules();
 const game = newGame({ map, scenario: rd('data/scenarios/modern_2026.json'), rules, seed: 'econ-1' });
 const s = game.state, X = rules.econ;

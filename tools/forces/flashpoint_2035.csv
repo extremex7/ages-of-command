@@ -1,0 +1,74 @@
+tag,carriers,capital,screens,subs,nsubs,ssbns,fighters,bombers,attack,drones,warheads,icbms,satellites,note
+USA,11,85,20,0,48,14,2500,140,900,1000,3600,400,900,Ford-class carriers and first Columbia SSBNs; B-21 entering service; collaborative combat drones
+CHN,6,60,120,50,16,10,2300,200,600,1500,1500,700,900,Six carriers incl. nuclear-powered Type 004; silo fields complete
+RUS,0,8,70,20,15,12,1000,110,600,600,5000,300,150,Kuznetsov retired; Yasen and Borei fleets; large non-strategic stockpile
+GBR,2,6,12,0,7,4,160,0,50,40,260,0,15,Two Queen Elizabeth carriers; Astute boats; Dreadnought SSBNs entering service
+FRA,1,2,20,0,6,4,230,0,60,40,290,0,20,Charles de Gaulle until its successor; Suffren SSNs; airborne nuclear component
+IND,3,15,40,18,2,4,700,0,250,150,250,80,30,Third carrier; first SSNs; Agni land-based missiles
+PAK,0,0,20,12,0,0,450,0,60,100,220,120,5,Hangor submarines; Shaheen and Ghauri land-based missiles
+JPN,2,10,40,24,0,0,320,0,50,30,0,0,25,Izumo-class carriers operating F-35B; Aegis system ships
+KOR,0,6,30,20,0,0,420,0,120,60,0,0,15,KDX-III destroyers; KF-21 fighters
+PRK,0,0,20,40,0,1,350,0,100,50,100,30,4,Mostly obsolete aircraft; road-mobile ICBMs; one ballistic missile submarine
+TWN,0,4,30,6,0,0,400,0,100,200,0,0,5,Hai Kun submarines; mass drone and missile arsenal for strait defence
+ISR,0,0,7,6,0,0,300,0,50,200,90,50,10,Undeclared arsenal; Jericho missiles; Dolphin submarines
+IRN,0,0,15,20,0,0,150,0,50,800,0,0,5,Threshold nuclear state; large one-way attack drone force
+SAU,0,0,16,0,0,0,330,0,100,100,0,0,5,
+ARE,0,0,10,0,0,0,150,0,30,60,0,0,4,
+QAT,0,0,7,0,0,0,90,0,10,10,0,0,1,
+KWT,0,0,4,0,0,0,60,0,20,10,0,0,0,
+OMN,0,0,6,0,0,0,40,0,10,5,0,0,0,
+TUR,1,2,30,12,0,0,300,0,100,500,0,0,8,MUGEM carrier; TF-2000 destroyers; KAAN fighters entering service
+EGY,0,0,25,8,0,0,400,0,80,50,0,0,4,
+ETH,0,0,0,0,0,0,25,0,15,40,0,0,0,
+ERI,0,0,2,0,0,0,10,0,5,0,0,0,0,
+SDN,0,0,2,0,0,0,30,0,15,30,0,0,0,
+DEU,0,0,13,9,0,0,220,0,50,30,0,0,12,
+ITA,2,2,18,8,0,0,200,0,50,20,0,0,10,Cavour and Trieste
+ESP,1,0,15,4,0,0,160,0,30,10,0,0,5,Juan Carlos I with F-35B
+NLD,0,0,6,4,0,0,50,0,30,10,0,0,2,
+POL,0,0,4,1,0,0,150,0,100,50,0,0,4,
+SWE,0,0,10,5,0,0,100,0,10,10,0,0,3,
+FIN,0,0,8,0,0,0,64,0,0,10,0,0,2,
+NOR,0,0,6,4,0,0,52,0,0,10,0,0,3,
+DNK,0,0,9,0,0,0,27,0,0,5,0,0,1,
+GRC,0,0,15,10,0,0,200,0,30,10,0,0,1,
+PRT,0,0,7,2,0,0,25,0,0,0,0,0,1,
+ROU,0,0,4,0,0,0,50,0,10,10,0,0,0,
+BGR,0,0,4,0,0,0,15,0,5,0,0,0,0,
+HRV,0,0,2,0,0,0,12,0,0,0,0,0,0,
+CZE,0,0,0,0,0,0,24,0,10,0,0,0,0,
+HUN,0,0,0,0,0,0,24,0,10,0,0,0,0,
+SVK,0,0,0,0,0,0,14,0,5,0,0,0,0,
+BEL,0,0,2,0,0,0,34,0,0,0,0,0,1,
+UKR,0,0,2,0,0,0,120,0,50,2000,0,0,2,Mass drone forces built during the war of the 2020s
+BLR,0,0,0,0,0,0,60,0,20,20,0,0,0,
+KAZ,0,0,0,0,0,0,60,0,20,10,0,0,1,
+AZE,0,0,0,0,0,0,20,0,10,60,0,0,0,
+ARM,0,0,0,0,0,0,10,0,5,20,0,0,0,
+CAN,0,0,12,4,0,0,90,0,0,10,0,0,4,
+AUS,0,4,10,6,2,0,100,0,30,30,0,0,8,Hobart destroyers; first AUKUS SSNs; Ghost Bat drones
+NZL,0,0,2,0,0,0,0,0,0,0,0,0,0,
+SGP,0,0,10,4,0,0,100,0,20,10,0,0,2,
+IDN,0,0,30,6,0,0,80,0,20,20,0,0,2,
+MYS,0,0,12,2,0,0,30,0,10,0,0,0,0,
+THA,0,0,12,1,0,0,80,0,20,5,0,0,1,
+VNM,0,0,15,6,0,0,80,0,30,10,0,0,1,
+PHL,0,0,10,0,0,0,30,0,20,10,0,0,1,
+MMR,0,0,8,2,0,0,80,0,20,10,0,0,0,
+BGD,0,0,10,2,0,0,50,0,10,5,0,0,0,
+LKA,0,0,5,0,0,0,10,0,0,0,0,0,0,
+BRA,0,0,12,5,1,0,90,0,30,10,0,0,3,Riachuelo submarines; first nuclear submarine Alvaro Alberto
+ARG,0,0,8,1,0,0,30,0,10,0,0,0,0,
+CHL,0,0,8,4,0,0,45,0,0,0,0,0,1,
+COL,0,0,5,4,0,0,20,0,20,5,0,0,0,
+PER,0,0,7,6,0,0,30,0,10,0,0,0,0,
+VEN,0,0,4,2,0,0,30,0,10,5,0,0,0,
+MEX,0,0,10,0,0,0,10,0,20,5,0,0,1,
+CUB,0,0,0,0,0,0,15,0,10,0,0,0,0,
+DZA,0,0,12,6,0,0,150,0,50,20,0,0,1,
+MAR,0,0,6,0,0,0,80,0,25,10,0,0,1,
+NGA,0,0,5,0,0,0,30,0,15,10,0,0,0,
+ZAF,0,0,4,3,0,0,20,0,10,0,0,0,1,
+IRQ,0,0,0,0,0,0,40,0,30,10,0,0,0,
+SYR,0,0,0,0,0,0,10,0,5,0,0,0,0,
+JOR,0,0,0,0,0,0,50,0,20,0,0,0,0,

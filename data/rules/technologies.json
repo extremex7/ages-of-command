@@ -1377,6 +1377,140 @@
       "fictional": true,
       "effects": { "research": 0.3, "industry": 0.1 },
       "desc": "Fictional: superhuman AI accelerates research and production beyond any human institution."
+    },
+    "submarines": {
+      "name": "Submarines",
+      "era": "great_war",
+      "field": "navy",
+      "year": 1900,
+      "cost": 1.0,
+      "req": ["steamships", "internal_combustion"],
+      "effects": {},
+      "desc": "Diesel-electric submarines that hunt warships and merchant convoys unseen."
+    },
+    "all_metal_aircraft": {
+      "name": "All-Metal Aircraft",
+      "era": "world_war",
+      "field": "air",
+      "year": 1933,
+      "cost": 1.0,
+      "req": ["powered_flight"],
+      "effects": {},
+      "desc": "Monoplane fighters, dive bombers and four-engine heavy bombers."
+    },
+    "atomic_bomb": {
+      "name": "Atomic Bomb",
+      "era": "world_war",
+      "field": "army",
+      "year": 1945,
+      "cost": 2.0,
+      "req": ["nuclear_fission"],
+      "effects": {},
+      "desc": "Fission weapons. Lets a country build nuclear warheads (Strategic tab)."
+    },
+    "thermonuclear_weapons": {
+      "name": "Thermonuclear Weapons",
+      "era": "cold_war",
+      "field": "army",
+      "year": 1952,
+      "cost": 1.5,
+      "req": ["atomic_bomb"],
+      "effects": {},
+      "desc": "Hydrogen bombs: each warhead does far more damage."
+    },
+    "icbm": {
+      "name": "Ballistic Missiles",
+      "era": "cold_war",
+      "field": "space",
+      "year": 1959,
+      "cost": 1.8,
+      "req": ["spaceflight", "atomic_bomb"],
+      "effects": {},
+      "desc": "Intercontinental and submarine-launched ballistic missiles deliver warheads anywhere."
+    },
+    "missile_defense": {
+      "name": "Missile Defence",
+      "era": "cold_war",
+      "field": "army",
+      "year": 1971,
+      "cost": 1.5,
+      "req": ["guided_missiles", "radar"],
+      "effects": {},
+      "desc": "Interceptors that can stop some incoming ballistic missiles."
+    },
+    "stealth": {
+      "name": "Stealth Aircraft",
+      "era": "cold_war",
+      "field": "air",
+      "year": 1981,
+      "cost": 1.5,
+      "req": ["jet_engine", "integrated_circuit"],
+      "effects": { "combat": 0.02 },
+      "desc": "Low-observable fighters and bombers that are hard to intercept."
+    },
+    "cyber_warfare": {
+      "name": "Cyber Warfare",
+      "era": "information",
+      "field": "communications",
+      "year": 2007,
+      "cost": 1.5,
+      "req": ["internet"],
+      "effects": {},
+      "desc": "State hacking units: espionage, sabotage and disruption through networks (Strategic tab)."
+    },
+    "hypersonic_weapons": {
+      "name": "Hypersonic Weapons",
+      "era": "information",
+      "field": "army",
+      "year": 2019,
+      "cost": 1.5,
+      "req": ["precision_guided_munitions", "icbm"],
+      "effects": {},
+      "desc": "Manoeuvring glide vehicles that missile defences struggle to stop."
+    },
+    "autonomous_weapons": {
+      "name": "Autonomous Weapons",
+      "era": "near_future",
+      "field": "army",
+      "year": 2038,
+      "cost": 1.5,
+      "req": ["drones", "machine_learning"],
+      "fictional": true,
+      "effects": { "combat": 0.05 },
+      "desc": "Fictional: self-directing drone swarms, robotic armour and unmanned warships."
+    },
+    "quantum_encryption": {
+      "name": "Quantum Encryption",
+      "era": "near_future",
+      "field": "communications",
+      "year": 2040,
+      "cost": 1.2,
+      "req": ["quantum_computing"],
+      "fictional": true,
+      "effects": {},
+      "desc": "Fictional: unbreakable communications that double cyber defence."
+    },
+    "orbital_defense": {
+      "name": "Orbital Defence",
+      "era": "near_future",
+      "field": "space",
+      "year": 2058,
+      "cost": 1.8,
+      "req": ["directed_energy_weapons", "orbital_industry"],
+      "fictional": true,
+      "effects": {},
+      "desc": "Fictional: space-based lasers that intercept ballistic missiles in flight and destroy satellites."
+    },
+    "off_world_settlement": {
+      "name": "Off-World Settlement",
+      "era": "future",
+      "field": "space",
+      "year": 2070,
+      "cost": 2.0,
+      "req": ["orbital_industry", "fusion_power"],
+      "fictional": true,
+      "effects": {},
+      "desc": "Fictional: permanent settlements on the Moon and Mars (Strategic tab)."
     }
   }
 }

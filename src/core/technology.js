@@ -85,7 +85,7 @@ function yearOf(day) { return civilFromDays(day).y; }
 
 // Installs starting technologies: everything first used up to the scenario's tech year minus
 // the country's lag (plus prerequisites), and any listed explicitly. Fictional technologies
-// are never given at start.
+// are only given at start in scenarios marked "fictional" (the future scenarios).
 export function initTechnology(state, map, rules, scenario) {
   const R = rules.tech, C = state.countries.length, T = R.T;
   state.tech = { ids: R.list.map((t) => t.id), T, known: new Uint8Array(C * T), ver: 0 };
@@ -94,7 +94,7 @@ export function initTechnology(state, map, rules, scenario) {
   for (const c of state.countries) {
     const sc = byTag.get(c.tag) || {};
     const year = (sc.techYear ?? scenario.techYear ?? startYear) - (sc.techLag ?? 0);
-    for (const t of R.list) if (!t.fictional && t.year <= year) grantClosure(state, rules, c.idx, t.i);
+    for (const t of R.list) if ((!t.fictional || scenario.fictional) && t.year <= year) grantClosure(state, rules, c.idx, t.i);
     for (const id of sc.techs || []) if (id in R.idx) grantClosure(state, rules, c.idx, R.idx[id]);
     c.research = newResearch(rules, sc);
   }
@@ -230,7 +230,10 @@ export function researchPoints(state, rules, c, parts = null) {
   const spend = Math.max(0, c.ledger.research || 0);
   const real = spend / Math.max(0.1, c.cache.priceLevel);
   const edu = Rb.eduMin + (1 - Rb.eduMin) * Math.min(1.25, c.cache.avgDev / rules.balance.economy.refDev);
-  const mult = c.tfx?.mult.research ?? 1;
+  // orbital stations and off-world settlements add research; network disruption cuts it
+  const st = c.strat;
+  const space = st ? (1 + 0.03 * st.stations + 0.06 * st.colonies) * (st.disrupted > 0 ? 0.8 : 1) : 1;
+  const mult = (c.tfx?.mult.research ?? 1) * space;
   const rp = Rb.rpScale * Math.sqrt(real) * edu * mult;
   if (parts) Object.assign(parts, { spend, real, edu, mult, rp });
   return rp;

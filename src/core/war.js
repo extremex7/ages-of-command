@@ -403,6 +403,8 @@ export function eliminate(state, map, c) {
   const C = state.countries;
   C[c].alive = false;
   state.armies = state.armies.filter((a) => a.owner !== c);
+  if (state.fleets) { state.fleets = state.fleets.filter((f) => f.owner !== c); state.fleetVer = (state.fleetVer || 0) + 1; }
+  if (state.wings) state.wings = state.wings.filter((w) => w.owner !== c);
   state.recruit = state.recruit.filter((r) => r.owner !== c);
   for (const al of state.alliances) al.members = al.members.filter((m) => m !== c);
   for (const w of [...state.wars]) {

@@ -10,6 +10,11 @@ import { opinion, treatiesBrokenByWar, overlordOf, subjectsOf, hasClaim, TREATIE
 import { govType } from './government.js';
 import { rand } from './rng.js';
 import { countryNeighbours } from './geo.js';
+import { aiFleets } from './naval.js';
+import { aiWings } from './air.js';
+import { aiDepots } from './supply.js';
+import { nuclearDeterred, hasDeterrent } from './strategic.js';
+import { portZonesOf } from './mapdata.js';
 import { constructionSlots, projectCost, canBuild, startProject, provinceLabour, devEff, infraEff, buildingEff, fertilityMap } from './industry.js';
 
 export { countryNeighbours };
@@ -19,19 +24,22 @@ export { countryNeighbours };
 export function warOdds(state, a, t) {
   const C = state.countries;
   const def = warJoiners(state, a, t);
+  // land power, plus air power (it supports every battle in range)
+  const pw = (k) => C[k].cache.armyPower + (C[k].cache.airPower || 0) * AIR_WEIGHT;
   let theirs = 0;
-  for (const d of def) theirs += C[d].cache.armyPower * (d === t ? 1 : 0.6);
-  let mine = C[a].cache.armyPower;
-  for (const s of subjectsOf(state, a)) if (!def.includes(s)) mine += C[s].cache.armyPower;
+  for (const d of def) theirs += pw(d) * (d === t ? 1 : 0.6);
+  let mine = pw(a);
+  for (const s of subjectsOf(state, a)) if (!def.includes(s)) mine += pw(s);
   for (const tr of state.dip.treaties) {
     if (tr.type !== 'alliance' || (tr.a !== a && tr.b !== a)) continue;
     const p = tr.a === a ? tr.b : tr.a;
-    if (!def.includes(p)) mine += C[p].cache.armyPower * 0.4;
+    if (!def.includes(p)) mine += pw(p) * 0.4;
   }
   return { mine, theirs: Math.max(1, theirs), joiners: def.slice(1) };
 }
 
 const DIFFICULTY = { easy: 0.6, normal: 1, hard: 1.3 };
+const AIR_WEIGHT = 0.15;
 
 export function aiTick(state, map, rules) {
   const every = rules.balance.ai.thinkEveryDays;
@@ -48,6 +56,8 @@ function think(state, map, rules, c) {
   manageRecruitment(state, map, rules, c);
   if (c.idx !== state.player) considerWar(state, map, rules, c);
   planArmies(state, map, rules, c);
+  aiFleets(state, map, rules, c);
+  if ((state.day + c.idx) % 28 < rules.balance.ai.thinkEveryDays) { aiWings(state, map, rules, c); aiDepots(state, map, rules, c); }
 }
 
 function manageBudget(state, rules, c) {
@@ -74,12 +84,49 @@ function pickUnitType(state, rules, c) {
   return b.line || b.support || b.mobile;
 }
 
+// Spending targets by domain: coastal countries keep a navy, and countries that can fly keep an
+// air force, in proportion to how industrialised they are. Picks the domain furthest below its
+// share of upkeep, then a role in it.
+const SEA_MIX = [['capital', 3], ['screen', 4], ['nsub', 2], ['sub', 2], ['carrier', 1]];
+const AIR_MIX = [['fighter', 5], ['attack', 3], ['drone', 2], ['bomber', 1]];
+function pickDomain(state, rules, c) {
+  const up = { land: 0, sea: 0, air: 0 };
+  const U = rules.units;
+  for (const a of state.armies) if (a.owner === c.idx) for (const t in a.units) up.land += a.units[t] * U[t].upkeep;
+  for (const f of state.fleets) if (f.owner === c.idx) for (const t in f.units) up.sea += f.units[t] * U[t].upkeep;
+  for (const w of state.wings) if (w.owner === c.idx) for (const t in w.units) up.air += w.units[t] * U[t].upkeep;
+  const tot = up.land + up.sea + up.air || 1;
+  const dev = Math.min(1, c.cache.avgDev / 60);
+  const want = { land: 1, sea: c.cache.ports > 0 ? 0.25 + 0.15 * dev + (c.cache.ports / Math.max(1, c.cache.provinces) > 0.6 ? 0.15 : 0) : 0, air: 0.3 * dev };
+  const wt = want.land + want.sea + want.air;
+  let best = 'land', gap = -Infinity;
+  for (const d of ['land', 'sea', 'air']) {
+    if (!want[d]) continue;
+    const g = want[d] / wt - up[d] / tot;
+    if (g > gap) { gap = g; best = d; }
+  }
+  if (best === 'land') return { domain: 'land', type: pickUnitType(state, rules, c) };
+  const b = bestUnits(state, rules, c.idx, best);
+  const mix = best === 'sea' ? SEA_MIX : AIR_MIX;
+  // the role most below its weight in the current force
+  const have = {};
+  for (const x of best === 'sea' ? state.fleets : state.wings) if (x.owner === c.idx) for (const t in x.units) have[U[t].role] = (have[U[t].role] || 0) + x.units[t];
+  let pick = null, pv = Infinity;
+  for (const [role, w] of mix) {
+    if (!b[role]) continue;
+    if (role === 'carrier' && c.cache.gdp < 1500) continue;
+    const v = (have[role] || 0) / w;
+    if (v < pv) { pv = v; pick = b[role]; }
+  }
+  return pick ? { domain: best, type: pick } : { domain: 'land', type: pickUnitType(state, rules, c) };
+}
+
 function manageRecruitment(state, map, rules, c) {
   const L = c.ledger;
   if (!L) return;
   const war = isAtWar(state, c.idx);
   const budget = L.taxRevenue * (1 - c.civilShare - (c.research?.share ?? 0)) + L.requisition - L.interest;
-  const type = pickUnitType(state, rules, c);
+  const { domain, type } = pickDomain(state, rules, c);
   if (!type) return;
   const cost = recruitCost(state, rules, c.idx, type);
   const upkeep = rules.units[type].upkeep * c.cache.priceLevel;
@@ -87,9 +134,9 @@ function manageRecruitment(state, map, rules, c) {
   if (L.military + upkeep > budget * share) return;
   if (c.treasury < cost.money * (war ? 1 : 1.5)) return;
   let site = c.capital;
-  if (site < 0 || state.prov.controller[site] !== c.idx) {
+  if (site < 0 || state.prov.controller[site] !== c.idx || (domain === 'sea' && !portZonesOf(map, site).length)) {
     site = -1;
-    for (const i of map.ids) if (state.prov.owner[i] === c.idx && state.prov.controller[i] === c.idx) { site = i; break; }
+    for (const i of countryProvinces(state, map, c.idx)) if (state.prov.controller[i] === c.idx && (domain !== 'sea' || portZonesOf(map, i).length)) { site = i; break; }
   }
   if (site < 0) return;
   if (!canRecruit(state, map, rules, c.idx, site, type)) recruit(state, map, rules, c.idx, site, type);
@@ -137,6 +184,10 @@ function considerWar(state, map, rules, c) {
     const odds = warOdds(state, c.idx, t);
     const ratio = odds.mine / odds.theirs;
     if (ratio < A.powerRatioForWar / Math.min(1.5, Math.max(0.35, aggr))) continue;
+    // nuclear deterrence: nobody attacks a nuclear power (or its protected allies) without one
+    // of its own and an overwhelming grievance (see docs/STRATEGIC.md)
+    const nuke = nuclearDeterred(state, map, rules, c.idx, [t, ...odds.joiners]);
+    if (nuke >= 0 && (!hasDeterrent(state, map, rules, c.idx) || motive < need + 1 || rand(state) > 0.2)) continue;
     const s = ratio * (0.5 + motive);
     if (!best || s > best.s) best = { t, ratio, op, claims, motive, broken, odds, s };
   }

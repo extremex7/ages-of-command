@@ -23,7 +23,7 @@ const args = process.argv.slice(2);
 const scenId = args.find((a) => !a.startsWith('--')) || 'modern_2026';
 const depFrom = args.find((a) => a.startsWith('--deposits-from='))?.split('=')[1] || null;
 const scenPath = new URL(`data/scenarios/${scenId}.json`, ROOT);
-const map = decodeMap(rd('data/map/world.json'));
+const map = decodeMap(rd('data/map/world.json'), rd('data/map/seas.json'));
 const rules = loadRules();
 const scenario = JSON.parse(fs.readFileSync(scenPath));
 delete scenario.economy;

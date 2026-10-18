@@ -1,0 +1,64 @@
+tag,carriers,capital,screens,subs,nsubs,ssbns,fighters,bombers,attack,drones,warheads,icbms,satellites,note
+USA,24,30,280,110,20,6,3300,1700,900,0,25000,135,5,15 CVA + 9 CVS; Atlas/Titan + Jupiter IRBM; SAC B-52/B-47/B-58; NRDC stockpile
+SOV,0,20,170,380,11,25,6000,2200,1000,0,3300,600,2,Sverdlov/Chapayev cruisers; Golf/Zulu V/Hotel ballistic subs; R-12/R-14 MRBM/IRBM + few ICBM; first Zenit April 1962
+GBR,5,6,130,50,0,0,650,400,50,0,200,60,0,Tiger class + old cruisers; V-force + Canberra; 60 RAF Thor IRBM (dual key)
+FRA,4,2,50,20,0,0,500,40,150,0,4,0,0,Clemenceau + light carriers; first AN-11 bombs only test-stage; Mirage IV from 1964
+BRD,0,0,18,3,0,0,400,0,50,0,0,0,0,Fletcher destroyers and Koln frigates; F-84F/F-86/F-104G
+DDR,0,0,4,0,0,0,200,0,0,0,0,0,0,Riga frigates; MiG-17/MiG-21
+ITA,0,3,30,8,0,0,300,0,50,0,0,0,0,Garibaldi and Montecuccoli class cruisers
+BEL,0,0,4,0,0,0,150,0,0,0,0,0,0,Escorts; F-84F/Hunter
+NET,1,2,20,6,0,0,200,0,0,0,0,0,0,Karel Doorman; De Ruyter class cruisers
+DEN,0,0,8,4,0,0,80,0,0,0,0,0,0,F-84/F-86/F-100
+NOR,0,0,8,10,0,0,120,0,0,0,0,0,0,F-86/F-104
+POR,0,0,12,3,0,0,80,0,0,0,0,0,0,Frigates; F-84/F-86
+GRE,0,0,12,2,0,0,150,0,0,0,0,0,0,Fletcher destroyers; F-84F/F-86
+TUR,0,0,12,10,0,0,300,0,0,0,0,0,0,Ex-US destroyers; F-84F/F-86/F-100; Jupiters counted under USA
+CAN,1,0,40,1,0,0,300,0,0,0,0,0,0,Bonaventure; St Laurent class escorts; CF-100/CF-101/Sabre
+POL,0,0,4,6,0,0,600,60,0,0,0,0,0,Destroyers; MiG-15/17/21
+CZS,0,0,0,0,0,0,500,50,100,0,0,0,0,MiG-15/17/19/21; Il-28
+HUN,0,0,0,0,0,0,150,0,0,0,0,0,0,MiG-15/17/21
+ROM,0,0,0,0,0,0,250,0,0,0,0,0,0,MiG-15/17/19
+BUL,0,0,2,2,0,0,200,0,0,0,0,0,0,MiG-15/17/19
+YUG,0,0,6,4,0,0,300,0,100,0,0,0,0,F-86/F-84 and domestic types
+ALB,0,0,0,4,0,0,50,0,0,0,0,0,0,Whiskey submarines from Vlore
+SWE,0,2,20,20,0,0,600,0,200,0,0,0,0,Tre Kronor class cruisers; J29/J32/J35 and A32
+FIN,0,0,2,0,0,0,40,0,0,0,0,0,0,MiG-21F and Gnat
+SWI,0,0,0,0,0,0,300,0,0,0,0,0,0,Venom and Hunter
+AUT,0,0,0,0,0,0,20,0,0,0,0,0,0,Saab 29 Tunnan
+SPA,0,1,25,5,0,0,200,0,0,0,0,0,0,Canarias cruiser; F-86
+CHN,0,0,8,25,0,0,2000,300,100,0,0,0,0,Anshan destroyers; MiG-15/17/19; Il-28; first test 1964
+TAI,0,0,20,0,0,0,350,0,0,0,0,0,0,Ex-US destroyers; F-86/F-100/F-104
+PRK,0,0,0,0,0,0,300,60,0,0,0,0,0,MiG-15/17; Il-28
+KOR,0,0,8,0,0,0,150,0,0,0,0,0,0,F-86
+JAP,0,0,40,3,0,0,350,0,0,0,0,0,0,JMSDF destroyers; F-86 and first F-104J
+IND,1,2,15,0,0,0,400,80,0,0,0,0,0,Vikrant; cruisers Delhi and Mysore; Hunter/Gnat/Mystere; Canberra
+PAK,0,1,8,0,0,0,110,26,0,0,0,0,0,Cruiser Babur; F-86/F-104; B-57
+CEY,0,0,1,0,0,0,0,0,0,0,0,0,0,Frigate Vijaya
+BUR,0,0,2,0,0,0,20,0,0,0,0,0,0,Frigates; Vampire/Sea Fury
+THA,0,0,6,0,0,0,50,0,0,0,0,0,0,F-86
+IDN,0,0,12,6,0,0,100,40,0,0,0,0,0,Skoryy destroyers; Sverdlov cruiser Irian arrives Aug 1962; Tu-16
+PHI,0,0,4,0,0,0,50,0,0,0,0,0,0,F-86
+SVM,0,0,2,0,0,0,0,0,50,0,0,0,0,A-1 Skyraider
+IRN,0,0,2,0,0,0,80,0,0,0,0,0,0,F-84/F-86
+IRQ,0,0,0,0,0,0,100,10,0,0,0,0,0,MiG-17/19/21 and Hunter
+SYR,0,0,0,0,0,0,80,0,0,0,0,0,0,MiG-17
+JOR,0,0,0,0,0,0,20,0,0,0,0,0,0,Hunter
+SAU,0,0,0,0,0,0,20,0,0,0,0,0,0,F-86
+ISR,0,0,4,2,0,0,150,20,0,0,0,0,0,Mirage III/Super Mystere/Mystere/Ouragan; Vautour
+EGY,0,0,8,6,0,0,300,60,0,0,0,0,0,Ex-Soviet/ex-RN destroyers; MiG-15/17/19/21; Il-28
+MOR,0,0,0,0,0,0,12,0,0,0,0,0,0,MiG-17
+ETH,0,0,0,0,0,0,20,0,0,0,0,0,0,F-86
+SAF,0,0,8,0,0,0,50,0,0,0,0,0,0,Destroyers and frigates; Sabre; Canberra from 1963
+MEX,0,0,4,0,0,0,15,0,0,0,0,0,0,Ex-US frigates; Vampire
+CUB,0,0,0,0,0,0,70,0,10,0,0,0,0,MiG-15/17/19; Il-28 and Soviet missiles arrive later in 1962
+DOM,0,0,2,0,0,0,30,0,0,0,0,0,0,Vampire and P-51
+COL,0,0,5,0,0,0,20,0,0,0,0,0,0,F-86/Vampire
+VEN,0,0,6,1,0,0,60,20,0,0,0,0,0,Nueva Esparta destroyers; Canberra
+ECU,0,0,2,0,0,0,15,0,0,0,0,0,0,Meteor
+PER,0,2,6,4,0,0,50,10,0,0,0,0,0,Ceylon-class cruisers Grau and Bolognesi; Hunter/F-86; Canberra
+BRA,1,2,12,4,0,0,70,40,0,0,0,0,0,Minas Gerais (S-2 trackers from 1963); Barroso/Tamandare cruisers
+URU,0,0,2,0,0,0,10,0,0,0,0,0,0,Destroyer escorts; F-80
+ARG,1,2,12,2,0,0,100,15,50,0,0,0,0,Independencia; Belgrano and Nueve de Julio
+CHL,0,2,8,3,0,0,30,15,0,0,0,0,0,Brooklyn-class cruisers Prat and O'Higgins
+AST,1,0,13,0,0,0,90,40,0,0,0,0,0,HMAS Melbourne; Daring destroyers; Sabre; Canberra
+NZL,0,0,5,0,0,0,20,10,0,0,0,0,0,Royalist cruiser and frigates; Vampire; Canberra

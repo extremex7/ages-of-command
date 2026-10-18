@@ -10,6 +10,7 @@ import { compileEvents } from './events.js';
 import { initDiplomacy } from './diplomacy.js';
 import { compileTech, initTechnology } from './technology.js';
 import { declareWar, joinWar } from './war.js';
+import { initStrategic } from './strategic.js';
 
 // governments: data/rules/governments.json; events: list of data/events/*.json files;
 // technologies: data/rules/technologies.json
@@ -25,6 +26,7 @@ export function makeRules(units, balance, goods, buildings, governments, events 
 export function newGame({ map, scenario, rules, playerTag = null, seed, settings }) {
   const state = createState({ map, scenario, rules, playerTag, seed: seed ?? `${scenario.id}-${Date.now()}`, settings });
   initTechnology(state, map, rules, scenario);
+  initStrategic(state, map, rules, scenario);
   refreshCountryCache(state, map, rules);
   // starting manpower follows the era's mobilisable share unless the scenario sets it
   const given = new Set((scenario.countries || []).filter((c) => c.manpower).map((c) => c.tag));

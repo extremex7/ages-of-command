@@ -13,17 +13,19 @@ import { govFamily, monthsToElection, addGovModifier, shiftSupport, checkEffects
 import { addMod, overlordOf, signTreaty, validateTreaty, recordOrder, treatiesBetween, removeTreaty, addClaim, TREATIES } from './diplomacy.js';
 import { warScore, canDeclareWar, declareWar, joinWar, makePeace, makeSeparatePeace, transferProvince } from './war.js';
 import { parseDate, civilFromDays } from './calendar.js';
-import { grantTech, knows, techCost, refreshTech } from './technology.js';
+import { grantTech, knows, knowsId, techCost, refreshTech } from './technology.js';
+import { satCount, SAT_KINDS, SAT_TECH } from './strategic.js';
 import { computeLedgers } from './economy.js';
 
 const NUM = ['stability', 'legitimacy', 'approval', 'unemployment', 'inflation', 'foodSat', 'living', 'tax', 'civilShare',
-  'warMonths', 'warScore', 'provinces', 'avgDev', 'monthsToElection', 'treasuryMonths', 'year'];
-const BOOL = ['atWar', 'hasRival', 'rivalNeighbour', 'neighbourAtWar', 'independent'];
+  'warMonths', 'warScore', 'provinces', 'avgDev', 'monthsToElection', 'treasuryMonths', 'year', 'warheads', 'satellites', 'worldNukes'];
+const BOOL = ['atWar', 'hasRival', 'rivalNeighbour', 'neighbourAtWar', 'independent', 'hasNukes'];
 // conditions naming countries (tags), technologies, ISO codes or events
 const TAGCOND = ['exists', 'notExists', 'atWarWith', 'notAtWarWith', 'warBetween', 'allied', 'subjectOf', 'strongerThan'];
 const OTHERCOND = ['hasTech', 'notTech', 'ownsAll', 'ownsAny', 'fired', 'notFired'];
 const EFFECTS = ['stability', 'legitimacy', 'treasuryMonths', 'tax', 'civilShare', 'manpower', 'modifier', 'support', 'opinion', 'popShare', 'dev',
-  'war', 'joinWar', 'peace', 'annex', 'transfer', 'release', 'government', 'rename', 'treaty', 'breakTreaties', 'rival', 'techs', 'research', 'trigger', 'claims'];
+  'war', 'joinWar', 'peace', 'annex', 'transfer', 'release', 'government', 'rename', 'treaty', 'breakTreaties', 'rival', 'techs', 'research', 'trigger', 'claims',
+  'warheads', 'satellites', 'cyber', 'stations', 'colonies'];
 const OPS = { '<': (a, b) => a < b, '>': (a, b) => a > b, '<=': (a, b) => a <= b, '>=': (a, b) => a >= b, '=': (a, b) => a === b };
 
 export function compileEvents(files, politics) {
@@ -112,6 +114,7 @@ export function eventContext(state, map, rules, c, warScores, warring = null) {
     treasuryMonths: c.ledger?.revenue ? c.treasury / c.ledger.revenue : 0,
     atWar: n > 0, hasRival: c.rival >= 0, rivalNeighbour: c.rival >= 0 && nb.has(c.rival), neighbourAtWar: neighbour >= 0 && !enemiesOf(state, c.idx).has(neighbour),
     independent: !state.dip || overlordOf(state, c.idx) < 0, year: civilFromDays(state.day).y,
+    warheads: c.strat?.warheads || 0, hasNukes: (c.strat?.warheads || 0) > 0, satellites: c.strat ? satCount(c) : 0, worldNukes: state.strategic?.detonations || 0,
     rival: c.rival, neighbour, state, map,
   };
 }
@@ -348,6 +351,11 @@ export function describeEffects(rules, fx, state = null) {
     else if (k === 'techs') out.push(`Gain ${v.map((id) => rules.tech?.list[rules.tech.idx[id]]?.name || id).join(', ')}`);
     else if (k === 'research') out.push(`Research ${sg(Math.round(v * 100))}% of the current project`);
     else if (k === 'claims') out.push(`Claims on ${name(v)}'s border provinces`);
+    else if (k === 'warheads') out.push(`Nuclear warheads ${sg(v)}`);
+    else if (k === 'satellites') out.push(`Satellites ${sg(v)}`);
+    else if (k === 'cyber') out.push(`Cyber points ${sg(v)}`);
+    else if (k === 'stations') out.push(`Orbital stations ${sg(v)}`);
+    else if (k === 'colonies') out.push(`Off-world settlements ${sg(v)}`);
     else if (k === 'modifier') {
       const parts = [];
       for (const [e, x] of Object.entries(v.effects || {})) {
@@ -380,6 +388,19 @@ export function applyEffects(state, map, rules, c, fx, ctx = {}) {
         if (t >= 0) addMod(state, c.idx, t, v.value, rules.balance.diplomacy.modDecay, v.why || 'Border incident');
         break;
       }
+      case 'warheads': if (knowsId(state, rules, c.idx, 'atomic_bomb')) c.strat.warheads = Math.max(0, c.strat.warheads + v); break;
+      case 'satellites': {
+        // added or removed one at a time, spread over the kinds the country can build
+        const kinds = SAT_KINDS.filter((x) => knowsId(state, rules, c.idx, SAT_TECH[x]));
+        for (let n = 0; n < Math.abs(v) && kinds.length; n++) {
+          const pick = kinds.slice().sort((a, b) => (v > 0 ? c.strat.sats[a] - c.strat.sats[b] : c.strat.sats[b] - c.strat.sats[a]))[0];
+          c.strat.sats[pick] = Math.max(0, c.strat.sats[pick] + Math.sign(v));
+        }
+        break;
+      }
+      case 'cyber': c.strat.cyber = Math.max(0, Math.min(rules.balance.strategic.cyberMax, c.strat.cyber + v)); break;
+      case 'stations': if (knowsId(state, rules, c.idx, 'orbital_industry')) c.strat.stations = Math.max(0, Math.min(rules.balance.strategic.maxStations, c.strat.stations + v)); break;
+      case 'colonies': if (knowsId(state, rules, c.idx, 'off_world_settlement')) c.strat.colonies = Math.max(0, Math.min(rules.balance.strategic.maxColonies, c.strat.colonies + v)); break;
       default: historicalEffect(state, map, rules, c, k, v); break;
       case 'popShare': case 'dev':
         for (const i of map.ids) {

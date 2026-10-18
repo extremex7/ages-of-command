@@ -2,8 +2,11 @@
 // per-province fields) so it can be saved, validated and replayed deterministically.
 import { parseDate } from './calendar.js';
 import { seedState } from './rng.js';
+import { portZonesOf } from './mapdata.js';
+import { newFleet, fleetPower } from './naval.js';
+import { newWing, wingStat } from './air.js';
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 export function createState({ map, scenario, rules, playerTag = null, seed = 'aoc3', settings = {} }) {
   const N = map.count;
@@ -33,6 +36,9 @@ export function createState({ map, scenario, rules, playerTag = null, seed = 'ao
     },
     armies: [],
     battles: [],
+    fleets: [],
+    wings: [],
+    navalBattles: [],
     wars: [],
     alliances: [],
     offers: [],
@@ -82,6 +88,24 @@ export function createState({ map, scenario, rules, playerTag = null, seed = 'ao
   for (const c of state.countries) {
     if (c.capital < 0 || state.prov.owner[c.capital] !== c.idx) c.capital = pickCapital(state, map, c.idx);
   }
+  // fleets dock in a port province (or sail in a named zone); wings sit at a base province
+  for (const f of scenario.fleets || []) {
+    const owner = tagIndex.get(f.owner);
+    if (owner == null) continue;
+    const port = f.port != null && map.exists[f.port] ? f.port : -1;
+    const zone = f.zone ?? (port >= 0 ? portZonesOf(map, port)[0] : undefined);
+    if (zone == null || zone < 0 || zone >= map.sea.Z) continue;
+    const fl = newFleet(state, owner, zone, port, f.units);
+    if (f.name) fl.name = f.name;
+    state.fleets.push(fl);
+  }
+  for (const w of scenario.wings || []) {
+    const owner = tagIndex.get(w.owner);
+    if (owner == null || !map.exists[w.base]) continue;
+    const wg = newWing(state, owner, w.base, w.units, w.mission);
+    if (w.name) wg.name = w.name;
+    state.wings.push(wg);
+  }
   refreshCountryCache(state, map, rules);
   for (const c of state.countries) if (!c.manpower) c.manpower = c.cache.maxManpower * 0.6;
   return state;
@@ -92,7 +116,7 @@ export function newArmy(state, owner, loc, units) {
   return {
     id, owner, loc, name: `${ordinal(countArmies(state, owner) + 1)} Army`,
     units: Object.fromEntries(Object.entries(units || {}).filter(([, n]) => n > 0)),
-    str: 1, org: 1, exp: 0, path: [], prog: 0, battle: 0, arrived: state.day, stance: 'hold',
+    str: 1, org: 1, exp: 0, path: [], prog: 0, battle: 0, arrived: state.day, stance: 'hold', sea: -1,
   };
 }
 
@@ -140,8 +164,11 @@ export function refreshCountryCache(state, map, rules) {
     devw[o] += p * state.prov.dev[i];
     if (state.prov.controller[i] !== o) occupied[o]++;
   }
-  const armyStr = new Float64Array(C);
+  const armyStr = new Float64Array(C), navy = new Float64Array(C), air = new Float64Array(C), ports = new Int32Array(C);
   for (const a of state.armies) armyStr[a.owner] += armyPower(a, rules);
+  for (const f of state.fleets || []) navy[f.owner] += fleetPower(f, rules);
+  for (const w of state.wings || []) air[w.owner] += wingStat(w, rules, 'air') + wingStat(w, rules, 'attack');
+  if (map.sea) for (const i of map.ids) { const o = state.prov.owner[i]; if (o >= 0 && state.prov.controller[i] === o && map.sea.portStart[i + 1] > map.sea.portStart[i]) ports[o]++; }
   const refProd = E.devBase * Math.pow(E.devGrowth, E.refDev);
   for (const c of state.countries) {
     const k = c.idx;
@@ -152,7 +179,7 @@ export function refreshCountryCache(state, map, rules) {
       priceLevel: (0.35 + 0.65 * Math.min(1.5, prod / refProd)) * (c.econ ? Math.max(0.5, Math.min(3, c.econ.cpi)) : 1),
       // the mobilisable share depends on the era (see docs/TECHNOLOGY.md)
       maxManpower: pop[k] * (rules.tech?.eras[c.tfx?.era ?? -1]?.manpowerShare ?? rules.balance.population.manpowerShare) * (c.govt?.fx?.manpower ?? 1),
-      armyPower: armyStr[k],
+      armyPower: armyStr[k], navyPower: navy[k], airPower: air[k], ports: ports[k],
     };
     if (n[k] === 0 && c.alive) c.alive = false;
   }

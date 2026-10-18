@@ -1,0 +1,102 @@
+tag,carriers,capital,screens,subs,nsubs,ssbns,fighters,bombers,attack,drones,warheads,icbms,satellites,note
+USA,11,88,25,0,53,14,2700,140,1150,450,5000,400,250,IISS 2024-25 rounded; 74 Burke + Tico + Zumwalt; LCS as screens; incl. 4 SSGN; SIPRI total inventory
+CHN,3,40,110,48,12,6,1900,200,500,300,600,650,150,Fujian commissioned 2025; Type 055 + 052D capital; DF-5/31/41 + DF-26/21 launchers; SIPRI 2025
+RUS,1,12,60,22,20,12,900,125,770,500,5500,330,110,Kuznetsov in refit; Kirov/Slava/Udaloy; Su-34/Su-25/helos as attack; Orion/Geran-class rough
+GBR,2,6,8,0,6,4,170,0,50,16,225,0,8,QE carriers; Type 45 capital; Type 23 screens; Typhoon + F-35B
+FRA,1,2,20,0,6,4,225,0,65,12,290,0,12,Charles de Gaulle; Horizon capital; FREMM/FDI/La Fayette/Floreal; Rafale + Mirage 2000
+IND,2,7,32,16,0,2,480,0,240,60,170,70,15,Vikramaditya and Vikrant; Kolkata/Visakhapatnam capital; Arihant/Arighaat; Agni launchers
+PAK,0,0,11,5,0,0,350,0,50,50,170,40,2,JF-17/F-16/J-10C/Mirage; Shaheen/Ghauri/Ababeel launchers
+ISR,0,0,15,5,0,0,325,0,48,100,90,50,10,Sa'ar 6/5/4.5; Dolphin subs; Jericho launchers estimated; undeclared arsenal
+PRK,0,0,8,70,0,1,400,80,70,10,50,100,1,Mostly obsolete aircraft; Choe Hyon destroyers; Hero Kim Kun Ok SSB; Hwasong launchers rough
+JPN,2,8,44,24,0,0,330,0,60,0,0,0,10,Izumo/Kaga converting for F-35B; Kongo/Atago/Maya capital; IGS satellites
+KOR,0,4,31,21,0,0,400,0,100,0,0,0,6,Sejong the Great class capital; KF-16/F-15K/F-35A/FA-50/F-5
+TWN,0,4,26,2,0,0,315,0,90,4,0,0,0,Kidd class capital; F-16V/Mirage 2000/F-CK-1
+TUR,0,0,27,12,0,0,270,0,70,300,0,0,2,MEKO/Gabya/Ada/Istif; TB2/Akinci/Aksungur fleets
+DEU,0,0,19,6,0,0,140,0,135,5,0,0,8,F125/F124/F123 + K130; Tornado and Tiger as attack
+ITA,2,2,18,8,0,0,160,0,52,6,0,0,8,Cavour and Trieste with F-35B/AV-8B; Doria class capital
+ESP,1,0,11,3,0,0,155,0,30,4,0,0,2,Juan Carlos I with AV-8B; F100/F80 frigates
+NLD,0,0,6,4,0,0,45,0,28,4,0,0,0,F-35A; De Zeven Provincien and Karel Doorman frigates
+BEL,0,0,2,0,0,0,45,0,0,0,0,0,0,F-16 transitioning to F-35
+DNK,0,0,9,0,0,0,40,0,0,0,0,0,0,Iver Huitfeldt/Absalon/Thetis
+NOR,0,0,4,6,0,0,52,0,0,0,0,0,0,Nansen frigates; Ula subs; F-35A
+SWE,0,0,5,5,0,0,95,0,0,0,0,0,0,Visby corvettes; Gripen
+FIN,0,0,0,0,0,0,62,0,0,0,0,0,0,F/A-18 Hornet
+POL,0,0,3,1,0,0,75,0,32,26,0,0,0,F-16/FA-50/MiG-29; MQ-9B + TB2
+GRC,0,0,14,10,0,0,230,0,28,0,0,0,0,MEKO/Elli/FDI; F-16/Mirage 2000/Rafale/F-4
+PRT,0,0,4,2,0,0,28,0,0,0,0,0,0,F-16
+ROU,0,0,4,0,0,0,32,0,0,0,0,0,0,Type 22 and Tetal; F-16
+BGR,0,0,4,0,0,0,12,0,8,0,0,0,0,Wielingen frigates; MiG-29/F-16; Su-25
+HUN,0,0,0,0,0,0,14,0,0,0,0,0,0,Gripen
+CZE,0,0,0,0,0,0,14,0,20,0,0,0,0,Gripen; L-159 as attack
+SVK,0,0,0,0,0,0,10,0,0,0,0,0,0,F-16 Block 70
+HRV,0,0,0,0,0,0,12,0,0,0,0,0,0,Rafale
+SRB,0,0,0,0,0,0,14,0,15,6,0,0,0,MiG-29; J-22 Orao; CH-92
+AUT,0,0,0,0,0,0,15,0,0,0,0,0,0,Eurofighter
+CHE,0,0,0,0,0,0,55,0,0,0,0,0,0,F/A-18 and F-5
+ALB,0,0,0,0,0,0,0,0,0,3,0,0,0,TB2
+UKR,0,0,1,0,0,0,80,0,55,500,0,0,0,Wartime losses; F-16/Mirage/MiG-29/Su-27; drone fleets very rough
+BLR,0,0,0,0,0,0,60,0,35,0,0,0,0,MiG-29/Su-30SM; Su-25 and Mi-24
+KAZ,0,0,0,0,0,0,100,0,30,4,0,0,0,MiG-31/Su-27/Su-30; Wing Loong
+UZB,0,0,0,0,0,0,40,0,20,0,0,0,0,MiG-29/Su-27; Su-25
+TKM,0,0,0,0,0,0,25,0,0,10,0,0,0,MiG-29; TB2/Wing Loong
+AZE,0,0,0,0,0,0,15,0,20,50,0,0,0,MiG-29; Su-25; TB2/Harop
+ARM,0,0,0,0,0,0,4,0,13,0,0,0,0,Su-30SM; Su-25
+GEO,0,0,0,0,0,0,0,0,10,0,0,0,0,Su-25
+KGZ,0,0,0,0,0,0,0,0,0,5,0,0,0,TB2/Aksungur
+IRN,0,0,10,20,0,0,200,0,80,400,0,0,3,Moudge/Alvand frigates; Kilo/Fateh/Ghadir subs; aged F-14/F-4/MiG-29; Shahed/Mohajer
+IRQ,0,0,0,0,0,0,30,0,40,10,0,0,0,F-16IQ; Su-25 and attack helicopters
+SAU,0,0,16,0,0,0,360,0,60,30,0,0,0,F-15SA/Typhoon/Tornado; AH-64
+ARE,0,0,8,0,0,0,135,0,28,30,0,0,2,F-16E/F and Mirage 2000-9; Wing Loong
+QAT,0,0,4,0,0,0,96,0,24,0,0,0,0,Rafale/F-15QA/Typhoon; Al Zubarah corvettes
+KWT,0,0,0,0,0,0,60,0,16,0,0,0,0,F/A-18E/F and Typhoon; AH-64
+BHR,0,0,1,0,0,0,20,0,20,0,0,0,0,OHP frigate Sabha; F-16; AH-1
+OMN,0,0,5,0,0,0,35,0,0,0,0,0,0,Khareef and Qahir corvettes; F-16 and Typhoon
+JOR,0,0,0,0,0,0,45,0,20,0,0,0,0,F-16; AH-1
+SYR,0,0,0,0,0,0,20,0,10,0,0,0,0,Most of former air force destroyed Dec 2024; very rough
+LBN,0,0,0,0,0,0,0,0,6,0,0,0,0,A-29 Super Tucano
+YEM,0,0,0,0,0,0,0,0,0,100,0,0,0,Houthi armed drone fleets rough
+EGY,0,0,14,8,0,0,370,0,90,30,0,0,1,FREMM/Gowind/MEKO A200; F-16/Rafale/MiG-29M; AH-64/Ka-52
+LBY,0,0,0,0,0,0,15,0,5,10,0,0,0,Split forces; rough
+DZA,0,0,11,6,0,0,90,0,105,20,0,0,2,MEKO A200/C28A/Type 056; Kilo subs; Su-30MKA; Su-24/Mi-28
+MAR,0,0,6,0,0,0,70,0,6,20,0,0,2,FREMM/Sigma; F-16/Mirage F1/F-5; TB2
+TUN,0,0,0,0,0,0,10,0,0,0,0,0,0,F-5
+SDN,0,0,0,0,0,0,30,0,30,20,0,0,0,Civil war; rough
+ETH,0,0,0,0,0,0,15,0,10,20,0,0,0,Su-27; Mi-35; TB2/Wing Loong
+ERI,0,0,0,0,0,0,6,0,0,0,0,0,0,MiG-29
+NGA,0,0,1,0,0,0,3,0,25,10,0,0,0,Aradu frigate; JF-17; A-29 and Alpha Jet; Wing Loong/CH-3
+AGO,0,0,0,0,0,0,22,0,8,0,0,0,0,Su-30K/MiG-23; Su-25
+ZAF,0,0,4,3,0,0,26,0,11,0,0,0,0,Valour frigates; Type 209; Gripen; Rooivalk
+KEN,0,0,0,0,0,0,15,0,0,0,0,0,0,F-5
+UGA,0,0,0,0,0,0,6,0,4,0,0,0,0,Su-30; Mi-24
+TZA,0,0,0,0,0,0,10,0,0,0,0,0,0,J-7
+ZWE,0,0,0,0,0,0,7,0,0,0,0,0,0,J-7
+TCD,0,0,0,0,0,0,0,0,4,2,0,0,0,Su-25; Anka
+MLI,0,0,0,0,0,0,0,0,0,6,0,0,0,TB2
+BFA,0,0,0,0,0,0,0,0,0,4,0,0,0,TB2
+NER,0,0,0,0,0,0,0,0,0,6,0,0,0,TB2
+TGO,0,0,0,0,0,0,0,0,0,4,0,0,0,TB2
+COD,0,0,0,0,0,0,0,0,4,6,0,0,0,Su-25; CH-4
+IDN,0,0,22,4,0,0,70,0,24,6,0,0,1,Martadinata/Van Speijk/Bung Tomo/Diponegoro; F-16/Su-27/Su-30; CH-4
+MYS,0,0,6,2,0,0,26,0,0,0,0,0,0,Lekiu/Kasturi/Kedah; Su-30MKM and F/A-18D
+SGP,0,0,12,4,0,0,100,0,19,0,0,0,0,Formidable and Victory; F-15SG/F-16; AH-64
+THA,0,0,9,0,0,0,75,0,7,0,0,0,0,Chakri Naruebet helicopter-only; F-16/Gripen/F-5
+VNM,0,0,7,6,0,0,45,0,30,0,0,0,0,Gepard frigates; Kilo subs; Su-30MK2/Su-27; Su-22
+PHL,0,0,5,0,0,0,12,0,12,0,0,0,0,Jose Rizal and Del Pilar; FA-50
+MMR,0,0,7,2,0,0,60,0,45,10,0,0,0,MiG-29/JF-17/Su-30/F-7; Yak-130/Mi-35
+BGD,0,0,10,2,0,0,43,0,14,6,0,0,0,Type 053/056 frigates and corvettes; F-7/MiG-29; TB2
+LKA,0,0,0,0,0,0,6,0,0,0,0,0,0,Kfir/F-7 remnants
+BRN,0,0,4,0,0,0,0,0,0,0,0,0,0,Darussalam-class OPVs with Exocet
+AUS,0,3,7,6,0,0,96,0,22,0,0,0,2,Hobart capital; Anzac frigates; Collins subs; F-35A/F-18F/EA-18G
+NZL,0,0,2,0,0,0,0,0,0,0,0,0,0,Anzac frigates
+CAN,0,0,12,4,0,0,85,0,0,0,0,0,2,Halifax frigates; Victoria subs; CF-18
+MEX,0,0,5,0,0,0,3,0,0,0,0,0,0,Reformador and Oaxaca-class OPVs
+ARG,0,0,10,0,0,0,12,0,10,0,0,0,0,MEKO 360/140; first F-16s and A-4AR; Pucara
+BRA,0,0,7,6,0,0,50,0,120,0,0,0,1,Niteroi/Tamandare; Riachuelo/Tupi subs; F-5EM/Gripen; AMX/A-29
+CHL,0,0,6,4,0,0,44,0,0,0,0,0,0,Type 23 and L-class frigates; Scorpene/209; F-16
+PER,0,0,5,6,0,0,24,0,25,0,0,0,0,Lupo frigates; Type 209; MiG-29/Mirage 2000; Su-25/Mi-35
+COL,0,0,4,4,0,0,20,0,30,0,0,0,0,Almirante Padilla; Kfir; A-29 and AH-60
+ECU,0,0,6,2,0,0,0,0,12,0,0,0,0,Esmeraldas corvettes; Type 209; A-29
+VEN,0,0,2,1,0,0,26,0,15,0,0,0,0,Su-30MK2/F-16; K-8
+CUB,0,0,0,0,0,0,15,0,4,0,0,0,0,MiG-29/MiG-23 low readiness
+BOL,0,0,0,0,0,0,0,0,6,0,0,0,0,K-8
+DOM,0,0,0,0,0,0,0,0,8,0,0,0,0,A-29

@@ -5,7 +5,7 @@ import { tick } from '../src/core/sim.js';
 import { formatDate } from '../src/core/calendar.js';
 const rd = (p) => JSON.parse(fs.readFileSync(new URL('../' + p, import.meta.url)));
 let t = performance.now();
-const map = decodeMap(rd('data/map/world.json'));
+const map = decodeMap(rd('data/map/world.json'), rd('data/map/seas.json'));
 const rules = loadRules();
 const scenario = rd(`data/scenarios/${process.argv[3] || 'modern_2026'}.json`);
 const game = newGame({ map, scenario, rules, playerTag: null, seed: 'smoke' });

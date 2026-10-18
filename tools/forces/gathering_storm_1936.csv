@@ -1,0 +1,48 @@
+tag,carriers,capital,screens,subs,nsubs,ssbns,fighters,bombers,attack,drones,warheads,icbms,satellites,note
+GBR,6,15,200,55,0,0,450,700,100,0,0,0,0,12 battleships + 3 battlecruisers; ~55 cruisers + ~150 destroyers; RAF+FAA first line
+FRA,1,6,90,75,0,0,600,700,150,0,0,0,0,Bearn; Courbet/Bretagne classes; Dunkerque commissions 1937
+GER,0,4,18,24,0,0,500,700,200,0,0,0,0,Deutschland and Scheer + two old pre-dreadnoughts; Graf Spee Jan 1936; Luftwaffe expanding fast
+ITA,0,4,110,70,0,0,500,700,150,0,0,0,0,Cavour/Doria classes (two in reconstruction); torpedo boats over 500t counted
+JAP,4,10,135,60,0,0,600,650,450,0,0,0,0,Akagi/Kaga/Hosho/Ryujo; 10 battleships incl. Hiei; Army+Navy air
+SOV,0,3,40,110,0,0,2500,1800,600,0,0,0,0,Marat/Oktyabrskaya Revolutsiya/Parizhskaya Kommuna; large VVS (I-15/I-16; TB-3/SB/R-5)
+USA,4,15,150,80,0,0,600,300,450,0,0,0,0,Lexington/Saratoga/Ranger/Langley; active destroyers only; Army Air Corps + Navy/USMC
+CHI,0,0,8,0,0,0,150,80,70,0,0,0,0,Ning Hai/Ping Hai/Yat Sen and old cruisers; mixed imported aircraft
+POL,0,0,2,3,0,0,250,100,150,0,0,0,0,Wicher and Burza destroyers; PZL P.7/P.11 fighters
+CZS,0,0,0,0,0,0,250,150,150,0,0,0,0,Avia/Letov aircraft
+ROM,0,0,4,1,0,0,120,80,50,0,0,0,0,Four destroyers; Delfinul
+YUG,0,0,5,4,0,0,100,120,50,0,0,0,0,Dubrovnik and Dalmacija plus old destroyers
+GRE,0,0,12,6,0,0,40,30,20,0,0,0,0,Averof armoured cruiser counted as screen
+TUR,0,1,6,5,0,0,70,60,40,0,0,0,0,Yavuz battlecruiser
+SPA,0,2,21,12,0,0,80,60,150,0,0,0,0,Espana and Jaime I; cruisers and Churruca destroyers
+POR,0,0,9,3,0,0,20,20,0,0,0,0,0,New destroyers and sloops
+NET,0,0,10,20,0,0,80,60,20,0,0,0,0,Cruisers Java/Sumatra and destroyers; De Zeven Provincien as screen; incl. KNIL
+BEL,0,0,0,0,0,0,60,20,50,0,0,0,0,Fairey Fox light bombers as attack
+SWE,0,3,10,15,0,0,50,30,40,0,0,0,0,Sverige-class pansarskepp counted capital
+NOR,0,0,6,9,0,0,10,10,10,0,0,0,0,Old coast defence ships as screens
+DEN,0,0,2,9,0,0,15,0,10,0,0,0,0,Niels Juel and Peder Skram
+FIN,0,0,2,5,0,0,30,15,10,0,0,0,0,Vainamoinen and Ilmarinen coast defence ships as screens
+EST,0,0,0,0,0,0,20,0,10,0,0,0,0,Lembit/Kalev subs delivered 1937
+LAT,0,0,0,2,0,0,15,0,5,0,0,0,0,Ronis and Spidola submarines
+LIT,0,0,0,0,0,0,15,15,10,0,0,0,0,ANBO aircraft
+HUN,0,0,0,0,0,0,50,30,20,0,0,0,0,Clandestine air arm
+AUT,0,0,0,0,0,0,10,0,0,0,0,0,0,Air arm just reforming
+BUL,0,0,0,0,0,0,20,0,10,0,0,0,0,Clandestine air arm
+SWI,0,0,0,0,0,0,80,0,60,0,0,0,0,Dewoitine D.27 fighters
+IRQ,0,0,0,0,0,0,0,0,20,0,0,0,0,Hawker Nisr/Audax
+PER,0,0,0,0,0,0,40,0,60,0,0,0,0,Hawker Fury and Audax
+SIA,0,0,2,0,0,0,40,30,40,0,0,0,0,Thonburi coast defence ships; Japanese-built subs arrive 1938
+AST,0,0,9,0,0,0,20,20,0,0,0,0,0,Four cruisers + destroyers
+CAN,0,0,4,0,0,0,10,0,0,0,0,0,0,Four destroyers
+NZL,0,0,2,0,0,0,0,0,10,0,0,0,0,New Zealand Division cruisers
+SAF,0,0,0,0,0,0,10,20,0,0,0,0,0,Hawker Fury and Hart
+MEX,0,0,3,0,0,0,15,0,20,0,0,0,0,Guanajuato-class gunboats
+BRA,0,2,7,4,0,0,30,30,40,0,0,0,0,Minas Geraes and Sao Paulo
+ARG,0,2,12,3,0,0,30,30,40,0,0,0,0,Rivadavia and Moreno
+CHL,0,1,10,9,0,0,20,30,20,0,0,0,0,Almirante Latorre
+PRU,0,0,4,4,0,0,20,10,20,0,0,0,0,Cruisers Grau and Bolognesi
+COL,0,0,2,0,0,0,10,0,20,0,0,0,0,Antioquia and Caldas destroyers
+CUB,0,0,1,0,0,0,10,0,10,0,0,0,0,Cruiser Cuba
+PAR,0,0,2,0,0,0,10,0,10,0,0,0,0,Paraguay and Humaita river gunboats
+BOL,0,0,0,0,0,0,15,0,15,0,0,0,0,Chaco War aircraft
+VEN,0,0,0,0,0,0,10,0,10,0,0,0,0,Small air arm
+URY,0,0,0,0,0,0,10,0,10,0,0,0,0,Small air arm

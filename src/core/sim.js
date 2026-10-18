@@ -13,6 +13,10 @@ import { monthlyDiplomacy } from './diplomacy.js';
 import { dailyEvents, currentWarScores } from './events.js';
 import { aiDiplomacy } from './ai_diplomacy.js';
 import { monthlyResearch } from './technology.js';
+import { processFleets, detectNavalBattles, resolveNavalBattles, navalTrade } from './naval.js';
+import { processWings, strategicBombing } from './air.js';
+import { dailySupply, monthlyDepots } from './supply.js';
+import { dailyStrategic, monthlyStrategic } from './strategic.js';
 
 export function tick(game) {
   const { state, map, rules } = game;
@@ -21,10 +25,16 @@ export function tick(game) {
   const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
   processRecruitment(state, map, rules);
   processMovement(state, map, rules);
+  processFleets(state, map, rules);
+  processWings(state, map, rules);
   detectBattles(state, map);
+  detectNavalBattles(state, map, rules);
+  dailySupply(state, map, rules);
   resolveBattles(state, map, rules);
+  resolveNavalBattles(state, map, rules);
   processSieges(state, map, rules);
   dailyRecovery(state, rules);
+  dailyStrategic(state, map, rules);
   processConstruction(state, map, rules);
   dailyEvents(state, map, rules);
   const t1 = typeof performance !== 'undefined' ? performance.now() : 0;
@@ -33,7 +43,11 @@ export function tick(game) {
   const t2 = typeof performance !== 'undefined' ? performance.now() : 0;
   const monthly = civilFromDays(state.day).d === 1;
   if (monthly) {
+    navalTrade(state, map, rules);
+    strategicBombing(state, map, rules);
     monthlyEconomy(state, map, rules);
+    monthlyStrategic(state, map, rules);
+    monthlyDepots(state, map, rules);
     if (state.tech) monthlyResearch(state, map, rules);
     monthlyMilitary(state, map, rules);
     const warScores = currentWarScores(state, map, rules);

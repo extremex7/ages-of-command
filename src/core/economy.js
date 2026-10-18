@@ -5,6 +5,7 @@ import { isAtWar } from './relations.js';
 import { industryMonth, recordHistory } from './industry.js';
 import { govStabilityParts } from './government.js';
 import { transferShares } from './diplomacy.js';
+import { strategicUpkeep } from './strategic.js';
 
 export function militaryUpkeep(state, c, rules, all = null) {
   if (all) return all[c.idx] * c.cache.priceLevel;
@@ -14,6 +15,8 @@ export function militaryUpkeep(state, c, rules, all = null) {
     if (a.owner !== c.idx) continue;
     for (const t in a.units) up += a.units[t] * U[t].upkeep;
   }
+  for (const f of state.fleets || []) if (f.owner === c.idx) for (const t in f.units) up += f.units[t] * U[t].upkeep;
+  for (const w of state.wings || []) if (w.owner === c.idx) for (const t in w.units) up += w.units[t] * U[t].upkeep;
   for (const r of state.recruit) if (r.owner === c.idx) up += U[r.type].upkeep * 0.5;
   return up * c.cache.priceLevel;
 }
@@ -22,6 +25,8 @@ export function militaryUpkeep(state, c, rules, all = null) {
 function allUpkeep(state, rules) {
   const U = rules.units, up = new Float64Array(state.countries.length);
   for (const a of state.armies) for (const t in a.units) up[a.owner] += a.units[t] * U[t].upkeep;
+  for (const f of state.fleets || []) for (const t in f.units) up[f.owner] += f.units[t] * U[t].upkeep;
+  for (const w of state.wings || []) for (const t in w.units) up[w.owner] += w.units[t] * U[t].upkeep;
   for (const r of state.recruit) up[r.owner] += U[r.type].upkeep * 0.5;
   return up;
 }
@@ -67,13 +72,14 @@ export function computeLedgers(state, map, rules) {
     const civil = taxRevenue * c.civilShare;
     const research = Math.max(0, taxRevenue) * (c.research?.share ?? 0);
     const military = militaryUpkeep(state, c, rules, ups);
+    const strategic = strategicUpkeep(c, rules);
     const interest = c.treasury < 0 ? (-c.treasury * E.debtInterestYear) / 12 : 0;
     const paid = Math.max(0, -transfer[k]);
     c.ledger = {
       gdpMonth: gdpOwned[k], gdpLost: gdpOwned[k] - gdpControlled[k], efficiency: eff,
-      taxRevenue, requisition: requisition[k], tariffs, transfersIn: Math.max(0, transfer[k]), transfersOut: paid, revenue, civil, research, military, interest,
+      taxRevenue, requisition: requisition[k], tariffs, transfersIn: Math.max(0, transfer[k]), transfersOut: paid, revenue, civil, research, military, strategic, interest,
       construction: c.econ ? c.econ.spentConstruction || 0 : 0,
-      net: revenue - civil - research - military - interest - paid,
+      net: revenue - civil - research - military - strategic - interest - paid,
     };
   }
 }
@@ -142,7 +148,7 @@ export function autoBalanceBudgets(state, map, rules) {
     if (!c.ledger) continue;
     const L = c.ledger;
     if (L.taxRevenue <= 0) continue;
-    const need = (L.military * 1.08) / L.taxRevenue + (c.research?.share ?? 0);
+    const need = ((L.military + (L.strategic || 0)) * 1.08) / L.taxRevenue + (c.research?.share ?? 0);
     c.civilShare = Math.max(0.55, Math.min(0.9, 1 - need));
     c.treasury = L.taxRevenue * 3;
   }

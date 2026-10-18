@@ -39,7 +39,7 @@ export function haversineKm(lat1, lon1, lat2, lon2) {
   return 2 * R_EARTH * Math.asin(Math.min(1, Math.sqrt(a)));
 }
 
-export function decodeMap(world) {
+export function decodeMap(world, seas = null) {
   const list = world.provinces;
   let maxId = -1;
   for (const p of list) maxId = Math.max(maxId, p.id);
@@ -82,7 +82,79 @@ export function decodeMap(world) {
   m.byKey = new Map(m.ids.map((i) => [m.key[i], i]));
   // shared land borders: polylines in absolute map coordinates, used by the renderer
   m.borders = (world.borders || []).map(([a, b, f, c]) => ({ a, b, fine: decodeLines(f, world.quant), coarse: decodeLines(c.length ? c : f, world.quant) }));
+  m.sea = seas ? decodeSeas(seas, m) : emptySeas(m);
   return m;
+}
+
+// Sea zones (data/map/seas.json, built by tools/build_seas.py): zones, zone links in CSR form,
+// the zones each coastal province touches (ports), the zone each strait or sea lane crosses,
+// and the 0.5° grid of zone ids used for map clicks and the naval map mode.
+function decodeSeas(seas, m) {
+  const zones = seas.zones.map((z) => ({ ...z }));
+  const Z = zones.length;
+  const deg = new Uint32Array(Z + 1);
+  for (const l of seas.links) { deg[l.a]++; deg[l.b]++; }
+  const start = new Uint32Array(Z + 1);
+  for (let z = 0; z < Z; z++) start[z + 1] = start[z] + deg[z];
+  const fill = start.slice(0, Z);
+  const adj = new Int16Array(start[Z]), km = new Float32Array(start[Z]), link = new Int16Array(start[Z]);
+  const links = seas.links.map((l, i) => ({ i, a: l.a, b: l.b, km: l.km, name: l.name || '', choke: l.choke || null, opens: l.opens ?? null }));
+  for (const l of links) {
+    adj[fill[l.a]] = l.b; km[fill[l.a]] = l.km; link[fill[l.a]++] = l.i;
+    adj[fill[l.b]] = l.a; km[fill[l.b]] = l.km; link[fill[l.b]++] = l.i;
+  }
+  const portStart = new Uint32Array(m.count + 1), portList = [];
+  const ports = seas.ports || {};
+  for (let i = 0; i < m.count; i++) {
+    portStart[i] = portList.length;
+    for (const z of ports[i] || []) portList.push(z);
+  }
+  portStart[m.count] = portList.length;
+  const portZones = Int16Array.from(portList);
+  const zoneProvs = zones.map(() => []);
+  for (let i = 0; i < m.count; i++) for (let k = portStart[i]; k < portStart[i + 1]; k++) zoneProvs[portZones[k]].push(i);
+  // the zone each province-graph edge crosses (-1 for land borders)
+  const laneZone = new Int16Array(m.adj.length).fill(-1);
+  for (const [u, v, z] of seas.lanes || []) {
+    for (let e = m.adjStart[u]; e < m.adjStart[u + 1]; e++) if (m.adj[e] === v) laneZone[e] = z;
+    for (let e = m.adjStart[v]; e < m.adjStart[v + 1]; e++) if (m.adj[e] === u) laneZone[e] = z;
+  }
+  const G = seas.grid, cells = new Int16Array(G.cols * G.rows);
+  for (let k = 0, o = 0; k < G.rle.length; k += 2) { cells.fill(G.rle[k], o, o + G.rle[k + 1]); o += G.rle[k + 1]; }
+  return { Z, zones, links, start, adj, km, link, portStart, portZones, zoneProvs, laneZone, grid: { ...G, cells, rle: null } };
+}
+
+function emptySeas(m) {
+  return decodeSeas({ zones: [], links: [], ports: {}, lanes: [], grid: { res: 1, lon0: -180, lat0: -58, cols: 1, rows: 1, rle: [-1, 1] } }, m);
+}
+
+// The zones a province's ports open onto (empty for inland provinces).
+export function portZonesOf(map, i) {
+  const s = map.sea;
+  return s.portZones.subarray(s.portStart[i], s.portStart[i + 1]);
+}
+
+// Map projection (Miller, as tools/build_map.py) and its inverse.
+const LAT_MIN = -58, LAT_MAX = 84;
+const millerY = (lat) => 1.25 * Math.log(Math.tan(Math.PI / 4 + 0.4 * (Math.max(LAT_MIN, Math.min(LAT_MAX, lat)) * Math.PI) / 180));
+const YMAX = millerY(LAT_MAX);
+export function projectLonLat(map, lon, lat) {
+  const scale = map.width / (2 * Math.PI);
+  return [((lon + 180) / 360) * map.width, (YMAX - millerY(lat)) * scale];
+}
+export function unprojectXY(map, x, y) {
+  const scale = map.width / (2 * Math.PI);
+  const yy = YMAX - y / scale;
+  return [(x / map.width) * 360 - 180, (2.5 * (Math.atan(Math.exp(yy / 1.25)) - Math.PI / 4) * 180) / Math.PI];
+}
+
+// The sea zone at a map point, or -1 on land.
+export function zoneAt(map, x, y) {
+  const G = map.sea.grid;
+  const [lon, lat] = unprojectXY(map, x, y);
+  const r = Math.floor((lat - G.lat0) / G.res), c = Math.floor((((lon + 180) % 360 + 360) % 360) / G.res);
+  if (r < 0 || r >= G.rows || c < 0 || c >= G.cols) return -1;
+  return G.cells[r * G.cols + c];
 }
 
 export function neighbours(map, i) {

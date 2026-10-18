@@ -8,7 +8,7 @@ let cached = null;
 export function data() {
   if (!cached) {
     cached = {
-      map: decodeMap(rd('data/map/world.json')),
+      map: decodeMap(rd('data/map/world.json'), rd('data/map/seas.json')),
       rules: loadRules(),
       scenario: rd('data/scenarios/modern_2026.json'),
     };

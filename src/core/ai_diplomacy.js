@@ -124,6 +124,12 @@ function seekTreaty(state, map, rules, c, greats) {
     // (trade partners from the last market are not saved, so the AI judges markets by size and proximity)
     if (have.trade < 3 && op > 20 && (nb || greats.includes(p))) wants.push({ type: 'trade', p, u: 8 + 12 * Math.min(1, P.cache.gdp / Math.max(1, c.cache.gdp)) + (nb ? 4 : 0), why: 'trade without tariffs' });
   }
+  // nuclear powers seek arms control with the largest arsenal facing them
+  if ((c.strat?.warheads || 0) > 0 && !treatiesOf(state, k).some((t) => t.type === 'arms_control')) {
+    let big = -1;
+    for (const o of C) if (o.alive && o.idx !== k && (o.strat?.warheads || 0) > (big < 0 ? 0 : C[big].strat.warheads) && !atWar(state, k, o.idx)) big = o.idx;
+    if (big >= 0 && C[big].strat.warheads > c.strat.warheads * 0.5 && opinion(state, map, rules, k, big) > -40) wants.push({ type: 'arms_control', p: big, u: 12, why: 'cap the nuclear arms race' });
+  }
   wants.sort((a, b) => b.u - a.u);
   let wanted = -1, tried = 0;
   for (const w of wants) {

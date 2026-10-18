@@ -1,7 +1,7 @@
 // Node-side loader for every rule file (units, balance, goods, buildings, governments,
 // technologies and the event files listed in data/events/index.json).
 import fs from 'node:fs';
-import { makeRules } from '../src/core/game.js';
+import { makeRules, decodeMap } from '../src/core/game.js';
 
 const ROOT = new URL('../', import.meta.url);
 export const readJson = (p) => JSON.parse(fs.readFileSync(new URL(p, ROOT)));
@@ -18,4 +18,9 @@ export function rawRules(overrides = {}) {
 export function loadRules(overrides = {}) {
   const r = rawRules(overrides);
   return makeRules(r.units, r.balance, r.goods, r.buildings, r.governments, r.events, r.technologies);
+}
+
+// The world map with its sea zones (data/map/world.json + data/map/seas.json).
+export function loadMap() {
+  return decodeMap(readJson('data/map/world.json'), readJson('data/map/seas.json'));
 }

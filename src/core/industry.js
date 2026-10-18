@@ -197,7 +197,7 @@ export function milDemand(state, rules, c, out, counts = null) {
   out.fill(0);
   let mun = 0, fuel = 0;
   if (counts) { mun = counts.mun[c.idx]; fuel = counts.fuel[c.idx]; }
-  else for (const a of state.armies) if (a.owner === c.idx) for (const t in a.units) { const u = rules.units[t]; mun += a.units[t] * (u.munitions ?? 1); fuel += a.units[t] * (u.fuel ?? 0); }
+  else { const all = armyCounts(state, rules); mun = all.mun[c.idx]; fuel = all.fuel[c.idx]; }
   const av = c.tfx?.goods;
   if ('munitions' in X.gi && (!av || av[X.gi.munitions])) out[X.gi.munitions] = mun * I.munitionsPerUnitMonth + (c.econ?.battleUse || 0);
   if ('fuel' in X.gi && (!av || av[X.gi.fuel])) out[X.gi.fuel] = fuel * I.fuelPerArmorMonth;
@@ -206,7 +206,8 @@ export function milDemand(state, rules, c, out, counts = null) {
 
 export function armyCounts(state, rules) {
   const C = state.countries.length, mun = new Float64Array(C), fuel = new Float64Array(C);
-  for (const a of state.armies) for (const t in a.units) { const u = rules.units[t]; mun[a.owner] += a.units[t] * (u.munitions ?? 1); fuel[a.owner] += a.units[t] * (u.fuel ?? 0); }
+  // armies, fleets and air wings
+  for (const list of [state.armies, state.fleets || [], state.wings || []]) for (const a of list) for (const t in a.units) { const u = rules.units[t]; mun[a.owner] += a.units[t] * (u.munitions ?? 1); fuel[a.owner] += a.units[t] * (u.fuel ?? 0); }
   return { mun, fuel };
 }
 
@@ -226,6 +227,11 @@ function potentials(state, map, rules) {
   const pot = new Float64Array(C * B);
   const base = new Float64Array(map.count);
   const fert = fertilityMap(map);
+  // nuclear winter cuts farm output everywhere; fallout stops a province's farms; orbital stations
+  // and asteroid mining raise output, network disruption cuts it (see docs/STRATEGIC.md)
+  const W = state.strategic, farmMult = W?.farmMult ?? 1, fallout = W?.fallout || {};
+  const indM = state.countries.map((c) => (c.strat ? (1 + 0.03 * c.strat.stations) * (c.strat.disrupted > 0 ? 0.9 : 1) : 1));
+  const minM = state.countries.map((c) => (c.strat?.asteroid ? 1 + 0.05 * c.strat.stations : 1));
   for (const i of map.ids) {
     const o = P.owner[i];
     if (o < 0) { ec.iw[i] = 0; continue; }
@@ -244,7 +250,10 @@ function potentials(state, map, rules) {
     const tc = state.countries[o];
     for (let b = 0; b < B; b++) {
       const L = ec.bld[off + b];
-      if (L) pot[o * B + b] += L * bs * buildingEff(X.buildings[b], de, fert[i]) * techOutput(tc, b);
+      if (!L) continue;
+      const Bd = X.buildings[b];
+      const m = Bd.fertility ? (fallout[i] ? 0 : farmMult) : Bd.dep >= 0 ? minM[o] : indM[o];
+      pot[o * B + b] += L * bs * buildingEff(Bd, de, fert[i]) * techOutput(tc, b) * m;
     }
   }
   return { pot, base };
@@ -322,7 +331,9 @@ export function industryMonth(state, map, rules, opts = {}) {
   // the tariff on last month's non-partner share of imports; revenue counts only non-partner flows.
   const links = tradeLinks(state);
   const effTariff = new Float64Array(C), partnerImp = new Float64Array(C);
-  for (const c of alive) { effTariff[c.idx] = c.econ.tariff * (1 - (c.econ.partnerShare || 0)); cut[c.idx] = 1 - I.tariffImportCut * effTariff[c.idx]; }
+  // blockades and commerce raiding cut a coastal country's trade (c.econ.tradeFactor, naval.js)
+  const tf = new Float64Array(C).fill(1);
+  for (const c of alive) { tf[c.idx] = c.econ.tradeFactor ?? 1; effTariff[c.idx] = c.econ.tariff * (1 - (c.econ.partnerShare || 0)); cut[c.idx] = (1 - I.tariffImportCut * effTariff[c.idx]) * tf[c.idx]; }
   for (let g = 0; g < G; g++) {
     const sm = X.goods[g].stockMonths;
     let ne = 0, ni = 0;
@@ -331,7 +342,7 @@ export function industryMonth(state, map, rules, opts = {}) {
       const target = popD[k * G + g] + milD[k * G + g] + e.need[g] * sm;
       const st = e.stock[g];
       sur[k] = 0; def[k] = 0;
-      if (st > target * 1.02 + 1e-6) { sur[k] = st - target; ex[ne++] = k; }
+      if (st > target * 1.02 + 1e-6) { sur[k] = (st - target) * tf[k]; ex[ne++] = k; }
       else if (st < target) { def[k] = (target - st) * cut[k]; if (def[k] > 1e-6) im[ni++] = k; else def[k] = 0; }
     }
     if (!ne || !ni) continue;

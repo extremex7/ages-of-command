@@ -7,6 +7,7 @@ import { initEconomy } from './industry.js';
 import { initGovernment, newGovt, govEffects } from './government.js';
 import { initDiplomacy, TREATIES } from './diplomacy.js';
 import { initTechnology, refreshAllTech, newResearch } from './technology.js';
+import { newStrat, newStrategicWorld, SAT_KINDS } from './strategic.js';
 
 const TYPED = { Int16Array, Uint8Array, Float32Array, Float64Array, Int32Array, Uint32Array };
 
@@ -87,6 +88,16 @@ const MIGRATIONS = {
     s.version = 5;
     return s;
   },
+  // v5 → v6 (Milestone 6): navies, air forces and strategic capabilities did not exist. Old games
+  // continue with none; countries can build them from now on.
+  5: (s) => {
+    s.fleets = []; s.wings = []; s.navalBattles = [];
+    s.strategic = newStrategicWorld();
+    for (const c of s.countries) { c.strat = newStrat(); c.depots = []; }
+    for (const a of s.armies) a.sea = -1;
+    s.version = 6;
+    return s;
+  },
 };
 
 export function deserialize(text, map, rules, scenario = null) {
@@ -165,11 +176,40 @@ export function validate(s, map, rules) {
   }
   s.armies = s.armies.filter((a) => a.loc < map.count && map.exists[a.loc] && a.owner < C && s.countries[a.owner]?.alive !== false);
   for (const a of s.armies) {
-    a.path = (a.path || []).filter((p) => p < map.count && map.exists[p]);
+    // path nodes at or above map.count are sea zones (armies at sea); validateForces checks them
+    a.path = (a.path || []).filter((p) => p >= map.count || map.exists[p]);
     for (const t of Object.keys(a.units)) if (!rules.units[t]) delete a.units[t];
   }
   for (const w of s.wars) if (!Array.isArray(w.attackers) || !Array.isArray(w.defenders)) throw new Error('Malformed war');
+  validateForces(s, map, rules);
   if (!s.needsPolitics) validatePolitics(s, rules);
+}
+
+// Fleets, wings and strategic data are checked against the map and rules; anything a mod removed
+// (a unit type, a sea zone) is dropped rather than rejected.
+function validateForces(s, map, rules) {
+  const C = s.countries.length, N = map.count, Z = map.sea.Z;
+  const ok = (t, d) => rules.units[t] && (rules.units[t].domain || 'land') === d;
+  for (const a of s.armies) { for (const t of Object.keys(a.units)) if (!ok(t, 'land')) delete a.units[t]; if (!(a.sea < Z)) a.sea = -1; a.path = a.path.filter((p) => p < N + Z); }
+  s.fleets = (s.fleets || []).filter((f) => f.owner < C && f.zone >= 0 && f.zone < Z);
+  for (const f of s.fleets) {
+    for (const t of Object.keys(f.units)) if (!ok(t, 'sea')) delete f.units[t];
+    if (!(f.port < N) || (f.port >= 0 && !map.exists[f.port])) f.port = -1;
+    f.path = (f.path || []).filter((z) => z >= 0 && z < Z);
+    if (!(f.dock < N)) f.dock = -1;
+  }
+  s.fleets = s.fleets.filter((f) => Object.keys(f.units).length);
+  s.wings = (s.wings || []).filter((w) => w.owner < C && w.base >= 0 && w.base < N && map.exists[w.base]);
+  for (const w of s.wings) for (const t of Object.keys(w.units)) if (!ok(t, 'air')) delete w.units[t];
+  s.wings = s.wings.filter((w) => Object.keys(w.units).length);
+  s.navalBattles = (s.navalBattles || []).filter((b) => b.zone < Z);
+  s.strategic = { ...newStrategicWorld(), ...(s.strategic || {}) };
+  for (const c of s.countries) {
+    c.strat = { ...newStrat(), ...(c.strat || {}) };
+    c.strat.sats = { ...newStrat().sats, ...(c.strat.sats || {}) };
+    for (const k of Object.keys(c.strat.sats)) if (!SAT_KINDS.includes(k)) delete c.strat.sats[k];
+    c.depots = (c.depots || []).filter((p) => p < N);
+  }
 }
 
 // Governments and treaties are checked against the loaded rules; anything a mod removed is

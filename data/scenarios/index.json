@@ -44,6 +44,24 @@
    "startDate": "1962-01-01",
    "description": "New Year 1962: the Berlin Wall is months old, Cuba has declared for socialism, Algeria and the Congo are in turmoil and the European empires are in their last years, while NATO and the Warsaw Pact face each other across a divided Germany.",
    "approximations": "Borders follow modern admin-1 provinces: Berlin is drawn wholly as East German, Vietnam is split at province level near the 17th parallel, Kashmir follows the 1949 ceasefire line only roughly, and the Gaza Strip and small enclaves are not shown. Colonies and protectorates still held on 1 January 1962 belong to their metropole (British East Africa, Aden and the Gulf, Portuguese Africa, Algeria, Rwanda-Urundi, West New Guinea, Spanish Sahara); the Central African Federation is a British subject and Katanga is shown as the secessionist state it then was. Population, GDP (Maddison-style 1990 international dollars, including colonies for the empires) and army sizes are rounded estimates; Soviet-bloc and Chinese output is especially uncertain."
+  },
+  {
+   "id": "flashpoint_2035",
+   "file": "flashpoint_2035.json",
+   "name": "Flashpoint 2035",
+   "era": "near_future",
+   "startDate": "2035-01-01",
+   "description": "A fictional near future, New Year 2035: a crowded multipolar world on edge. Warships shadow each other in the Taiwan Strait, the melting Arctic and a newly independent Greenland draw rival suitors, nuclear-armed India and Pakistan quarrel over Kashmir and the Indus, tankers run a gauntlet at Hormuz, and drought on the Nile meets a war for the Red Sea coast.",
+   "approximations": "Fictional scenario extrapolated from the Modern World (2026). Borders are the 2026 ones except that Greenland has become independent (an invented outcome). Population and GDP are 2026 figures times rough growth multipliers; armies, navies, air forces, nuclear stockpiles and military satellites are plausible extrapolations, not forecasts. The Ethiopia-Eritrea war, the rivalries, the Sahel and AUKUS blocs as defence pacts and all events are invented. Frontier economies start with the first speculative technologies (quantum computing, directed-energy weapons, vertical farming); the rest of the world is a step behind."
+  },
+  {
+   "id": "orbital_age_2085",
+   "file": "orbital_age_2085.json",
+   "name": "Orbital Age 2085",
+   "era": "future",
+   "startDate": "2085-01-01",
+   "description": "A fictional future, New Year 2085: Europe, East Africa, West Africa, South America and Arabia have merged into federations, Korea is one country again and a warmer world has redrawn where people live. Three blocs led by America, China and India hold each other in check with nuclear arsenals and orbital weapons, while their stations, asteroid miners and first settlements on the Moon and Mars make space the new frontier.",
+   "approximations": "Entirely fictional: every merger, alliance, rivalry, technology level and event is invented to make a playable future, not a forecast. Borders are the 2026 provinces regrouped into the invented unions (the European Federation includes the 2026 EU, Ukraine, Moldova and the western Balkans; the federations of East and West Africa, South America and Arabia follow regional organisations; Greenland is independent and Korea reunified). Population and GDP are 2026 figures times rough growth multipliers that stand for demographic change and climate damage (shrinking East Asia and Europe, growing Africa and South Asia, weakened low-lying and very hot states). Forces, nuclear stockpiles and satellites are speculative. Space stations and off-world settlements are given to the space powers by opening events."
   }
  ]
 }

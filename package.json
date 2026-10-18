@@ -9,7 +9,9 @@
     "test": "node --test tests/*.test.mjs",
     "bench": "node tools/bench.mjs",
     "build:history": "node tools/build_history.mjs --economy",
-    "build:map": "python3 tools/build_map.py && python3 tools/build_scenarios.py && node tools/build_economy.mjs && node tools/build_diplomacy.mjs"
+    "build:map": "python3 tools/build_map.py && python3 tools/build_seas.py && python3 tools/build_scenarios.py && node tools/build_economy.mjs && node tools/build_diplomacy.mjs && node tools/build_forces.mjs modern_2026",
+    "build:seas": "python3 tools/build_seas.py",
+    "build:forces": "node tools/build_forces.mjs"
   },
   "license": "UNLICENSED"
 }

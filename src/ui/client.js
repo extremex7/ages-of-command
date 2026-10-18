@@ -4,6 +4,7 @@ import { h, mount } from './dom.js';
 import { MapRenderer } from '../map/renderer.js';
 import { buildIndex, pickProvince } from '../map/picking.js';
 import { MAP_MODES, MODE_LEGENDS } from '../map/modes.js';
+import { eraOf } from '../core/technology.js';
 import { TREATIES } from '../core/diplomacy.js';
 
 const TREATY_NAMES = Object.fromEntries(Object.entries(TREATIES).map(([k, t]) => [k, t.name.toLowerCase()]));
@@ -433,6 +434,7 @@ export class Client {
       me && h('div.stat', { tip: 'Stability 0–100: affects tax efficiency. Lowered by high taxes, low public spending, debt, war and occupation.' }, h('b', Math.round(me.stability)), h('span', 'Stability')),
       me && h('div.stat.opt', { tip: `Available manpower for recruiting and reinforcement. Cap ${people(me.cache.maxManpower)}, regenerates monthly.` }, h('b', people(me.manpower)), h('span', 'Manpower')),
       me && h('div.stat.opt', { tip: 'Population' }, h('b', people(me.cache.pop)), h('span', 'Population')),
+      me && me.tfx && h('div.stat.opt', { tip: `Era: ${me.tfx.known} technologies known${me.research?.current ? `, researching ${this.game.rules.tech.list[this.game.rules.tech.idx[me.research.current]].name}` : ', no research project'}. Click for the Research tab.`, on: { click: () => this.setTab('research') } }, h('b', eraOf(this.game.rules, me).name), h('span', 'Era')),
       h('div.stat', { tip: me ? 'Wars you are part of' : 'Wars in the world', className: wars ? 'bad' : '' }, h('b', wars), h('span', 'Wars')),
       h('div.spacer'),
       this.searchBox(),

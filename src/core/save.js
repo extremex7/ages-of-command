@@ -6,6 +6,7 @@ import { touchRelations } from './relations.js';
 import { initEconomy } from './industry.js';
 import { initGovernment, newGovt, govEffects } from './government.js';
 import { initDiplomacy, TREATIES } from './diplomacy.js';
+import { initTechnology, refreshAllTech, newResearch } from './technology.js';
 
 const TYPED = { Int16Array, Uint8Array, Float32Array, Float64Array, Int32Array, Uint32Array };
 
@@ -24,7 +25,7 @@ function fromB64(type, b64) {
 }
 
 // Keys of derived data that is rebuilt on load instead of saved.
-const DERIVED = new Set(['fx']);
+const DERIVED = new Set(['fx', 'tfx']);
 
 function replacer(key, v) {
   if (DERIVED.has(key)) return undefined;
@@ -79,6 +80,13 @@ const MIGRATIONS = {
     s.version = 4;
     return s;
   },
+  // v4 → v5 (Milestone 5): technologies did not exist. Countries get the scenario's starting
+  // technologies (for the Modern World: everything up to its start year).
+  4: (s) => {
+    s.needsTech = true;
+    s.version = 5;
+    return s;
+  },
 };
 
 export function deserialize(text, map, rules, scenario = null) {
@@ -124,6 +132,13 @@ export function deserialize(text, map, rules, scenario = null) {
     initDiplomacy(s, map, rules, scenario);
     refreshCountryCache(s, map, rules);
   }
+  if (s.needsTech) {
+    if (!scenario) throw new Error('This save predates technology; loading it needs its scenario');
+    delete s.needsTech;
+    initTechnology(s, map, rules, scenario);
+  } else remapTech(s, rules);
+  refreshAllTech(s, rules);
+  refreshCountryCache(s, map, rules);
   return s;
 }
 
@@ -181,5 +196,32 @@ function validatePolitics(s, rules) {
     g.fx = govEffects(rules, c);
     c.claims = (c.claims || []).filter((x) => x.p < s.prov.owner.length);
     c.influence = c.influence ?? 0; c.reputation = c.reputation ?? 0; c.rival = c.rival < C ? c.rival ?? -1 : -1;
+  }
+}
+
+// Technologies are saved with their ids; a changed technology file maps known flags by id and
+// drops research projects that no longer exist.
+function remapTech(s, rules) {
+  const R = rules.tech, C = s.countries.length;
+  const t = s.tech;
+  if (!t || !Array.isArray(t.ids) || !ArrayBuffer.isView(t.known)) throw new Error('Save is missing technology data');
+  if (t.known.length !== C * t.ids.length) throw new Error('Save has malformed technology data');
+  const same = t.ids.length === R.T && t.ids.every((id, i) => R.list[i].id === id);
+  if (!same) {
+    const known = new Uint8Array(C * R.T);
+    t.ids.forEach((id, j) => {
+      const i = R.idx[id];
+      if (i == null) return;
+      for (let k = 0; k < C; k++) known[k * R.T + i] = t.known[k * t.ids.length + j];
+    });
+    s.tech = { ids: R.list.map((x) => x.id), T: R.T, known, ver: (t.ver || 0) + 1 };
+  }
+  s.tech.T = R.T;
+  for (const c of s.countries) {
+    const r = c.research || (c.research = newResearch(rules));
+    if (r.current && !(r.current in R.idx)) { r.current = null; r.progress = 0; }
+    r.queue = (r.queue || []).filter((id) => id in R.idx);
+    if (!(r.share >= 0)) r.share = rules.balance.research.defaultShare;
+    r.bank = r.bank || 0;
   }
 }

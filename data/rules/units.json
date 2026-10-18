@@ -1,18 +1,58 @@
 {
-  "_doc": "Land unit types. cost/upkeep in billions (B) at price level 1.0; speed in km/day; days = training time. terrain = attack multiplier by terrain.",
+  "_doc": "Land unit types. cost/upkeep in billions (B) at price level 1.0; speed in km/day; days = training time. terrain = attack multiplier by terrain. role: line | support | mobile (the AI recruits the newest available type of each role). tech: technology that unlocks it (none = always available). munitions/fuel: monthly use relative to the industry defaults (0 = none). siege: weight in siege speed (default 1).",
+  "levy": {
+    "name": "Levy Spearmen", "short": "LEV", "role": "line", "men": 5000, "cost": 0.004, "upkeep": 0.0006, "days": 30,
+    "attack": 0.35, "defense": 0.6, "speed": 20, "width": 1, "toughness": 0.7, "munitions": 0, "fuel": 0,
+    "terrain": { "plains": 1.0, "hills": 1.0, "mountains": 1.0, "forest": 1.0, "desert": 0.9, "tundra": 0.8 }
+  },
+  "heavy_inf": {
+    "name": "Heavy Infantry", "short": "HVY", "role": "line", "tech": "iron_working", "men": 5000, "cost": 0.012, "upkeep": 0.0015, "days": 60,
+    "attack": 0.5, "defense": 0.8, "speed": 20, "width": 1, "toughness": 0.9, "munitions": 0, "fuel": 0,
+    "terrain": { "plains": 1.05, "hills": 1.0, "mountains": 0.9, "forest": 0.85, "desert": 0.9, "tundra": 0.8 }
+  },
+  "cavalry": {
+    "name": "Cavalry", "short": "CAV", "role": "mobile", "tech": "horseback_riding", "men": 3000, "cost": 0.015, "upkeep": 0.002, "days": 60,
+    "attack": 0.7, "defense": 0.4, "speed": 36, "width": 1, "toughness": 0.7, "munitions": 0.2, "fuel": 0,
+    "terrain": { "plains": 1.25, "hills": 0.9, "mountains": 0.5, "forest": 0.6, "desert": 1.1, "tundra": 0.7 }
+  },
+  "siege": {
+    "name": "Siege Engines", "short": "SGE", "role": "support", "tech": "siege_engineering", "men": 2000, "cost": 0.015, "upkeep": 0.002, "days": 75,
+    "attack": 0.6, "defense": 0.25, "speed": 14, "width": 1, "toughness": 0.4, "munitions": 0, "fuel": 0, "siege": 3,
+    "terrain": { "plains": 1.0, "hills": 0.8, "mountains": 0.5, "forest": 0.6, "desert": 0.9, "tundra": 0.6 }
+  },
+  "musketeers": {
+    "name": "Musket Infantry", "short": "MSK", "role": "line", "tech": "firearms", "men": 8000, "cost": 0.04, "upkeep": 0.005, "days": 60,
+    "attack": 0.6, "defense": 0.9, "speed": 22, "width": 1, "toughness": 0.9, "munitions": 0.3, "fuel": 0,
+    "terrain": { "plains": 1.0, "hills": 1.0, "mountains": 0.95, "forest": 0.9, "desert": 0.9, "tundra": 0.8 }
+  },
+  "cannons": {
+    "name": "Field Cannons", "short": "CAN", "role": "support", "tech": "cannon", "men": 3000, "cost": 0.05, "upkeep": 0.006, "days": 75,
+    "attack": 1.1, "defense": 0.5, "speed": 16, "width": 1, "toughness": 0.5, "munitions": 0.6, "fuel": 0, "siege": 2.5,
+    "terrain": { "plains": 1.0, "hills": 0.85, "mountains": 0.6, "forest": 0.7, "desert": 1.0, "tundra": 0.7 }
+  },
+  "rifles": {
+    "name": "Rifle Division", "short": "RIF", "role": "line", "tech": "rifled_firearms", "men": 12000, "cost": 0.2, "upkeep": 0.03, "days": 60,
+    "attack": 0.8, "defense": 1.25, "speed": 22, "width": 1, "toughness": 1.0, "munitions": 0.7, "fuel": 0,
+    "terrain": { "plains": 1.0, "hills": 1.0, "mountains": 1.0, "forest": 1.0, "desert": 0.9, "tundra": 0.85 }
+  },
+  "field_guns": {
+    "name": "Field Artillery", "short": "FLD", "role": "support", "tech": "quick_firing_artillery", "men": 5000, "cost": 0.25, "upkeep": 0.035, "days": 75,
+    "attack": 1.6, "defense": 0.7, "speed": 18, "width": 1, "toughness": 0.55, "munitions": 1.0, "fuel": 0, "siege": 3,
+    "terrain": { "plains": 1.0, "hills": 0.9, "mountains": 0.7, "forest": 0.8, "desert": 1.0, "tundra": 0.8 }
+  },
   "infantry": {
-    "name": "Infantry Division", "short": "INF", "men": 10000, "cost": 0.8, "upkeep": 0.12, "days": 45,
+    "name": "Infantry Division", "short": "INF", "role": "line", "tech": "motorised_infantry", "men": 10000, "cost": 0.8, "upkeep": 0.12, "days": 45,
     "attack": 1.0, "defense": 1.5, "speed": 24, "width": 1, "toughness": 1.0,
     "terrain": { "plains": 1.0, "hills": 1.0, "mountains": 1.0, "forest": 1.0, "desert": 0.9, "tundra": 0.9 }
   },
   "artillery": {
-    "name": "Artillery Brigade", "short": "ART", "men": 5000, "cost": 1.1, "upkeep": 0.15, "days": 60,
-    "attack": 2.0, "defense": 0.9, "speed": 20, "width": 1, "toughness": 0.6,
+    "name": "Artillery Brigade", "short": "ART", "role": "support", "tech": "modern_artillery", "men": 5000, "cost": 1.1, "upkeep": 0.15, "days": 60,
+    "attack": 2.0, "defense": 0.9, "speed": 20, "width": 1, "toughness": 0.6, "siege": 3.5,
     "terrain": { "plains": 1.0, "hills": 0.9, "mountains": 0.7, "forest": 0.8, "desert": 1.0, "tundra": 0.8 }
   },
   "armor": {
-    "name": "Armored Division", "short": "ARM", "men": 8000, "cost": 2.4, "upkeep": 0.3, "days": 90,
-    "attack": 2.8, "defense": 1.8, "speed": 40, "width": 1, "toughness": 1.6,
+    "name": "Armored Division", "short": "ARM", "role": "mobile", "tech": "tanks", "men": 8000, "cost": 2.4, "upkeep": 0.3, "days": 90,
+    "attack": 2.8, "defense": 1.8, "speed": 40, "width": 1, "toughness": 1.6, "fuel": 1,
     "terrain": { "plains": 1.2, "hills": 0.8, "mountains": 0.45, "forest": 0.6, "desert": 1.15, "tundra": 0.7 }
   }
 }

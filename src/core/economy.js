@@ -31,7 +31,7 @@ function allUpkeep(state, rules) {
 export function taxEfficiency(c, rules) {
   const w = rules.balance.economy.taxEfficiencyStabilityWeight;
   const g = c.govt?.fx ? Math.max(0.6, Math.min(1.3, c.govt.fx.taxEff)) : 1;
-  return (1 - w + w * (c.stability / 100)) * g;
+  return (1 - w + w * (c.stability / 100)) * g * (c.tfx?.mult.tax ?? 1);
 }
 
 // Computes this month's ledger for every country without mutating treasuries.
@@ -65,14 +65,15 @@ export function computeLedgers(state, map, rules) {
     const tariffs = c.econ ? c.econ.tariffRev : 0;
     const revenue = taxRevenue + requisition[k] + tariffs + Math.max(0, transfer[k]);
     const civil = taxRevenue * c.civilShare;
+    const research = Math.max(0, taxRevenue) * (c.research?.share ?? 0);
     const military = militaryUpkeep(state, c, rules, ups);
     const interest = c.treasury < 0 ? (-c.treasury * E.debtInterestYear) / 12 : 0;
     const paid = Math.max(0, -transfer[k]);
     c.ledger = {
       gdpMonth: gdpOwned[k], gdpLost: gdpOwned[k] - gdpControlled[k], efficiency: eff,
-      taxRevenue, requisition: requisition[k], tariffs, transfersIn: Math.max(0, transfer[k]), transfersOut: paid, revenue, civil, military, interest,
+      taxRevenue, requisition: requisition[k], tariffs, transfersIn: Math.max(0, transfer[k]), transfersOut: paid, revenue, civil, research, military, interest,
       construction: c.econ ? c.econ.spentConstruction || 0 : 0,
-      net: revenue - civil - military - interest - paid,
+      net: revenue - civil - research - military - interest - paid,
     };
   }
 }
@@ -116,17 +117,19 @@ export function monthlyEconomy(state, map, rules) {
   }
   // population growth (occupied provinces stagnate; hunger slows or reverses it) and
   // development growth (driven by living standards and civil spending)
-  const g = P.growthYear / 12;
+  // (medicine and agriculture technology scale growth; see docs/TECHNOLOGY.md)
   const C = state.countries;
   for (const i of map.ids) {
     const o = state.prov.owner[i];
     if (o < 0 || state.prov.controller[i] !== o) continue;
+    const tm = C[o].tfx?.mult;
+    const g = (P.growthYear / 12) * (tm ? tm.popGrowth : 1);
     const ee = C[o].econ;
     if (!ee) { state.prov.pop[i] *= 1 + g; continue; }
     const fs = ee.foodSat;
     state.prov.pop[i] *= 1 + g * (2 * fs - 1) - (fs < 0.5 ? (0.5 - fs) * 0.01 : 0);
     const d = state.prov.dev[i];
-    if (d < 100) state.prov.dev[i] = Math.min(100, d + I.devGrowthMonth * ee.living * (C[o].civilShare / 0.75) * Math.max(0.2, 1.3 - d / 100));
+    if (d < 100) state.prov.dev[i] = Math.min(100, d + I.devGrowthMonth * ee.living * (C[o].civilShare / 0.75) * Math.max(0.2, 1.3 - d / 100) * (tm ? tm.devGrowth : 1));
   }
   if (state.econ) recordHistory(state);
 }
@@ -139,7 +142,7 @@ export function autoBalanceBudgets(state, map, rules) {
     if (!c.ledger) continue;
     const L = c.ledger;
     if (L.taxRevenue <= 0) continue;
-    const need = (L.military * 1.08) / L.taxRevenue;
+    const need = (L.military * 1.08) / L.taxRevenue + (c.research?.share ?? 0);
     c.civilShare = Math.max(0.55, Math.min(0.9, 1 - need));
     c.treasury = L.taxRevenue * 3;
   }

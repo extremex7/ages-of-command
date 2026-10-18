@@ -1,0 +1,367 @@
+{
+  "id": "height_of_rome_117",
+  "name": "Height of Rome",
+  "era": "classical",
+  "startDate": "0117-08-11",
+  "techYear": 117,
+  "description": "August 117: Trajan is dead, Hadrian takes the purple and the Roman Empire stands at its greatest extent, while Parthia recovers Mesopotamia, the Kushans rule the road to India and Eastern Han China faces the Xianbei on the steppe.",
+  "approximations": "Borders follow modern admin-1 provinces, so frontiers such as the Rhine-Danube limes, Hadrian's later wall line, the Parthian marches and the Han frontier are drawn at province resolution. Populations, output (1990 international dollars) and army sizes are rounded estimates with wide uncertainty. Ancient polities are simplified: tribal confederations (Germanic peoples, Sarmatians, Xianbei, Caledonians, Irish kingdoms, Wa, Samhan) are shown as single chiefdom-style states with abs_monarchy government; the Maya city-states are one polity; Saba and Himyar are merged; Kushan and Western Satrap chronology around 117 is uncertain. Peoples outside states (most of the Americas, sub-Saharan Africa, Siberia, the forest zone, Arabia's interior, the Sahara, Tibet, the Tarim basin after the Han withdrawal of 107) are shown as unclaimed land. Flags are invented simple standards.",
+  "countries": [
+    {
+      "tag": "ROM", "name": "Roman Empire", "color": "#a8473f", "gov": "abs_monarchy",
+      "capital": [41.90, 12.50], "pop": 58.0, "gdp": 28.0, "techLag": 0, "armyK": 380,
+      "aggression": 0.35, "stability": 70,
+      "policies": { "conscription": "volunteer", "administration": "balanced", "religion": "tolerant" },
+      "flag": { "pattern": "disc", "colors": ["#7a1f1a", "#d4a93a"] },
+      "regions": [
+        { "iso": ["ITA", "SMR", "VAT", "MLT", "MCO", "CHE", "LIE", "AND", "GIB", "BEL", "LUX", "AUT", "SVN", "HRV", "BIH", "SRB", "MNE", "MKD", "ALB", "GRC", "BGR", "TUR", "CYP", "SYR", "LBN", "ISR", "PSE", "JOR", "EGY", "JEY", "GGY"] },
+        { "iso": ["FRA"], "box": [-5.5, 41.0, 10.0, 51.5] },
+        { "iso": ["ESP"], "box": [-10.0, 35.5, 5.0, 44.0] },
+        { "iso": ["PRT"], "box": [-10.0, 36.5, -6.0, 42.5] },
+        { "iso": ["GBR"], "box": [-5.8, 49.0, 2.0, 55.2] },
+        { "iso": ["NLD"], "names": ["Noord-Brabant"] },
+        { "iso": ["DEU"], "names": ["Rheinland-Pfalz", "Saarland", "Baden-Württemberg", "Bayern"] },
+        { "iso": ["HUN"], "names": ["Somogy", "Baranya", "Budapest"] },
+        { "iso": ["ROU"], "exclude": [{ "names": ["Suceava", "Bacau", "Maramures"] }] },
+        { "iso": ["LBY"], "box": [9.0, 30.0, 26.0, 34.0] },
+        { "iso": ["LBY"], "names": ["Al Butnan"] },
+        { "iso": ["TUN"], "box": [7.0, 32.5, 12.0, 38.0] },
+        { "iso": ["DZA"], "box": [-2.5, 34.3, 9.0, 37.5] },
+        { "iso": ["MAR"], "box": [-7.0, 33.5, -1.0, 36.0] },
+        { "iso": ["MAR"], "names": ["Fès - Boulemane"] },
+        { "iso": ["SAU"], "names": ["Tabuk"] },
+        { "iso": ["GEO"], "names": ["Abkhazia", "Samegrelo-Zemo Svaneti"] }
+      ]
+    },
+    {
+      "tag": "ARM", "name": "Kingdom of Armenia", "color": "#8c6aa8", "gov": "abs_monarchy",
+      "capital": [39.95, 44.55], "pop": 1.2, "gdp": 0.55, "techLag": 0, "armyK": 15,
+      "aggression": 0.2, "stability": 50,
+      "flag": { "pattern": "h", "colors": ["#5b2a6e", "#c9a23a"] },
+      "regions": [
+        { "iso": ["ARM"] },
+        { "iso": ["TUR"], "names": ["Van", "Agri", "Erzurum"] },
+        { "iso": ["AZE"], "names": ["Culfa", "Kəlbəcər"] }
+      ]
+    },
+    {
+      "tag": "BOS", "name": "Bosporan Kingdom", "color": "#5f8fa8", "gov": "abs_monarchy",
+      "capital": [45.35, 36.47], "pop": 0.5, "gdp": 0.25, "techLag": 0, "armyK": 10,
+      "aggression": 0.2, "stability": 55,
+      "flag": { "pattern": "h", "colors": ["#2f5f7a", "#e0d6b8"] },
+      "regions": [
+        { "iso": ["RUS"], "names": ["Crimea", "Krasnodar"] }
+      ]
+    },
+    {
+      "tag": "IBE", "name": "Kingdom of Iberia", "color": "#c98f5a", "gov": "abs_monarchy",
+      "capital": [41.84, 44.72], "pop": 0.4, "gdp": 0.18, "techLag": 50, "armyK": 8,
+      "aggression": 0.25, "stability": 55,
+      "flag": { "pattern": "cross", "colors": ["#8a5a2a", "#e8dcc0"] },
+      "regions": [
+        { "iso": ["GEO"], "exclude": [{ "names": ["Abkhazia", "Samegrelo-Zemo Svaneti"] }] }
+      ]
+    },
+    {
+      "tag": "CAA", "name": "Caucasian Albania", "color": "#9a8d5c", "gov": "abs_monarchy",
+      "capital": [40.98, 47.85], "pop": 0.4, "gdp": 0.17, "techLag": 100, "armyK": 8,
+      "aggression": 0.25, "stability": 50,
+      "flag": { "pattern": "v", "colors": ["#6a5f30", "#d8cfa0"] },
+      "regions": [
+        { "iso": ["AZE"], "exclude": [{ "names": ["Culfa", "Kəlbəcər"] }] }
+      ]
+    },
+    {
+      "tag": "PAR", "name": "Parthian Empire", "color": "#6fa88a", "gov": "abs_monarchy",
+      "capital": [33.09, 44.58], "pop": 9.0, "gdp": 4.6, "techLag": 0, "armyK": 70,
+      "aggression": 0.4, "stability": 45,
+      "policies": { "administration": "decentralised", "religion": "tolerant" },
+      "flag": { "pattern": "disc", "colors": ["#2e6a4a", "#e2c46a"] },
+      "regions": [
+        { "iso": ["IRQ", "IRN", "KWT", "BHR"] },
+        { "iso": ["SYR"], "names": ["Dayr Az Zawr", "Hasaka (Al Haksa)"] },
+        { "iso": ["TKM"], "names": ["Balkan", "Ashgabat", "Mary", "Chardzhou"] },
+        { "iso": ["AFG"], "names": ["Hirat", "Badghis", "Farah", "Nimroz", "Hilmand"] },
+        { "iso": ["SAU"], "names": ["Ash Sharqiyah (North)"] }
+      ]
+    },
+    {
+      "tag": "KUS", "name": "Kushan Empire", "color": "#c08a3e", "gov": "abs_monarchy",
+      "capital": [34.95, 69.27], "pop": 12.0, "gdp": 6.0, "techLag": 0, "armyK": 100,
+      "aggression": 0.45, "stability": 60,
+      "policies": { "religion": "tolerant" },
+      "flag": { "pattern": "disc", "colors": ["#8a5a1e", "#f0d890"] },
+      "regions": [
+        { "iso": ["AFG"], "exclude": [{ "names": ["Hirat", "Badghis", "Farah", "Nimroz", "Hilmand"] }] },
+        { "iso": ["PAK"], "exclude": [{ "names": ["Baluchistan (West)", "Baluchistan (Southwest)", "Baluchistan (South)"] }] },
+        { "iso": ["TJK"], "names": ["Khatlon", "Dushanbe", "Gorno-Badakhshan"] },
+        { "iso": ["UZB"], "names": ["Surkhandarya"] },
+        { "iso": ["IND"], "names": ["Punjab", "New Delhi", "Himachal Pradesh", "Jammu and Kashmir", "Uttarakhand", "Uttar Pradesh", "Rajasthan (Northeast)"] }
+      ]
+    },
+    {
+      "tag": "WSA", "name": "Western Satraps", "color": "#d1a774", "gov": "abs_monarchy",
+      "capital": [22.30, 73.20], "pop": 3.0, "gdp": 1.5, "techLag": 0, "armyK": 25,
+      "aggression": 0.4, "stability": 50,
+      "flag": { "pattern": "h", "colors": ["#9a6a2a", "#f2e2b8"] },
+      "regions": [
+        { "iso": ["IND"], "names": ["Gujarat", "Rajasthan (South)"] }
+      ]
+    },
+    {
+      "tag": "SAT", "name": "Satavahana Empire", "color": "#7a8fc4", "gov": "abs_monarchy",
+      "capital": [19.48, 75.38], "pop": 10.0, "gdp": 5.0, "techLag": 0, "armyK": 80,
+      "aggression": 0.45, "stability": 60,
+      "policies": { "religion": "tolerant" },
+      "flag": { "pattern": "v", "colors": ["#3a4f8a", "#e8e0c8"] },
+      "regions": [
+        { "iso": ["IND"], "names": ["Maharashtra", "Telangana", "Andhra Pradesh", "Karnataka", "Goa", "Madhya Pradesh"] }
+      ]
+    },
+    {
+      "tag": "TAM", "name": "Tamilakam", "color": "#b5576b", "gov": "abs_monarchy",
+      "capital": [9.93, 78.12], "pop": 4.0, "gdp": 2.0, "techLag": 50, "armyK": 30,
+      "aggression": 0.3, "stability": 50,
+      "flag": { "pattern": "disc", "colors": ["#7a2a3a", "#e8c85a"] },
+      "regions": [
+        { "iso": ["IND"], "names": ["Tamil Nadu", "Kerala"] }
+      ]
+    },
+    {
+      "tag": "SRI", "name": "Anuradhapura", "color": "#6aa0a0", "gov": "abs_monarchy",
+      "capital": [8.33, 80.40], "pop": 1.0, "gdp": 0.5, "techLag": 50, "armyK": 10,
+      "aggression": 0.15, "stability": 55,
+      "policies": { "religion": "state" },
+      "flag": { "pattern": "disc", "colors": ["#2f6a6a", "#e8b84a"] },
+      "regions": [
+        { "iso": ["LKA"] }
+      ]
+    },
+    {
+      "tag": "HAN", "name": "Eastern Han", "color": "#c4a43c", "gov": "abs_monarchy",
+      "capital": [34.62, 112.45], "pop": 52.0, "gdp": 26.0, "techLag": 0, "armyK": 300,
+      "aggression": 0.3, "stability": 60,
+      "policies": { "administration": "centralised", "religion": "tolerant" },
+      "flag": { "pattern": "disc", "colors": ["#8a2a1a", "#e8c84a"] },
+      "regions": [
+        { "iso": ["CHN"], "names": ["Gansu (South)", "Gansu (Central)", "Gansu (Northwest)", "Gansu (Southeast)", "Qinghai (East)", "Guangxi", "Guizhou", "Chongqing", "Beijing", "Fujian", "Anhui", "Guangdong", "Ningxia", "Shaanxi", "Shanxi", "Hubei", "Hunan", "Sichuan (South)", "Sichuan (South 2)", "Sichuan (East)", "Yunnan (Northeast)", "Yunnan (East)", "Yunnan (Northwest)", "Hebei", "Henan", "Liaoning", "Shandong", "Tianjin", "Jiangxi", "Jiangsu", "Shanghai", "Zhejiang", "Inner Mongol (South)", "Inner Mongol (Southwest 2)", "Inner Mongol (Central)"] },
+        { "iso": ["HKG", "MAC"] },
+        { "iso": ["VNM"], "names": ["Lạng Sơn", "Hà Giang", "Hanoi", "Thanh Hóa", "Nghệ An", "Quảng Bình", "Quàng Nam"] },
+        { "iso": ["PRK"], "names": ["Pyongyang", "P'yŏngan-namdo", "Hwanghae-namdo"] }
+      ]
+    },
+    {
+      "tag": "XIA", "name": "Xianbei", "color": "#8b7d6b", "gov": "abs_monarchy",
+      "capital": [47.00, 112.00], "pop": 1.0, "gdp": 0.4, "techLag": 200, "armyK": 80,
+      "aggression": 0.6, "stability": 40,
+      "flag": { "pattern": "h", "colors": ["#4a4034", "#c8b890"] },
+      "regions": [
+        { "iso": ["MNG"] },
+        { "iso": ["CHN"], "names": ["Inner Mongol (East)", "Inner Mongol (East 2)", "Inner Mongol (Central 2)", "Inner Mongol (Northeast)", "Inner Mongol (Northeast 2)", "Inner Mongol (East 3)", "Inner Mongol (Southwest)"] }
+      ]
+    },
+    {
+      "tag": "BUY", "name": "Buyeo", "color": "#a87a9a", "gov": "abs_monarchy",
+      "capital": [43.85, 126.55], "pop": 0.4, "gdp": 0.17, "techLag": 150, "armyK": 15,
+      "aggression": 0.25, "stability": 50,
+      "flag": { "pattern": "v", "colors": ["#6a3a5a", "#e8d8e0"] },
+      "regions": [
+        { "iso": ["CHN"], "names": ["Jilin"] }
+      ]
+    },
+    {
+      "tag": "GOG", "name": "Goguryeo", "color": "#7aa36b", "gov": "abs_monarchy",
+      "capital": [41.12, 126.18], "pop": 0.35, "gdp": 0.15, "techLag": 150, "armyK": 15,
+      "aggression": 0.5, "stability": 55,
+      "flag": { "pattern": "disc", "colors": ["#2f5a2a", "#e8d070"] },
+      "regions": [
+        { "iso": ["PRK"], "names": ["Chagang-do", "Ryanggang", "P'yŏngan-bukto", "Hamgyŏng-namdo", "Hamgyŏng-bukto", "Kangwŏn-do"] }
+      ]
+    },
+    {
+      "tag": "SAM", "name": "Samhan", "color": "#5f8fb0", "gov": "abs_monarchy",
+      "capital": [36.80, 127.10], "pop": 1.0, "gdp": 0.43, "techLag": 200, "armyK": 15,
+      "aggression": 0.2, "stability": 45,
+      "policies": { "administration": "decentralised" },
+      "flag": { "pattern": "h", "colors": ["#2a4f6a", "#e8e8e0", "#2a4f6a"] },
+      "regions": [
+        { "iso": ["KOR"] }
+      ]
+    },
+    {
+      "tag": "WA", "name": "Wa", "color": "#c06a6a", "gov": "abs_monarchy",
+      "capital": [33.55, 130.45], "pop": 1.5, "gdp": 0.62, "techLag": 300, "armyK": 20,
+      "aggression": 0.3, "stability": 40,
+      "policies": { "administration": "decentralised" },
+      "flag": { "pattern": "disc", "colors": ["#e8e0d0", "#a83a3a"] },
+      "regions": [
+        { "iso": ["JPN"], "exclude": [{ "names": ["Hokkaidō", "Okinawa", "Akita", "Iwate"] }] }
+      ]
+    },
+    {
+      "tag": "FUN", "name": "Funan", "color": "#8aa65a", "gov": "abs_monarchy",
+      "capital": [11.00, 105.00], "pop": 0.8, "gdp": 0.36, "techLag": 150, "armyK": 10,
+      "aggression": 0.25, "stability": 50,
+      "flag": { "pattern": "disc", "colors": ["#4a6a2a", "#e8c070"] },
+      "regions": [
+        { "iso": ["KHM"], "names": ["Phnom Penh", "Kâmpóng Cham", "Kâmpóng Spœ", "Kaôh Kong"] },
+        { "iso": ["VNM"], "names": ["Kiên Giang", "Bình Phước"] }
+      ]
+    },
+    {
+      "tag": "AKS", "name": "Kingdom of Aksum", "color": "#9a6fb0", "gov": "abs_monarchy",
+      "capital": [14.13, 38.72], "pop": 1.0, "gdp": 0.48, "techLag": 50, "armyK": 15,
+      "aggression": 0.3, "stability": 55,
+      "flag": { "pattern": "disc", "colors": ["#5a3a7a", "#e8c870"] },
+      "regions": [
+        { "iso": ["ERI"] },
+        { "iso": ["ETH"], "names": ["Tigray", "Amhara"] }
+      ]
+    },
+    {
+      "tag": "HIM", "name": "Himyar and Saba", "color": "#7fae6b", "gov": "abs_monarchy",
+      "capital": [14.20, 44.40], "pop": 1.2, "gdp": 0.6, "techLag": 50, "armyK": 15,
+      "aggression": 0.3, "stability": 45,
+      "flag": { "pattern": "h", "colors": ["#3a6a2a", "#e8dcb0"] },
+      "regions": [
+        { "iso": ["YEM"], "exclude": [{ "names": ["Hadramawt", "Al Mahrah", "Shabwah"] }] },
+        { "iso": ["SAU"], "names": ["Najran", "Jizan"] }
+      ]
+    },
+    {
+      "tag": "HAD", "name": "Hadramaut", "color": "#c9a46a", "gov": "abs_monarchy",
+      "capital": [15.37, 47.00], "pop": 0.4, "gdp": 0.2, "techLag": 50, "armyK": 6,
+      "aggression": 0.2, "stability": 50,
+      "flag": { "pattern": "v", "colors": ["#8a6a2a", "#f0e4c0"] },
+      "regions": [
+        { "iso": ["YEM"], "names": ["Hadramawt", "Al Mahrah", "Shabwah"] },
+        { "iso": ["OMN"], "names": ["Dhofar"] }
+      ]
+    },
+    {
+      "tag": "MER", "name": "Kingdom of Kush", "color": "#b86d3d", "gov": "abs_monarchy",
+      "capital": [16.94, 33.75], "pop": 0.8, "gdp": 0.38, "techLag": 100, "armyK": 12,
+      "aggression": 0.2, "stability": 50,
+      "flag": { "pattern": "disc", "colors": ["#7a3a1a", "#e8d090"] },
+      "regions": [
+        { "iso": ["SDN"], "names": ["River Nile", "Northern (Central)", "Khartoum", "Gezira", "Sennar"] }
+      ]
+    },
+    {
+      "tag": "SAR", "name": "Sarmatians", "color": "#b8a26a", "gov": "abs_monarchy",
+      "capital": [47.50, 40.00], "pop": 1.2, "gdp": 0.48, "techLag": 150, "armyK": 60,
+      "aggression": 0.6, "stability": 35,
+      "policies": { "administration": "decentralised" },
+      "flag": { "pattern": "h", "colors": ["#6a5a2a", "#d8c890"] },
+      "regions": [
+        { "iso": ["UKR"], "names": ["Odessa", "Mykolayiv", "Kherson", "Kirovohrad", "Zaporizhzhya", "Dnipropetrovs'k", "Donets'k", "Luhans'k"] },
+        { "iso": ["RUS"], "names": ["Rostov", "Volgograd", "Kalmyk", "Astrakhan'", "Stavropol'", "Saratov", "Orenburg", "Adygey", "Karachay-Cherkess", "Kabardin-Balkar", "North Ossetia", "Ingush", "Chechnya"] },
+        { "iso": ["KAZ"], "names": ["West Kazakhstan", "Atyrau"] }
+      ]
+    },
+    {
+      "tag": "IAZ", "name": "Iazyges", "color": "#8fa36b", "gov": "abs_monarchy",
+      "capital": [46.90, 20.00], "pop": 0.3, "gdp": 0.12, "techLag": 150, "armyK": 15,
+      "aggression": 0.5, "stability": 40,
+      "flag": { "pattern": "h", "colors": ["#4a5a2a", "#d0d8a0"] },
+      "regions": [
+        { "iso": ["HUN"], "names": ["Pest", "Bács-Kiskun", "Jász-Nagykun-Szolnok", "Hajdú-Bihar", "Borsod-Abaúj-Zemplén"] }
+      ]
+    },
+    {
+      "tag": "GERM", "name": "Germanic peoples", "color": "#6b7f99", "gov": "abs_monarchy",
+      "capital": [52.00, 10.00], "pop": 3.5, "gdp": 1.4, "techLag": 200, "armyK": 100,
+      "aggression": 0.55, "stability": 30,
+      "policies": { "administration": "decentralised" },
+      "flag": { "pattern": "h", "colors": ["#2a3a4f", "#c8c0a0"] },
+      "regions": [
+        { "iso": ["DEU"], "exclude": [{ "names": ["Rheinland-Pfalz", "Saarland", "Baden-Württemberg", "Bayern"] }] },
+        { "iso": ["NLD"], "names": ["Amsterdam", "Overijssel"] },
+        { "iso": ["DNK", "CZE"] },
+        { "iso": ["POL"], "box": [14.0, 49.0, 22.0, 55.0] },
+        { "iso": ["SVK"], "names": ["Bratislava", "Nitriansky", "Žilinský"] },
+        { "iso": ["SWE"], "box": [10.0, 55.0, 19.0, 59.5] }
+      ]
+    },
+    {
+      "tag": "CAL", "name": "Caledonians", "color": "#7d9a6a", "gov": "abs_monarchy",
+      "capital": [56.50, -3.50], "pop": 0.2, "gdp": 0.08, "techLag": 300, "armyK": 10,
+      "aggression": 0.5, "stability": 35,
+      "policies": { "administration": "decentralised" },
+      "flag": { "pattern": "v", "colors": ["#3a5a2a", "#d0d8c0"] },
+      "regions": [
+        { "iso": ["GBR"], "names": ["Aberdeenshire", "Highland", "Argyll and Bute", "Eilean Siar"] }
+      ]
+    },
+    {
+      "tag": "HIB", "name": "Hibernia", "color": "#5a9a7a", "gov": "abs_monarchy",
+      "capital": [53.58, -6.60], "pop": 0.4, "gdp": 0.16, "techLag": 300, "armyK": 10,
+      "aggression": 0.3, "stability": 35,
+      "policies": { "administration": "decentralised" },
+      "flag": { "pattern": "disc", "colors": ["#2a5a3a", "#e0d090"] },
+      "regions": [
+        { "iso": ["IRL"] },
+        { "iso": ["GBR"], "names": ["Fermanagh"] }
+      ]
+    },
+    {
+      "tag": "MAY", "name": "Maya", "color": "#4f9a8a", "gov": "abs_monarchy",
+      "capital": [17.22, -89.62], "pop": 2.0, "gdp": 0.85, "techLag": 1800, "armyK": 30,
+      "aggression": 0.4, "stability": 40,
+      "policies": { "administration": "decentralised", "religion": "state" },
+      "flag": { "pattern": "disc", "colors": ["#1f5a4a", "#e8d080"] },
+      "regions": [
+        { "iso": ["MEX"], "names": ["Campeche", "Yucatán", "Quintana Roo", "Chiapas", "Tabasco"] },
+        { "iso": ["GTM", "BLZ", "SLV"] }
+      ]
+    },
+    {
+      "tag": "TEO", "name": "Teotihuacan", "color": "#b0785a", "gov": "theocracy",
+      "capital": [19.69, -98.84], "pop": 0.6, "gdp": 0.27, "techLag": 1800, "armyK": 15,
+      "aggression": 0.4, "stability": 60,
+      "policies": { "administration": "centralised", "religion": "state" },
+      "flag": { "pattern": "disc", "colors": ["#7a4a2a", "#5ab0a0"] },
+      "regions": [
+        { "iso": ["MEX"], "names": ["México", "Mexico City", "Puebla", "Tlaxcala", "Hidalgo"] }
+      ]
+    },
+    {
+      "tag": "WEI", "name": "Cao Wei", "color": "#8a6f4a", "gov": "abs_monarchy",
+      "capital": [34.62, 112.45], "pop": 4.4, "gdp": 2.0, "techLag": 0, "armyK": 300,
+      "aggression": 0.5, "stability": 55,
+      "flag": { "pattern": "disc", "colors": ["#3a2a1a", "#d8b060"] },
+      "dormant": true,
+      "regions": [
+        { "iso": ["CHN"], "names": ["Gansu (South)", "Gansu (Central)", "Gansu (Northwest)", "Gansu (Southeast)", "Qinghai (East)", "Beijing", "Tianjin", "Hebei", "Henan", "Shandong", "Shanxi", "Shaanxi", "Ningxia", "Liaoning", "Anhui", "Jiangsu", "Inner Mongol (South)", "Inner Mongol (Southwest 2)", "Inner Mongol (Central)"] },
+        { "iso": ["PRK"], "names": ["Pyongyang", "P'yŏngan-namdo", "Hwanghae-namdo"] }
+      ]
+    },
+    {
+      "tag": "SHU", "name": "Shu Han", "color": "#6f9a5a", "gov": "abs_monarchy",
+      "capital": [30.66, 104.06], "pop": 1.0, "gdp": 0.45, "techLag": 0, "armyK": 100,
+      "aggression": 0.55, "stability": 55,
+      "flag": { "pattern": "disc", "colors": ["#2a4a1a", "#e0c860"] },
+      "dormant": true,
+      "regions": [
+        { "iso": ["CHN"], "names": ["Sichuan (South)", "Sichuan (South 2)", "Sichuan (East)", "Chongqing", "Yunnan (Northeast)", "Yunnan (East)", "Yunnan (Northwest)", "Guizhou"] }
+      ]
+    },
+    {
+      "tag": "WU", "name": "Eastern Wu", "color": "#c0604f", "gov": "abs_monarchy",
+      "capital": [32.06, 118.78], "pop": 2.3, "gdp": 1.0, "techLag": 0, "armyK": 200,
+      "aggression": 0.4, "stability": 55,
+      "flag": { "pattern": "disc", "colors": ["#6a1f1a", "#e0c870"] },
+      "dormant": true,
+      "regions": [
+        { "iso": ["CHN"], "names": ["Shanghai", "Zhejiang", "Jiangxi", "Fujian", "Hunan", "Hubei", "Guangdong", "Guangxi"] },
+        { "iso": ["HKG", "MAC"] },
+        { "iso": ["VNM"], "names": ["Lạng Sơn", "Hà Giang", "Hanoi", "Thanh Hóa", "Nghệ An", "Quảng Bình", "Quàng Nam"] }
+      ]
+    }
+  ],
+  "subjects": [["ROM", "ARM"], ["ROM", "BOS"], ["KUS", "WSA"]],
+  "treaties": [],
+  "blocs": [],
+  "rivals": [["ROM", "PAR"], ["PAR", "ROM"], ["HAN", "XIA"], ["XIA", "HAN"], ["SAT", "WSA"], ["WSA", "SAT"]],
+  "wars": []
+}

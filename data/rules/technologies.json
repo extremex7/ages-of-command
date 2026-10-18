@@ -1,0 +1,1382 @@
+{
+  "_doc": "Technology tree. See docs/TECHNOLOGY.md.",
+  "eras": [
+    { "id": "ancient", "name": "Ancient", "start": -3000, "manpowerShare": 0.012 },
+    { "id": "classical", "name": "Classical", "start": -500, "manpowerShare": 0.012 },
+    { "id": "medieval", "name": "Medieval", "start": 500, "manpowerShare": 0.008 },
+    { "id": "renaissance", "name": "Renaissance", "start": 1450, "manpowerShare": 0.008 },
+    { "id": "early_modern", "name": "Early Modern", "start": 1600, "manpowerShare": 0.01 },
+    { "id": "enlightenment", "name": "Enlightenment and Revolution", "start": 1750, "manpowerShare": 0.015 },
+    { "id": "industrial", "name": "Industrial", "start": 1830, "manpowerShare": 0.02 },
+    { "id": "great_war", "name": "Great War", "start": 1900, "manpowerShare": 0.04 },
+    { "id": "world_war", "name": "World War", "start": 1930, "manpowerShare": 0.04 },
+    { "id": "cold_war", "name": "Cold War", "start": 1950, "manpowerShare": 0.015 },
+    { "id": "information", "name": "Information Age", "start": 1990, "manpowerShare": 0.006 },
+    { "id": "near_future", "name": "Near Future", "start": 2025, "manpowerShare": 0.006, "fictional": true },
+    { "id": "future", "name": "Future", "start": 2060, "manpowerShare": 0.006, "fictional": true }
+  ],
+  "fields": {
+    "agriculture": "Agriculture",
+    "administration": "Administration",
+    "economy": "Economy and industry",
+    "medicine": "Medicine",
+    "education": "Education and science",
+    "transport": "Transport",
+    "communications": "Communications and computing",
+    "energy": "Energy",
+    "army": "Army",
+    "navy": "Navy",
+    "air": "Air",
+    "doctrine": "Doctrine and intelligence",
+    "space": "Space"
+  },
+  "techs": {
+    "irrigation": {
+      "name": "Irrigation",
+      "era": "ancient",
+      "field": "agriculture",
+      "year": -3000,
+      "cost": 1.5,
+      "req": [],
+      "effects": { "farm": 0.3, "popGrowth": 0.25 },
+      "desc": "Canals and ditches water the fields, raising farm output and population growth."
+    },
+    "bronze_working": {
+      "name": "Bronze Working",
+      "era": "ancient",
+      "field": "economy",
+      "year": -3000,
+      "cost": 1,
+      "req": [],
+      "effects": { "mine": 0.1, "combat": 0.1 },
+      "desc": "Smelting copper and tin improves mine output and gives troops better weapons and armour."
+    },
+    "writing": {
+      "name": "Writing",
+      "era": "ancient",
+      "field": "education",
+      "year": -3000,
+      "cost": 1.5,
+      "req": [],
+      "effects": { "research": 0.15, "tax": 0.05 },
+      "desc": "Written records speed research and make tax collection more efficient."
+    },
+    "masonry": {
+      "name": "Masonry",
+      "era": "ancient",
+      "field": "economy",
+      "year": -2600,
+      "cost": 1,
+      "req": [],
+      "effects": { "construction": 0.25, "devGrowth": 0.05, "mine": 0.05 },
+      "desc": "Quarrying and dressed stone make construction cheaper and help settlements develop."
+    },
+    "sailing": {
+      "name": "Sailing",
+      "era": "ancient",
+      "field": "navy",
+      "year": -3000,
+      "cost": 0.8,
+      "req": [],
+      "effects": { "devGrowth": 0.05, "movement": 0.03 },
+      "desc": "Sailing ships carry coastal trade, adding development growth and a little army movement."
+    },
+    "mathematics": {
+      "name": "Mathematics",
+      "era": "ancient",
+      "field": "education",
+      "year": -1800,
+      "cost": 1,
+      "req": ["writing"],
+      "effects": { "research": 0.1, "construction": 0.1 },
+      "desc": "Arithmetic and geometry speed research and make building projects cheaper."
+    },
+    "horseback_riding": {
+      "name": "Horseback Riding",
+      "era": "ancient",
+      "field": "army",
+      "year": -1500,
+      "cost": 1,
+      "req": [],
+      "effects": { "movement": 0.15 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": ["cavalry"],
+        "govTypes": []
+      },
+      "desc": "Domesticated war horses unlock cavalry and speed up armies."
+    },
+    "iron_working": {
+      "name": "Iron Working",
+      "era": "ancient",
+      "field": "economy",
+      "year": -1200,
+      "cost": 1.5,
+      "req": ["bronze_working"],
+      "effects": { "mine": 0.15, "combat": 0.05, "farm": 0.05, "construction": 0.05 },
+      "unlocks": {
+        "goods": ["iron"],
+        "buildings": ["iron_mine"],
+        "units": ["heavy_inf"],
+        "govTypes": []
+      },
+      "desc": "Smelting iron unlocks iron, iron mines and heavy infantry, and improves mines, tools and weapons."
+    },
+    "philosophy": {
+      "name": "Philosophy",
+      "era": "classical",
+      "field": "education",
+      "year": -450,
+      "cost": 1,
+      "req": ["mathematics"],
+      "effects": { "research": 0.1 },
+      "desc": "Systematic inquiry into nature and ethics speeds research."
+    },
+    "siege_engineering": {
+      "name": "Siege Engineering",
+      "era": "classical",
+      "field": "army",
+      "year": -400,
+      "cost": 1.2,
+      "req": ["masonry", "mathematics"],
+      "effects": { "siege": 0.15 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": ["siege"],
+        "govTypes": []
+      },
+      "desc": "Torsion catapults and siege towers unlock siege engines and speed up sieges."
+    },
+    "hippocratic_medicine": {
+      "name": "Hippocratic Medicine",
+      "era": "classical",
+      "field": "medicine",
+      "year": -400,
+      "cost": 0.8,
+      "req": ["writing"],
+      "effects": { "popGrowth": 0.05 },
+      "desc": "Observational medicine and hygiene modestly raise population growth."
+    },
+    "roads": {
+      "name": "Paved Roads",
+      "era": "classical",
+      "field": "transport",
+      "year": -312,
+      "cost": 1.2,
+      "req": ["masonry"],
+      "effects": { "movement": 0.2, "tax": 0.03, "devGrowth": 0.05 },
+      "desc": "Engineered all-weather roads speed army movement and help tax collectors reach the provinces."
+    },
+    "aqueducts": {
+      "name": "Aqueducts",
+      "era": "classical",
+      "field": "economy",
+      "year": -312,
+      "cost": 1,
+      "req": ["masonry", "mathematics"],
+      "effects": { "popGrowth": 0.1, "construction": 0.1 },
+      "desc": "Aqueducts and Roman concrete supply cities with clean water, raising population growth and cheapening construction."
+    },
+    "bureaucracy": {
+      "name": "Bureaucracy",
+      "era": "classical",
+      "field": "administration",
+      "year": -221,
+      "cost": 1.5,
+      "req": ["writing", "mathematics"],
+      "effects": { "tax": 0.2, "devGrowth": 0.05 },
+      "desc": "A salaried, standardised civil service greatly improves tax efficiency."
+    },
+    "professional_army": {
+      "name": "Professional Army",
+      "era": "classical",
+      "field": "army",
+      "year": -107,
+      "cost": 1.2,
+      "req": ["iron_working"],
+      "effects": { "combat": 0.1 },
+      "desc": "Long-service paid soldiers with standard kit and drill fight better in attack and defence."
+    },
+    "paper": {
+      "name": "Paper",
+      "era": "classical",
+      "field": "education",
+      "year": 105,
+      "cost": 0.8,
+      "req": ["writing"],
+      "effects": { "research": 0.05, "tax": 0.03 },
+      "desc": "Cheap paper speeds research and record-keeping, slightly improving tax efficiency."
+    },
+    "three_field_rotation": {
+      "name": "Heavy Plough and Three-Field Rotation",
+      "era": "medieval",
+      "field": "agriculture",
+      "year": 800,
+      "cost": 1.5,
+      "req": ["iron_working", "irrigation"],
+      "effects": { "farm": 0.3, "popGrowth": 0.2 },
+      "desc": "The heavy plough and three-field rotation raise farm output and population growth."
+    },
+    "magnetic_compass": {
+      "name": "Magnetic Compass",
+      "era": "medieval",
+      "field": "navy",
+      "year": 1100,
+      "cost": 0.8,
+      "req": ["sailing"],
+      "effects": { "devGrowth": 0.05, "movement": 0.02 },
+      "desc": "Navigation by compass makes sea trade more reliable, adding development growth."
+    },
+    "universities": {
+      "name": "Universities",
+      "era": "medieval",
+      "field": "education",
+      "year": 1088,
+      "cost": 1.5,
+      "req": ["philosophy", "paper"],
+      "effects": { "research": 0.15, "devGrowth": 0.05 },
+      "desc": "Chartered universities train scholars and substantially speed research."
+    },
+    "trebuchet": {
+      "name": "Trebuchet",
+      "era": "medieval",
+      "field": "army",
+      "year": 1100,
+      "cost": 1,
+      "req": ["siege_engineering"],
+      "effects": { "siege": 0.2 },
+      "desc": "Counterweight trebuchets batter down walls, speeding up sieges."
+    },
+    "banking": {
+      "name": "Banking",
+      "era": "medieval",
+      "field": "economy",
+      "year": 1200,
+      "cost": 1.2,
+      "req": ["bureaucracy"],
+      "effects": { "devGrowth": 0.1, "tax": 0.05 },
+      "desc": "Bills of exchange and deposit banks boost development growth and tax efficiency."
+    },
+    "gunpowder": {
+      "name": "Gunpowder",
+      "era": "medieval",
+      "field": "army",
+      "year": 1250,
+      "cost": 1.5,
+      "req": ["iron_working", "philosophy"],
+      "effects": { "combat": 0.05 },
+      "unlocks": {
+        "goods": ["munitions"],
+        "buildings": ["arms_factory"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Gunpowder unlocks munitions and arms factories and adds explosive weapons to combat."
+    },
+    "blast_furnace": {
+      "name": "Blast Furnace",
+      "era": "medieval",
+      "field": "economy",
+      "year": 1350,
+      "cost": 1.2,
+      "req": ["iron_working"],
+      "effects": { "mine": 0.1, "industry": 0.1 },
+      "desc": "Water-powered blast furnaces produce cast iron in bulk, raising mine and industrial output."
+    },
+    "cannon": {
+      "name": "Cannon",
+      "era": "medieval",
+      "field": "army",
+      "year": 1350,
+      "cost": 1.2,
+      "req": ["gunpowder"],
+      "effects": { "siege": 0.2 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": ["cannons"],
+        "govTypes": []
+      },
+      "desc": "Bronze and iron cannon unlock cannon batteries and greatly speed up sieges."
+    },
+    "printing_press": {
+      "name": "Printing Press",
+      "era": "renaissance",
+      "field": "education",
+      "year": 1450,
+      "cost": 2,
+      "req": ["paper", "universities"],
+      "effects": { "research": 0.3, "devGrowth": 0.1 },
+      "desc": "Movable-type printing spreads knowledge cheaply, sharply speeding research."
+    },
+    "firearms": {
+      "name": "Firearms",
+      "era": "renaissance",
+      "field": "army",
+      "year": 1450,
+      "cost": 1.2,
+      "req": ["gunpowder"],
+      "effects": { "combat": 0.05 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": ["musketeers"],
+        "govTypes": []
+      },
+      "desc": "Matchlock arquebuses and muskets unlock musketeers and improve combat."
+    },
+    "ocean_navigation": {
+      "name": "Ocean Navigation",
+      "era": "renaissance",
+      "field": "navy",
+      "year": 1450,
+      "cost": 1.2,
+      "req": ["magnetic_compass"],
+      "effects": { "devGrowth": 0.1, "movement": 0.02 },
+      "desc": "Caravels and astronomical navigation open oceanic trade routes, boosting development growth."
+    },
+    "trace_italienne": {
+      "name": "Bastion Fortress",
+      "era": "renaissance",
+      "field": "army",
+      "year": 1500,
+      "cost": 1,
+      "req": ["cannon", "mathematics"],
+      "effects": { "combat": 0.05, "construction": 0.03 },
+      "desc": "Angled star forts strengthen defence and improve military engineering."
+    },
+    "pike_and_shot": {
+      "name": "Pike and Shot",
+      "era": "renaissance",
+      "field": "doctrine",
+      "year": 1500,
+      "cost": 1,
+      "req": ["firearms", "professional_army"],
+      "effects": { "combat": 0.1 },
+      "desc": "Combining pikemen with shot into drilled formations improves attack and defence."
+    },
+    "columbian_exchange": {
+      "name": "Columbian Exchange",
+      "era": "renaissance",
+      "field": "agriculture",
+      "year": 1500,
+      "cost": 1.5,
+      "req": ["ocean_navigation"],
+      "effects": { "farm": 0.2, "popGrowth": 0.2 },
+      "desc": "New World crops such as maize and potatoes raise farm output and population growth."
+    },
+    "anatomy": {
+      "name": "Anatomy",
+      "era": "renaissance",
+      "field": "medicine",
+      "year": 1543,
+      "cost": 0.8,
+      "req": ["hippocratic_medicine", "printing_press"],
+      "effects": { "popGrowth": 0.05, "research": 0.03 },
+      "desc": "Dissection-based anatomy improves surgery and medical knowledge, slightly raising population growth."
+    },
+    "joint_stock_company": {
+      "name": "Joint-Stock Company",
+      "era": "early_modern",
+      "field": "economy",
+      "year": 1602,
+      "cost": 1.2,
+      "req": ["banking", "ocean_navigation"],
+      "effects": { "devGrowth": 0.1, "industry": 0.05 },
+      "desc": "Pooled shareholder capital finances large ventures, boosting development growth and industry."
+    },
+    "scientific_method": {
+      "name": "Scientific Method",
+      "era": "early_modern",
+      "field": "education",
+      "year": 1620,
+      "cost": 2,
+      "req": ["printing_press"],
+      "effects": { "research": 0.2 },
+      "desc": "Experiment, measurement and calculus put science on a systematic footing, strongly speeding research."
+    },
+    "ship_of_the_line": {
+      "name": "Ship of the Line",
+      "era": "early_modern",
+      "field": "navy",
+      "year": 1650,
+      "cost": 1,
+      "req": ["ocean_navigation", "cannon"],
+      "effects": { "combat": 0.03, "devGrowth": 0.03 },
+      "desc": "Broadside-armed warships protect trade lanes and slightly improve combat."
+    },
+    "vauban_siegecraft": {
+      "name": "Scientific Siegecraft",
+      "era": "early_modern",
+      "field": "army",
+      "year": 1670,
+      "cost": 1,
+      "req": ["trace_italienne"],
+      "effects": { "siege": 0.2 },
+      "desc": "Vauban-style parallels and saps make sieges far faster."
+    },
+    "parliamentarism": {
+      "name": "Parliamentarism",
+      "era": "early_modern",
+      "field": "administration",
+      "year": 1689,
+      "cost": 1.5,
+      "req": ["bureaucracy", "printing_press"],
+      "effects": { "tax": 0.05 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": [],
+        "govTypes": ["parliamentary", "const_monarchy"]
+      },
+      "desc": "Parliamentary supremacy over taxation unlocks parliamentary and constitutional monarchy governments."
+    },
+    "flintlock_bayonet": {
+      "name": "Flintlock and Bayonet",
+      "era": "early_modern",
+      "field": "army",
+      "year": 1700,
+      "cost": 1.2,
+      "req": ["pike_and_shot"],
+      "effects": { "combat": 0.1 },
+      "desc": "Reliable flintlock muskets with socket bayonets improve firepower and close combat."
+    },
+    "steam_engine": {
+      "name": "Steam Engine",
+      "era": "early_modern",
+      "field": "energy",
+      "year": 1712,
+      "cost": 1.5,
+      "req": ["scientific_method", "blast_furnace"],
+      "effects": { "mine": 0.25, "industry": 0.05 },
+      "unlocks": {
+        "goods": ["coal"],
+        "buildings": ["coal_mine"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Newcomen engines pump flooded pits, unlocking coal and coal mines and raising mine output."
+    },
+    "crop_rotation": {
+      "name": "Four-Course Crop Rotation",
+      "era": "enlightenment",
+      "field": "agriculture",
+      "year": 1750,
+      "cost": 1.5,
+      "req": ["three_field_rotation", "columbian_exchange"],
+      "effects": { "farm": 0.45, "popGrowth": 0.15 },
+      "desc": "Norfolk rotation with clover and turnips plus selective breeding greatly raises farm output."
+    },
+    "canals": {
+      "name": "Canals",
+      "era": "enlightenment",
+      "field": "transport",
+      "year": 1761,
+      "cost": 1,
+      "req": ["roads", "mathematics"],
+      "effects": { "mine": 0.05, "devGrowth": 0.05 },
+      "desc": "Navigable canals carry coal and bulk goods cheaply, raising mine output and development."
+    },
+    "compulsory_schooling": {
+      "name": "Compulsory Schooling",
+      "era": "enlightenment",
+      "field": "education",
+      "year": 1763,
+      "cost": 1.2,
+      "req": ["printing_press", "bureaucracy"],
+      "effects": { "research": 0.1, "devGrowth": 0.1 },
+      "desc": "State primary schooling spreads literacy, speeding research and development growth."
+    },
+    "mechanised_textiles": {
+      "name": "Mechanised Textiles",
+      "era": "enlightenment",
+      "field": "economy",
+      "year": 1765,
+      "cost": 1.2,
+      "req": ["steam_engine", "joint_stock_company"],
+      "effects": { "industry": 0.25 },
+      "desc": "Spinning jennies, water frames and power looms raise industrial output."
+    },
+    "watt_steam_engine": {
+      "name": "Watt Steam Engine",
+      "era": "enlightenment",
+      "field": "energy",
+      "year": 1776,
+      "cost": 1.5,
+      "req": ["steam_engine"],
+      "effects": { "industry": 0.2, "mine": 0.1 },
+      "desc": "The separate-condenser rotary engine powers factories, raising industrial and mine output."
+    },
+    "federalism": {
+      "name": "Federalism",
+      "era": "enlightenment",
+      "field": "administration",
+      "year": 1787,
+      "cost": 1.2,
+      "req": ["parliamentarism"],
+      "effects": { "devGrowth": 0.05 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": [],
+        "govTypes": ["federal_republic"]
+      },
+      "desc": "A written federal constitution unlocks the federal republic government."
+    },
+    "census": {
+      "name": "National Census",
+      "era": "enlightenment",
+      "field": "administration",
+      "year": 1790,
+      "cost": 1,
+      "req": ["bureaucracy", "compulsory_schooling"],
+      "effects": { "tax": 0.1 },
+      "desc": "Regular population censuses let the state assess and collect taxes more efficiently."
+    },
+    "levee_en_masse": {
+      "name": "Levée en Masse",
+      "era": "enlightenment",
+      "field": "doctrine",
+      "year": 1793,
+      "cost": 1.2,
+      "req": ["flintlock_bayonet"],
+      "effects": { "combat": 0.1, "movement": 0.1 },
+      "desc": "Mass conscript armies organised in self-supporting corps fight better and march faster."
+    },
+    "vaccination": {
+      "name": "Vaccination",
+      "era": "enlightenment",
+      "field": "medicine",
+      "year": 1796,
+      "cost": 1.5,
+      "req": ["anatomy"],
+      "effects": { "popGrowth": 0.4 },
+      "desc": "Smallpox vaccination sharply cuts mortality, greatly raising population growth."
+    },
+    "machine_tools": {
+      "name": "Machine Tools",
+      "era": "enlightenment",
+      "field": "economy",
+      "year": 1800,
+      "cost": 1.5,
+      "req": ["watt_steam_engine"],
+      "effects": { "industry": 0.2, "construction": 0.05 },
+      "unlocks": {
+        "goods": ["machinery"],
+        "buildings": ["machine_works"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Precision lathes and planers unlock machinery and machine works and raise industrial output."
+    },
+    "railways": {
+      "name": "Railways",
+      "era": "industrial",
+      "field": "transport",
+      "year": 1830,
+      "cost": 2,
+      "req": ["watt_steam_engine", "machine_tools"],
+      "effects": { "movement": 0.35, "devGrowth": 0.15, "industry": 0.1, "mine": 0.1 },
+      "desc": "Steam railways move troops and goods quickly, greatly raising army speed, development and bulk ore haulage."
+    },
+    "steamships": {
+      "name": "Steamships",
+      "era": "industrial",
+      "field": "navy",
+      "year": 1840,
+      "cost": 1,
+      "req": ["watt_steam_engine", "ocean_navigation"],
+      "effects": { "devGrowth": 0.1, "combat": 0.02 },
+      "desc": "Screw-driven iron steamships speed trade and give navies more reliable warships."
+    },
+    "chemical_fertilisers": {
+      "name": "Chemical Fertilisers",
+      "era": "industrial",
+      "field": "agriculture",
+      "year": 1842,
+      "cost": 1.2,
+      "req": ["crop_rotation", "scientific_method"],
+      "effects": { "farm": 0.35, "popGrowth": 0.1 },
+      "desc": "Superphosphates and imported guano and nitrates raise farm output."
+    },
+    "income_tax": {
+      "name": "Income Tax",
+      "era": "industrial",
+      "field": "administration",
+      "year": 1842,
+      "cost": 1.2,
+      "req": ["census"],
+      "effects": { "tax": 0.2 },
+      "desc": "A permanent tax on incomes greatly improves tax efficiency."
+    },
+    "telegraph": {
+      "name": "Electric Telegraph",
+      "era": "industrial",
+      "field": "communications",
+      "year": 1844,
+      "cost": 1.2,
+      "req": ["scientific_method", "machine_tools"],
+      "effects": { "combat": 0.05, "tax": 0.03, "research": 0.03, "devGrowth": 0.05 },
+      "desc": "Instant long-distance messaging improves command, administration and the spread of knowledge."
+    },
+    "rifled_firearms": {
+      "name": "Rifled Firearms",
+      "era": "industrial",
+      "field": "army",
+      "year": 1850,
+      "cost": 1.5,
+      "req": ["flintlock_bayonet", "machine_tools"],
+      "effects": { "combat": 0.1 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": ["rifles"],
+        "govTypes": []
+      },
+      "desc": "Rifled muskets and breech-loaders unlock rifle infantry and improve combat."
+    },
+    "bessemer_process": {
+      "name": "Bessemer Process",
+      "era": "industrial",
+      "field": "economy",
+      "year": 1856,
+      "cost": 1.8,
+      "req": ["blast_furnace", "machine_tools"],
+      "effects": { "industry": 0.2, "construction": 0.15 },
+      "unlocks": {
+        "goods": ["steel"],
+        "buildings": ["steel_mill"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Cheap mass-produced steel unlocks steel and steel mills, raising industrial output and cheapening construction."
+    },
+    "general_staff": {
+      "name": "General Staff",
+      "era": "industrial",
+      "field": "doctrine",
+      "year": 1857,
+      "cost": 1,
+      "req": ["levee_en_masse", "telegraph"],
+      "effects": { "combat": 0.05, "movement": 0.05 },
+      "desc": "A professional planning staff using rail and telegraph improves combat and army movement."
+    },
+    "public_sanitation": {
+      "name": "Public Sanitation",
+      "era": "industrial",
+      "field": "medicine",
+      "year": 1858,
+      "cost": 1.2,
+      "req": ["aqueducts", "machine_tools"],
+      "effects": { "popGrowth": 0.35, "devGrowth": 0.05 },
+      "desc": "Sewers and filtered water end cholera epidemics, greatly raising population growth."
+    },
+    "oil_drilling": {
+      "name": "Oil Drilling",
+      "era": "industrial",
+      "field": "energy",
+      "year": 1859,
+      "cost": 1.2,
+      "req": ["steam_engine"],
+      "effects": { "mine": 0.15 },
+      "unlocks": {
+        "goods": ["oil"],
+        "buildings": ["oil_well"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Cable-tool drilling unlocks oil and oil wells and raises extraction output."
+    },
+    "germ_theory": {
+      "name": "Germ Theory",
+      "era": "industrial",
+      "field": "medicine",
+      "year": 1865,
+      "cost": 1.5,
+      "req": ["vaccination", "scientific_method"],
+      "effects": { "popGrowth": 0.35, "research": 0.03 },
+      "desc": "Antiseptic surgery and germ theory cut infection deaths, greatly raising population growth."
+    },
+    "high_explosives": {
+      "name": "High Explosives",
+      "era": "industrial",
+      "field": "economy",
+      "year": 1867,
+      "cost": 1,
+      "req": ["gunpowder", "scientific_method"],
+      "effects": { "mine": 0.25, "construction": 0.15, "siege": 0.1 },
+      "desc": "Dynamite speeds mining, tunnelling and demolition, raising mine output and siege speed."
+    },
+    "reinforced_concrete": {
+      "name": "Reinforced Concrete",
+      "era": "industrial",
+      "field": "economy",
+      "year": 1892,
+      "cost": 1,
+      "req": ["bessemer_process", "aqueducts"],
+      "effects": { "construction": 0.2 },
+      "desc": "Steel-reinforced concrete makes large buildings, bridges and dams much cheaper to construct."
+    },
+    "electricity": {
+      "name": "Electric Power",
+      "era": "industrial",
+      "field": "energy",
+      "year": 1880,
+      "cost": 2,
+      "req": ["telegraph", "watt_steam_engine"],
+      "effects": { "industry": 0.3, "mine": 0.1, "construction": 0.05, "devGrowth": 0.05 },
+      "unlocks": {
+        "goods": ["energy"],
+        "buildings": ["coal_power"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Central power stations unlock energy and coal power plants and raise industrial and mine output."
+    },
+    "internal_combustion": {
+      "name": "Internal Combustion Engine",
+      "era": "industrial",
+      "field": "energy",
+      "year": 1885,
+      "cost": 1.5,
+      "req": ["oil_drilling", "machine_tools"],
+      "effects": { "industry": 0.1, "movement": 0.15, "farm": 0.15, "mine": 0.1, "construction": 0.1 },
+      "unlocks": {
+        "goods": ["fuel"],
+        "buildings": ["refinery"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Petrol and diesel engines unlock fuel and refineries and motorise transport, farm tractors and earth-moving machinery."
+    },
+    "quick_firing_artillery": {
+      "name": "Quick-Firing Artillery",
+      "era": "industrial",
+      "field": "army",
+      "year": 1897,
+      "cost": 1.2,
+      "req": ["rifled_firearms", "bessemer_process"],
+      "effects": { "siege": 0.1, "combat": 0.05 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": ["field_guns"],
+        "govTypes": []
+      },
+      "desc": "Recoil-absorbing steel guns unlock field guns and improve combat and sieges."
+    },
+    "radio": {
+      "name": "Radio",
+      "era": "great_war",
+      "field": "communications",
+      "year": 1901,
+      "cost": 1.2,
+      "req": ["electricity"],
+      "effects": { "combat": 0.05, "research": 0.05 },
+      "desc": "Wireless communication improves battlefield command and the spread of information."
+    },
+    "powered_flight": {
+      "name": "Powered Flight",
+      "era": "great_war",
+      "field": "air",
+      "year": 1903,
+      "cost": 1.2,
+      "req": ["internal_combustion"],
+      "effects": { "combat": 0.05 },
+      "desc": "Aeroplanes provide reconnaissance and air support, improving combat."
+    },
+    "dreadnought": {
+      "name": "Dreadnought",
+      "era": "great_war",
+      "field": "navy",
+      "year": 1906,
+      "cost": 1,
+      "req": ["steamships", "quick_firing_artillery"],
+      "effects": { "combat": 0.03 },
+      "desc": "All-big-gun turbine battleships slightly improve combat power."
+    },
+    "assembly_line": {
+      "name": "Assembly Line",
+      "era": "great_war",
+      "field": "economy",
+      "year": 1913,
+      "cost": 1.8,
+      "req": ["electricity", "machine_tools"],
+      "effects": { "industry": 0.35, "construction": 0.05 },
+      "desc": "Moving assembly lines with interchangeable parts sharply raise industrial output."
+    },
+    "haber_bosch": {
+      "name": "Haber-Bosch Process",
+      "era": "great_war",
+      "field": "agriculture",
+      "year": 1913,
+      "cost": 1.8,
+      "req": ["chemical_fertilisers", "electricity"],
+      "effects": { "farm": 0.4, "popGrowth": 0.2 },
+      "desc": "Synthetic nitrogen fertiliser greatly raises farm output and population growth."
+    },
+    "tanks": {
+      "name": "Tanks",
+      "era": "great_war",
+      "field": "army",
+      "year": 1916,
+      "cost": 1.5,
+      "req": ["internal_combustion", "quick_firing_artillery"],
+      "effects": { "combat": 0.1 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": ["armor"],
+        "govTypes": []
+      },
+      "desc": "Armoured tracked fighting vehicles unlock armour and improve combat."
+    },
+    "modern_surgery": {
+      "name": "Modern Surgery",
+      "era": "great_war",
+      "field": "medicine",
+      "year": 1916,
+      "cost": 1,
+      "req": ["germ_theory"],
+      "effects": { "popGrowth": 0.2 },
+      "desc": "Blood transfusion, X-rays and aseptic surgery raise population growth."
+    },
+    "infiltration_tactics": {
+      "name": "Infiltration Tactics",
+      "era": "great_war",
+      "field": "doctrine",
+      "year": 1917,
+      "cost": 1,
+      "req": ["general_staff", "quick_firing_artillery"],
+      "effects": { "combat": 0.05, "siege": 0.1 },
+      "desc": "Storm troops and creeping barrages break fortified lines faster."
+    },
+    "mass_politics": {
+      "name": "Mass Politics",
+      "era": "great_war",
+      "field": "administration",
+      "year": 1917,
+      "cost": 1.2,
+      "req": ["compulsory_schooling", "parliamentarism", "radio"],
+      "effects": { "tax": 0.03 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": [],
+        "govTypes": ["one_party"]
+      },
+      "desc": "Mass parties and propaganda unlock the one-party state."
+    },
+    "quantum_mechanics": {
+      "name": "Quantum Mechanics",
+      "era": "great_war",
+      "field": "education",
+      "year": 1925,
+      "cost": 1.5,
+      "req": ["radio"],
+      "effects": { "research": 0.1 },
+      "desc": "Modern physics underpins later electronics and nuclear science, speeding research."
+    },
+    "modern_artillery": {
+      "name": "Modern Artillery",
+      "era": "world_war",
+      "field": "army",
+      "year": 1935,
+      "cost": 1.2,
+      "req": ["quick_firing_artillery", "radio"],
+      "effects": { "siege": 0.2 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": ["artillery"],
+        "govTypes": []
+      },
+      "desc": "Radio-directed howitzers with indirect fire unlock artillery brigades and speed up sieges."
+    },
+    "keynesian_economics": {
+      "name": "Macroeconomic Management",
+      "era": "world_war",
+      "field": "economy",
+      "year": 1936,
+      "cost": 1,
+      "req": ["income_tax"],
+      "effects": { "devGrowth": 0.1, "tax": 0.05 },
+      "desc": "Counter-cyclical fiscal policy and national accounts boost development and tax efficiency."
+    },
+    "motorised_infantry": {
+      "name": "Motorised Infantry",
+      "era": "world_war",
+      "field": "army",
+      "year": 1937,
+      "cost": 1.5,
+      "req": ["tanks"],
+      "effects": { "movement": 0.15 },
+      "unlocks": {
+        "goods": [],
+        "buildings": [],
+        "units": ["infantry"],
+        "govTypes": []
+      },
+      "desc": "Lorry-borne infantry divisions unlock modern infantry and speed up armies."
+    },
+    "radar": {
+      "name": "Radar",
+      "era": "world_war",
+      "field": "communications",
+      "year": 1937,
+      "cost": 1.2,
+      "req": ["radio"],
+      "effects": { "combat": 0.05 },
+      "desc": "Radio detection gives early warning of aircraft and ships, improving combat."
+    },
+    "combined_arms_warfare": {
+      "name": "Combined Arms Warfare",
+      "era": "world_war",
+      "field": "doctrine",
+      "year": 1939,
+      "cost": 1.5,
+      "req": ["infiltration_tactics", "tanks", "radio"],
+      "effects": { "combat": 0.1, "movement": 0.1 },
+      "desc": "Coordinated tanks, aircraft and motorised infantry improve combat and army speed."
+    },
+    "aircraft_carrier": {
+      "name": "Aircraft Carrier",
+      "era": "world_war",
+      "field": "navy",
+      "year": 1941,
+      "cost": 1,
+      "req": ["dreadnought", "powered_flight"],
+      "effects": { "combat": 0.03 },
+      "desc": "Carrier-borne air power slightly improves combat."
+    },
+    "antibiotics": {
+      "name": "Antibiotics",
+      "era": "world_war",
+      "field": "medicine",
+      "year": 1942,
+      "cost": 1.8,
+      "req": ["modern_surgery"],
+      "effects": { "popGrowth": 0.5 },
+      "desc": "Mass-produced penicillin and sulfa drugs cure infections, greatly raising population growth."
+    },
+    "nuclear_fission": {
+      "name": "Nuclear Fission",
+      "era": "world_war",
+      "field": "energy",
+      "year": 1942,
+      "cost": 2,
+      "req": ["quantum_mechanics", "electricity"],
+      "effects": { "research": 0.05 },
+      "unlocks": {
+        "goods": ["uranium"],
+        "buildings": ["uranium_mine"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Controlled chain reactions unlock uranium and uranium mines."
+    },
+    "jet_engine": {
+      "name": "Jet Engine",
+      "era": "world_war",
+      "field": "air",
+      "year": 1944,
+      "cost": 1.2,
+      "req": ["powered_flight"],
+      "effects": { "combat": 0.05, "movement": 0.03 },
+      "desc": "Jet aircraft improve air superiority and air transport."
+    },
+    "electronic_computer": {
+      "name": "Electronic Computer",
+      "era": "world_war",
+      "field": "communications",
+      "year": 1945,
+      "cost": 1.5,
+      "req": ["radar", "quantum_mechanics"],
+      "effects": { "research": 0.1 },
+      "desc": "Programmable valve computers speed research and calculation."
+    },
+    "transistor": {
+      "name": "Transistor",
+      "era": "cold_war",
+      "field": "communications",
+      "year": 1950,
+      "cost": 1.8,
+      "req": ["electronic_computer"],
+      "effects": { "research": 0.05, "industry": 0.15 },
+      "unlocks": {
+        "goods": ["electronics"],
+        "buildings": ["electronics_plant"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Solid-state transistors unlock electronics and electronics plants."
+    },
+    "helicopters": {
+      "name": "Helicopters",
+      "era": "cold_war",
+      "field": "air",
+      "year": 1950,
+      "cost": 1,
+      "req": ["jet_engine"],
+      "effects": { "movement": 0.08 },
+      "desc": "Helicopter airmobility and medevac speed army movement."
+    },
+    "nuclear_power": {
+      "name": "Nuclear Power",
+      "era": "cold_war",
+      "field": "energy",
+      "year": 1954,
+      "cost": 1.5,
+      "req": ["nuclear_fission"],
+      "effects": { "industry": 0.1 },
+      "unlocks": {
+        "goods": [],
+        "buildings": ["nuclear_power"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Commercial reactors unlock nuclear power plants."
+    },
+    "mass_immunisation": {
+      "name": "Mass Immunisation",
+      "era": "cold_war",
+      "field": "medicine",
+      "year": 1955,
+      "cost": 1.2,
+      "req": ["antibiotics", "vaccination"],
+      "effects": { "popGrowth": 0.3 },
+      "desc": "National vaccine programmes against polio, measles and more greatly raise population growth."
+    },
+    "containerisation": {
+      "name": "Containerisation",
+      "era": "cold_war",
+      "field": "transport",
+      "year": 1956,
+      "cost": 1,
+      "req": ["internal_combustion", "steamships"],
+      "effects": { "devGrowth": 0.1, "industry": 0.1, "construction": 0.05 },
+      "desc": "Standard shipping containers slash freight costs, boosting development and cheapening construction materials."
+    },
+    "spaceflight": {
+      "name": "Spaceflight",
+      "era": "cold_war",
+      "field": "space",
+      "year": 1957,
+      "cost": 1.8,
+      "req": ["jet_engine", "electronic_computer"],
+      "effects": { "research": 0.05 },
+      "desc": "Orbital rockets open space to science, speeding research."
+    },
+    "integrated_circuit": {
+      "name": "Integrated Circuit",
+      "era": "cold_war",
+      "field": "communications",
+      "year": 1960,
+      "cost": 1.8,
+      "req": ["transistor"],
+      "effects": { "research": 0.15, "industry": 0.2, "construction": 0.1 },
+      "desc": "Microchips and computer-controlled automation speed research, raise industrial output and cheapen construction."
+    },
+    "guided_missiles": {
+      "name": "Guided Missiles",
+      "era": "cold_war",
+      "field": "army",
+      "year": 1960,
+      "cost": 1.2,
+      "req": ["jet_engine", "transistor"],
+      "effects": { "combat": 0.1, "siege": 0.05 },
+      "desc": "Guided anti-tank, anti-air and ballistic missiles improve combat and sieges."
+    },
+    "satellites": {
+      "name": "Satellites",
+      "era": "cold_war",
+      "field": "space",
+      "year": 1962,
+      "cost": 1.2,
+      "req": ["spaceflight", "transistor"],
+      "effects": { "combat": 0.05, "research": 0.03, "mine": 0.05 },
+      "desc": "Reconnaissance, weather and communications satellites improve intelligence, research and mineral prospecting."
+    },
+    "green_revolution": {
+      "name": "Green Revolution",
+      "era": "cold_war",
+      "field": "agriculture",
+      "year": 1965,
+      "cost": 2,
+      "req": ["haber_bosch"],
+      "effects": { "farm": 0.5, "popGrowth": 0.3 },
+      "desc": "High-yield crop varieties with irrigation and fertiliser greatly raise farm output and population growth."
+    },
+    "rare_earth_refining": {
+      "name": "Rare Earth Refining",
+      "era": "cold_war",
+      "field": "economy",
+      "year": 1965,
+      "cost": 1.2,
+      "req": ["transistor", "nuclear_fission"],
+      "effects": { "mine": 0.1 },
+      "unlocks": {
+        "goods": ["rare_earths"],
+        "buildings": ["rare_earth_mine"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Solvent-extraction separation unlocks rare earths and rare earth mines."
+    },
+    "internet": {
+      "name": "Internet",
+      "era": "information",
+      "field": "communications",
+      "year": 1991,
+      "cost": 2,
+      "req": ["integrated_circuit", "satellites"],
+      "effects": { "research": 0.15, "devGrowth": 0.15, "industry": 0.1 },
+      "desc": "The World Wide Web connects researchers and markets, sharply speeding research, development and industry."
+    },
+    "gps": {
+      "name": "Satellite Navigation",
+      "era": "information",
+      "field": "space",
+      "year": 1991,
+      "cost": 1,
+      "req": ["satellites"],
+      "effects": { "movement": 0.05, "combat": 0.03 },
+      "desc": "GPS positioning speeds army movement and improves targeting."
+    },
+    "precision_guided_munitions": {
+      "name": "Precision-Guided Munitions",
+      "era": "information",
+      "field": "army",
+      "year": 1991,
+      "cost": 1.5,
+      "req": ["guided_missiles", "gps"],
+      "effects": { "combat": 0.1, "siege": 0.1 },
+      "desc": "Laser- and GPS-guided bombs and network-centric strike improve combat and sieges."
+    },
+    "mobile_telephony": {
+      "name": "Mobile Telephony",
+      "era": "information",
+      "field": "communications",
+      "year": 1992,
+      "cost": 1.2,
+      "req": ["integrated_circuit"],
+      "effects": { "devGrowth": 0.15, "tax": 0.03 },
+      "desc": "Digital mobile networks and later smartphones boost development and economic activity."
+    },
+    "gm_crops": {
+      "name": "Genetically Modified Crops",
+      "era": "information",
+      "field": "agriculture",
+      "year": 1996,
+      "cost": 1.2,
+      "req": ["green_revolution"],
+      "effects": { "farm": 0.2 },
+      "desc": "Engineered pest- and herbicide-resistant crops raise farm output."
+    },
+    "e_government": {
+      "name": "Digital Administration",
+      "era": "information",
+      "field": "administration",
+      "year": 2000,
+      "cost": 1,
+      "req": ["internet", "income_tax"],
+      "effects": { "tax": 0.1 },
+      "desc": "Computerised tax and registry systems improve tax efficiency."
+    },
+    "drones": {
+      "name": "Combat Drones",
+      "era": "information",
+      "field": "air",
+      "year": 2001,
+      "cost": 1.2,
+      "req": ["gps", "jet_engine"],
+      "effects": { "combat": 0.05 },
+      "desc": "Armed unmanned aircraft improve reconnaissance and strike, improving combat."
+    },
+    "biotechnology": {
+      "name": "Biotechnology",
+      "era": "information",
+      "field": "medicine",
+      "year": 2003,
+      "cost": 1.5,
+      "req": ["mass_immunisation", "integrated_circuit"],
+      "effects": { "popGrowth": 0.15, "research": 0.03 },
+      "desc": "Genome sequencing and biologic drugs raise population growth."
+    },
+    "hydraulic_fracturing": {
+      "name": "Hydraulic Fracturing",
+      "era": "information",
+      "field": "energy",
+      "year": 2008,
+      "cost": 1.2,
+      "req": ["oil_drilling", "integrated_circuit"],
+      "effects": { "mine": 0.2 },
+      "desc": "Horizontal drilling with fracking unlocks shale reserves, raising mine and well output."
+    },
+    "renewable_energy": {
+      "name": "Renewable Energy",
+      "era": "information",
+      "field": "energy",
+      "year": 2010,
+      "cost": 1.2,
+      "req": ["rare_earth_refining", "electricity"],
+      "effects": { "industry": 0.1 },
+      "desc": "Cheap solar panels and wind turbines add power, raising industrial output."
+    },
+    "machine_learning": {
+      "name": "Machine Learning",
+      "era": "information",
+      "field": "communications",
+      "year": 2012,
+      "cost": 1.5,
+      "req": ["internet"],
+      "effects": { "research": 0.1, "industry": 0.1 },
+      "desc": "Deep neural networks automate analysis, speeding research and raising industrial output."
+    },
+    "quantum_computing": {
+      "name": "Quantum Computing",
+      "era": "near_future",
+      "field": "communications",
+      "year": 2035,
+      "cost": 1.5,
+      "req": ["machine_learning", "quantum_mechanics"],
+      "fictional": true,
+      "effects": { "research": 0.15 },
+      "desc": "Fictional: fault-tolerant quantum computers speed research further."
+    },
+    "directed_energy_weapons": {
+      "name": "Directed-Energy Weapons",
+      "era": "near_future",
+      "field": "army",
+      "year": 2035,
+      "cost": 1.2,
+      "req": ["precision_guided_munitions"],
+      "fictional": true,
+      "effects": { "combat": 0.1 },
+      "desc": "Fictional: battlefield lasers and microwave weapons improve combat."
+    },
+    "vertical_farming": {
+      "name": "Precision and Vertical Farming",
+      "era": "near_future",
+      "field": "agriculture",
+      "year": 2035,
+      "cost": 1.2,
+      "req": ["gm_crops", "machine_learning"],
+      "fictional": true,
+      "effects": { "farm": 0.2 },
+      "desc": "Fictional: automated precision and indoor farming raise farm output."
+    },
+    "longevity_medicine": {
+      "name": "Longevity Medicine",
+      "era": "near_future",
+      "field": "medicine",
+      "year": 2040,
+      "cost": 1.5,
+      "req": ["biotechnology"],
+      "fictional": true,
+      "effects": { "popGrowth": 0.15 },
+      "desc": "Fictional: gene therapies against ageing diseases raise population growth."
+    },
+    "general_ai": {
+      "name": "General AI",
+      "era": "near_future",
+      "field": "communications",
+      "year": 2045,
+      "cost": 2,
+      "req": ["machine_learning", "quantum_computing"],
+      "fictional": true,
+      "effects": { "research": 0.3, "industry": 0.1, "tax": 0.05 },
+      "desc": "Fictional: human-level artificial intelligence sharply speeds research and raises output."
+    },
+    "fusion_power": {
+      "name": "Fusion Power",
+      "era": "near_future",
+      "field": "energy",
+      "year": 2050,
+      "cost": 2,
+      "req": ["nuclear_power", "quantum_computing"],
+      "fictional": true,
+      "effects": { "industry": 0.15, "mine": 0.05 },
+      "desc": "Fictional: commercial fusion reactors provide abundant power, raising industrial output."
+    },
+    "orbital_industry": {
+      "name": "Orbital Industry",
+      "era": "near_future",
+      "field": "space",
+      "year": 2055,
+      "cost": 1.8,
+      "req": ["spaceflight", "general_ai"],
+      "fictional": true,
+      "effects": { "industry": 0.1, "construction": 0.05 },
+      "desc": "Fictional: factories in orbit make zero-gravity materials, raising industrial output."
+    },
+    "powered_exoskeletons": {
+      "name": "Powered Exoskeletons",
+      "era": "future",
+      "field": "army",
+      "year": 2065,
+      "cost": 1.2,
+      "req": ["directed_energy_weapons", "general_ai"],
+      "fictional": true,
+      "effects": { "combat": 0.15, "movement": 0.05 },
+      "desc": "Fictional: powered armour suits improve infantry combat and endurance."
+    },
+    "asteroid_mining": {
+      "name": "Asteroid Mining",
+      "era": "future",
+      "field": "space",
+      "year": 2070,
+      "cost": 1.8,
+      "req": ["orbital_industry"],
+      "fictional": true,
+      "effects": { "mine": 0.3 },
+      "desc": "Fictional: robotic mining of asteroids greatly raises mine output."
+    },
+    "arcologies": {
+      "name": "Arcologies",
+      "era": "future",
+      "field": "economy",
+      "year": 2075,
+      "cost": 1.5,
+      "req": ["fusion_power", "vertical_farming"],
+      "fictional": true,
+      "effects": { "devGrowth": 0.2, "construction": 0.1 },
+      "desc": "Fictional: self-contained megastructure cities boost development growth."
+    },
+    "molecular_nanotechnology": {
+      "name": "Molecular Nanotechnology",
+      "era": "future",
+      "field": "economy",
+      "year": 2080,
+      "cost": 2,
+      "req": ["general_ai", "fusion_power"],
+      "fictional": true,
+      "effects": { "industry": 0.3, "construction": 0.2 },
+      "desc": "Fictional: atomically precise manufacturing greatly raises industrial output and cheapens construction."
+    },
+    "life_extension": {
+      "name": "Radical Life Extension",
+      "era": "future",
+      "field": "medicine",
+      "year": 2085,
+      "cost": 1.8,
+      "req": ["longevity_medicine", "molecular_nanotechnology"],
+      "fictional": true,
+      "effects": { "popGrowth": 0.2 },
+      "desc": "Fictional: cellular repair halts ageing, raising population growth."
+    },
+    "artificial_superintelligence": {
+      "name": "Artificial Superintelligence",
+      "era": "future",
+      "field": "communications",
+      "year": 2090,
+      "cost": 2,
+      "req": ["general_ai", "molecular_nanotechnology"],
+      "fictional": true,
+      "effects": { "research": 0.3, "industry": 0.1 },
+      "desc": "Fictional: superhuman AI accelerates research and production beyond any human institution."
+    }
+  }
+}

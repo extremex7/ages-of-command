@@ -91,7 +91,7 @@ test('save validation and migration', () => {
   assert.throws(() => deserialize(JSON.stringify(v1), d.map, d.rules), /needs its scenario/);
   const s = deserialize(JSON.stringify(v1), d.map, d.rules, d.scenario);
   assert.deepEqual(s.offers, []);
-  assert.equal(s.version, 4);
+  assert.equal(s.version, 5);
   assert.ok(s.countries.every((c) => c.govt && c.govt.fx), 'governments installed');
   assert.ok(s.econ && s.econ.bld.length === d.map.count * d.rules.econ.B, 'economy installed from the scenario');
   const usa = s.countries.findIndex((c) => c.tag === 'USA');

@@ -34,15 +34,16 @@ src/map (Canvas) ──── reads state + static map; never drives simulation
   (`owner, controller, pop, dev, fort, siege, siegeBy`), countries/armies/wars are small object
   arrays. Everything needed to continue a game is in `state` (including the RNG state), so saves
   are exact and the simulation is deterministic for a given seed and command sequence.
-- **Rules** (`data/rules/*.json`): unit stats and balance constants, validated on load (`rules.js`).
+- **Rules** (`data/rules/*.json`): unit stats, balance constants, goods, buildings, governments
+  and technologies, validated on load (`rules.js`, `technology.js`).
 
 ## Simulation clock (`sim.js`)
 
 One tick = one day. Daily: recruitment, movement, battle detection/resolution, sieges,
-organisation recovery, construction, domestic events (each country checked once a month,
-spread across days), AI diplomacy (each country every 3 months, spread across days). AI military: each country thinks every 7 days, staggered by country index so ~1/7
+organisation recovery, construction, events (each country checked once a month, spread across
+days; events queued by a `trigger` run the next day), AI diplomacy (each country every 3 months, spread across days). AI military: each country thinks every 7 days, staggered by country index so ~1/7
 of countries run per tick. Monthly (1st of month): production, world market, consumption and
-their effects, budget, reinforcement, war scores, government (approval, legitimacy, elections,
+their effects, budget, research (points, project completion, AI project choice), reinforcement, war scores, government (approval, legitimacy, elections,
 coups, revolutions, AI policies), diplomacy (influence, reputation, modifier decay, tribute and
 reparations, expiring claims), AI peace evaluation, AI investment, country caches. The renderer has no influence on the clock; the UI loop runs ticks
 within a per-frame time budget, so fast-forward cannot freeze the interface.
@@ -86,8 +87,15 @@ co-belligerents can sign a separate peace; white peace is accepted when the othe
 - **Government** (`government.js`, rules in GOVERNMENT.md): `c.govt` holds the ruling faction,
   faction support and approval, legitimacy, policies, election dates and modifiers. Combined
   effects (`govt.fx`) are derived and recomputed on load, not saved.
-- **Events** (`events.js`): data-driven domestic events with compiled conditions, player choice
-  dialogs and AI weights.
+- **Events** (`events.js`): data-driven domestic, world and historical events with compiled
+  conditions, date windows, scenario and country filters, chains (`trigger`), player choice
+  dialogs and AI weights; history effects can declare war, annex, transfer and release land,
+  change governments, sign treaties and grant technologies (SCENARIOS.md).
+- **Technology** (`technology.js`, rules in TECHNOLOGY.md): known technologies are one byte per
+  country and technology (`state.tech.known`, saved with the id list). Everything they imply —
+  normalised effect multipliers, unlocked goods, buildings and units, waived building inputs and
+  the era — lives in `c.tfx`, derived and rebuilt on load. Research is monthly; the diffusion
+  discount uses neighbour sets and a per-day cached world GDP share per technology.
 - **AI diplomacy** (`ai_diplomacy.js`): rivals, treaty review, one treaty sought per round,
   embargoes, blocs, influence spending; every decision logged.
 - **AI** (`ai.js`): budget management (tax/spending), recruitment within its military budget,
@@ -120,12 +128,23 @@ adjacency, short sea straits (≤ ~50 km) and sea lanes that connect every islan
 terrain estimate → Miller projection, quantised and delta-encoded JSON. Province IDs come from an
 append-only registry so they stay stable.
 
+## Historical scenario pipeline (`tools/build_history.mjs`)
+
+Scenario definitions in `tools/history/` list countries with region rules over the shared
+admin-1 map; the builder resolves ownership (later rules override earlier ones), spreads
+population and GDP, derives development, places era-appropriate armies within an upkeep cap and
+writes diplomacy, wars and the provinces dormant countries would get when released. The economy
+builder then seeds industry, copying deposits from the Modern World and placing only buildings
+each owner has the technology for. All scenarios share one map, so province ids, the renderer and
+saves need nothing scenario-specific.
+
 ## Saves (`save.js`)
 
 JSON in which every typed array (province fields, building levels, stockpiles) is base64
 (~1.1 MB for a modern-world campaign; browser slots are gzip-compressed to ~260–320 KB). Versioned with
 step-by-step migrations (`MIGRATIONS[v]`; v2 → v3 installs the scenario's economy into old saves; v3 → v4 installs governments and the
-scenario's treaties and blocs; unknown government types or policies fall back to defaults),
+scenario's treaties and blocs; v4 → v5 installs the scenario's starting technologies; unknown
+government types or policies fall back to defaults and a changed technology file is remapped by id),
 validated against the loaded map and rules (unknown countries,
 wrong array lengths, missing fields are rejected with a message; removed unit types and invalid
 army locations are dropped; a larger newer map extends province arrays). Browser slots use

@@ -103,3 +103,13 @@ table.t.small td, table.t.small th { padding: 0.18em 0.25em; }
 .build-grid { display: flex; flex-wrap: wrap; gap: 0.3em; }
 .build-grid button { padding: 0.25em 0.5em; font-size: 0.88em; }
 canvas.spark { display: block; margin: 0.25em 0 0.4em; background: #171a1f; border: 1px solid var(--line); border-radius: 3px; max-width: 100%; }
+.dialog.wide { width: min(1400px, 97vw); }
+.tree { display: grid; gap: 2px; font-size: 0.78em; overflow-x: auto; }
+.tree .th { color: var(--muted); padding: 0.2em; position: sticky; top: 0; background: var(--panel); }
+.tree .cell { display: flex; flex-direction: column; gap: 2px; padding: 2px; background: #1e2329; min-height: 1.5em; }
+.tree .tech { padding: 0.15em 0.3em; border-radius: 3px; border: 1px solid var(--line); cursor: default; line-height: 1.2; }
+.tree .tech.known { background: #2c4a33; border-color: #3f7a4a; }
+.tree .tech.avail { background: #3a3a2a; border-color: var(--accent); cursor: pointer; }
+.tree .tech.current, .tree .tech.queued { background: #2c3e55; border-color: var(--blue); }
+.tree .tech.locked { color: var(--muted); cursor: pointer; }
+.tree .tech.fict { font-style: italic; }

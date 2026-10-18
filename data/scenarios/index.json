@@ -8,6 +8,42 @@
    "startDate": "2026-01-01",
    "description": "The world of the mid-2020s with present-day borders (Natural Earth, UN boundary view). Every recognised state and Taiwan is playable; overseas dependencies belong to their sovereign states.",
    "approximations": "Population and GDP per country are rounded c. 2025 estimates; their spread across provinces, terrain, and starting armies are model estimates. No wars are active at start."
+  },
+  {
+   "id": "height_of_rome_117",
+   "file": "height_of_rome_117.json",
+   "name": "Height of Rome",
+   "era": "classical",
+   "startDate": "0117-08-11",
+   "description": "August 117: Trajan is dead, Hadrian takes the purple and the Roman Empire stands at its greatest extent, while Parthia recovers Mesopotamia, the Kushans rule the road to India and Eastern Han China faces the Xianbei on the steppe.",
+   "approximations": "Borders follow modern admin-1 provinces, so frontiers such as the Rhine-Danube limes, Hadrian's later wall line, the Parthian marches and the Han frontier are drawn at province resolution. Populations, output (1990 international dollars) and army sizes are rounded estimates with wide uncertainty. Ancient polities are simplified: tribal confederations (Germanic peoples, Sarmatians, Xianbei, Caledonians, Irish kingdoms, Wa, Samhan) are shown as single chiefdom-style states with abs_monarchy government; the Maya city-states are one polity; Saba and Himyar are merged; Kushan and Western Satrap chronology around 117 is uncertain. Peoples outside states (most of the Americas, sub-Saharan Africa, Siberia, the forest zone, Arabia's interior, the Sahara, Tibet, the Tarim basin after the Han withdrawal of 107) are shown as unclaimed land. Flags are invented simple standards."
+  },
+  {
+   "id": "great_war_1914",
+   "file": "great_war_1914.json",
+   "name": "The Great War",
+   "era": "great_war",
+   "startDate": "1914-06-01",
+   "description": "June 1914: the alliance blocs of Europe stand armed and wary, while colonial empires span the globe. One shot in Sarajevo could set the whole system alight.",
+   "approximations": "Borders follow modern admin-1 provinces, so each province goes to whoever held most of it in mid-1914 (e.g. Alsace-Lorraine as the Moselle province, Galicia, Bukovina and Transylvania, Western Thrace given to Bulgaria, Dodecanese to Italy, south Sakhalin left with Russia, Kuwait, Qatar and the Trucial States folded into British holdings). Population (millions) and GDP (billions of 1990 international dollars) are rounded Maddison-style estimates that include colonies; army sizes are rounded peacetime strengths; Arabian emirates, Tibet and Mongolia are given their de facto extents. Svalbard and Bouvet Island are left unowned (terra nullius in 1914)."
+  },
+  {
+   "id": "gathering_storm_1936",
+   "file": "gathering_storm_1936.json",
+   "name": "The Gathering Storm",
+   "era": "world_war",
+   "startDate": "1936-01-01",
+   "description": "January 1936: Germany rearms, Italy fights in Ethiopia, Japan rules Manchuria, and the Soviet Union industrialises at breakneck speed. The peace of Versailles is fraying.",
+   "approximations": "Borders follow modern admin-1 provinces, so each province goes to whoever held most of it on 1 January 1936 (e.g. Polish eastern lands as L'viv, Ivano-Frankivs'k, Rivne, Brest, Grodno and Vilnius; Istria and Inner Carniola to Italy; Italian-occupied Tigray to Italy; Jehol and western Manchuria to Manchukuo; south Sakhalin, Danzig, Tangier and Hatay not represented separately). Mandates are owned by the mandatory power. Population (millions) and GDP (billions of 1990 international dollars) are rounded Maddison-style estimates including colonies; army sizes are rounded peacetime strengths (Italy and Ethiopia already mobilised)."
+  },
+  {
+   "id": "cold_war_1962",
+   "file": "cold_war_1962.json",
+   "name": "Cold War",
+   "era": "cold_war",
+   "startDate": "1962-01-01",
+   "description": "New Year 1962: the Berlin Wall is months old, Cuba has declared for socialism, Algeria and the Congo are in turmoil and the European empires are in their last years, while NATO and the Warsaw Pact face each other across a divided Germany.",
+   "approximations": "Borders follow modern admin-1 provinces: Berlin is drawn wholly as East German, Vietnam is split at province level near the 17th parallel, Kashmir follows the 1949 ceasefire line only roughly, and the Gaza Strip and small enclaves are not shown. Colonies and protectorates still held on 1 January 1962 belong to their metropole (British East Africa, Aden and the Gulf, Portuguese Africa, Algeria, Rwanda-Urundi, West New Guinea, Spanish Sahara); the Central African Federation is a British subject and Katanga is shown as the secessionist state it then was. Population, GDP (Maddison-style 1990 international dollars, including colonies for the empires) and army sizes are rounded estimates; Soviet-bloc and Chinese output is especially uncertain."
   }
  ]
 }

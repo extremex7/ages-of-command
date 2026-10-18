@@ -12,6 +12,7 @@ import { monthlyGovernment } from './government.js';
 import { monthlyDiplomacy } from './diplomacy.js';
 import { dailyEvents, currentWarScores } from './events.js';
 import { aiDiplomacy } from './ai_diplomacy.js';
+import { monthlyResearch } from './technology.js';
 
 export function tick(game) {
   const { state, map, rules } = game;
@@ -33,6 +34,7 @@ export function tick(game) {
   const monthly = civilFromDays(state.day).d === 1;
   if (monthly) {
     monthlyEconomy(state, map, rules);
+    if (state.tech) monthlyResearch(state, map, rules);
     monthlyMilitary(state, map, rules);
     const warScores = currentWarScores(state, map, rules);
     monthlyGovernment(state, map, rules, warScores);

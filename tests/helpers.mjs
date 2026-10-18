@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { decodeMap, makeRules, newGame } from '../src/core/game.js';
+import { loadRules } from '../tools/load_rules.mjs';
 
 const rd = (p) => JSON.parse(fs.readFileSync(new URL('../' + p, import.meta.url)));
 
@@ -8,7 +9,7 @@ export function data() {
   if (!cached) {
     cached = {
       map: decodeMap(rd('data/map/world.json')),
-      rules: makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'), rd('data/rules/goods.json'), rd('data/rules/buildings.json'), rd('data/rules/governments.json'), [rd('data/events/domestic.json')]),
+      rules: loadRules(),
       scenario: rd('data/scenarios/modern_2026.json'),
     };
   }

@@ -3,7 +3,7 @@
 // state.aiLog with the reason so they can be inspected in the AI debug panel.
 import { aiLog, unitCount } from './state.js';
 import { atWar, allied, enemiesOf, friendly, isAtWar, canEnter } from './relations.js';
-import { recruit, canRecruit, orderMove, recruitCost } from './military.js';
+import { recruit, canRecruit, orderMove, recruitCost, bestUnits, modernizeCost, modernizeArmy } from './military.js';
 import { declareWar, canDeclareWar, warScore, demandCost, evaluatePeace, makePeace, provinceValue, warJoiners, termsCost,
   separateScore, evaluateSeparatePeace, makeSeparatePeace, warJustified } from './war.js';
 import { opinion, treatiesBrokenByWar, overlordOf, subjectsOf, hasClaim, TREATIES } from './diplomacy.js';
@@ -64,20 +64,23 @@ function manageBudget(state, rules, c) {
   }
 }
 
-function pickUnitType(state, c) {
+function pickUnitType(state, rules, c) {
   const n = state.armies.reduce((s, a) => (a.owner === c.idx ? s + unitCount(a) : s), 0);
   const roll = (n * 7 + c.idx) % 10;
-  if (c.cache.avgDev > 45 && roll < 2) return 'armor';
-  if (roll < 4) return 'artillery';
-  return 'infantry';
+  const b = bestUnits(state, rules, c.idx);
+  const mobile = b.mobile && (rules.units[b.mobile].fuel ? c.cache.avgDev > 45 : true);
+  if (mobile && roll < 2) return b.mobile;
+  if (b.support && roll < 4) return b.support;
+  return b.line || b.support || b.mobile;
 }
 
 function manageRecruitment(state, map, rules, c) {
   const L = c.ledger;
   if (!L) return;
   const war = isAtWar(state, c.idx);
-  const budget = L.taxRevenue * (1 - c.civilShare) + L.requisition - L.interest;
-  const type = pickUnitType(state, c);
+  const budget = L.taxRevenue * (1 - c.civilShare - (c.research?.share ?? 0)) + L.requisition - L.interest;
+  const type = pickUnitType(state, rules, c);
+  if (!type) return;
   const cost = recruitCost(state, rules, c.idx, type);
   const upkeep = rules.units[type].upkeep * c.cache.priceLevel;
   const share = war ? 1.05 : rules.balance.ai.targetArmyShare;
@@ -90,6 +93,17 @@ function manageRecruitment(state, map, rules, c) {
   }
   if (site < 0) return;
   if (!canRecruit(state, map, rules, c.idx, site, type)) recruit(state, map, rules, c.idx, site, type);
+  // in peacetime, re-equip one outdated army when money allows
+  if (!war && (state.day + c.idx) % 28 < rules.balance.ai.thinkEveryDays) {
+    for (const a of state.armies) {
+      if (a.owner !== c.idx || a.battle) continue;
+      const mc = modernizeCost(state, rules, a);
+      if (mc.units && c.treasury > mc.money * 3 && c.manpower > mc.men * 2) {
+        if (!modernizeArmy(state, rules, a.id)) aiLog(state, c.idx, `Re-equipped ${a.name} with newer units (${mc.money.toFixed(2)}B).`);
+        break;
+      }
+    }
+  }
 }
 
 // War needs a motive (low opinion, rivalry or claims on their land), favourable odds counting

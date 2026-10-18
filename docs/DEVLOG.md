@@ -124,3 +124,72 @@ revolutions, reforms, event validation, conditions and effects, the v3 → v4 mi
 determinism after reload with diplomacy). The browser end-to-end test changes a policy, improves
 relations, opens both new map modes and resolves an event dialog with no console errors. Low
 profile at 4× CPU throttle: 38 FPS.
+
+## 2026-10-18 — Session 4: Milestone 5, research, eras and historical scenarios
+
+**Built.**
+- **Technology**: a 119-technology tree in a data file. It has 13 eras, 13 fields and
+  prerequisites, and is validated for cycles and unknown ids. Effects are normalised to the 2026
+  world, and technologies gate units, buildings and goods.
+- **Research**: a budget line, points from √(spending) × education, a diffusion discount from
+  neighbours and world adoption, banking, a queue that adds prerequisites, and an AI chooser.
+- **Eras**: the era is derived from known technologies and sets mobilisable manpower.
+- **Units**: 11 units from levies to armour, with roles, munitions, fuel and siege factors, plus
+  army modernisation.
+- **Historical scenarios**: a reusable loader. `tools/build_history.mjs` turns region-rule
+  definitions into scenarios, and the economy builder seeds technology-aware industry. Four
+  scenarios: Height of Rome 117, The Great War 1914, The Gathering Storm 1936 and The Cold War
+  1962.
+- **Events**: the engine gained dates, scenario and country filters, once-only events, news,
+  premises (`exists`, `atWarWith`, `warBetween`, `hasTech`, `ownsAny`, `fired`…), history effects
+  (`war`, `annex`, `transfer`, `release`, `government`, `treaty`, `techs`, `trigger`…), chains and
+  a Historical / Plausible / Off setting. 114 historical events and 15 world events.
+- **UI**: a Research tab, a technology tree overlay, the era in the top bar and Nation tab, a
+  Technology map mode, Modernise, recruit lists filtered by technology, and event settings on the
+  New Game screen.
+- **Saves**: format v5 with a migration and remapping of technologies by id.
+
+Rules: [TECHNOLOGY.md](TECHNOLOGY.md), [SCENARIOS.md](SCENARIOS.md).
+
+**Decisions.**
+- Technology effects are ratios against the sum of all real technologies up to 2020. That keeps
+  every Milestone 1–4 calibration valid, so the Modern World plays as before, and still makes a
+  1914 economy roughly half as productive per building.
+- Research points grow with the square root of spending. With linear points, large economies
+  ran away; the square root gives about the historical pace. From 1914, leaders gained 6
+  technologies in 20 years against 5 historical ones.
+- All periods use the one admin-1 world map: one owner per province, with unowned land for
+  regions without states. Province ids, the renderer and saves need nothing scenario-specific.
+- Deposits are copied from the Modern World (geology does not change); industry is sized to each
+  period's demand and technology.
+- Scenario definitions and events were drafted by three parallel workers from fixed schemas and
+  tag lists, then reviewed and run through the real builder and engine.
+
+**Problems found and fixed.**
+- Event effects that were not basic fell through into the province-development loop because a
+  `break` was missing, which would have written NaN development. Fixed and covered by tests.
+- Historical army sizes made 1962 budgets collapse (Soviet −11 B/month, China −12 B/month): the
+  game's upkeep model is calibrated to modern GDP. Starting armies are now capped at a third of a
+  typical revenue.
+- The AI dropped scenario rivalries on day one (France stopped treating Germany as its rival).
+  Scenario rivalries now come with a fading "Historic enmity" opinion modifier.
+- Italy could not join the Entente after the Treaty of London, because it was still in the
+  Triple Alliance bloc. `breakTreaties` now also leaves shared defence blocs, and the event uses
+  it.
+- Milestone 5 first cost +40% simulation time per day. Per-game event lists, rolling before
+  conditions, a lazy event context and a cached newest-unit lookup brought that to +23%.
+
+**Results.**
+- **Tests**: 79 pass, 16 of them new. They cover technology validation, starting technologies and
+  lags, unit, building and goods gating, research, the queue and banking, diffusion, era manpower,
+  the v4 → v5 migration and remapping, determinism of a 1914 game, loading and running every
+  scenario, borders, subjects, dormant states and starting wars, releasing a country, Sarajevo's
+  chain firing on schedule and not when events are off, events skipping when their premise fails,
+  history effects, and the shipped event files.
+- **Browser end-to-end test**: it starts research, opens the technology tree and Technology map,
+  then starts 1914 as Germany and runs it. There were no console errors.
+
+**Not done (honest gaps).**
+- There is no scenario editor or colonisation.
+- Navy, air and space technologies have only general effects until Milestone 6.
+- The war AI ends the Great War early.

@@ -189,7 +189,7 @@ test('save v3 → v4 migration installs governments and keeps the game running',
   o.alliances = o.alliances.filter((a) => a.name === 'NATO' || a.name === 'CSTO').map(({ kind, ...a }) => a);
   const g2 = loadGame(JSON.stringify(o), d);
   const s = g2.state;
-  assert.equal(s.version, 4);
+  assert.equal(s.version, 5);
   assert.ok(s.countries.every((c) => c.govt && c.govt.fx && Number.isFinite(c.influence)));
   assert.ok(s.alliances.some((a) => a.name === 'European Union' && a.kind === 'economic'), 'scenario blocs added');
   assert.ok(s.alliances.find((a) => a.name === 'NATO').kind === 'defense');

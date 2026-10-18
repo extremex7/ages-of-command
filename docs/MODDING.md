@@ -59,7 +59,7 @@ Unknown keys are rejected on load with the file and field named.
 
 ## Events — `data/events/*.json` + `index.json`
 
-`index.json` lists the files: `{ "files": ["domestic.json"] }`. Each file is `{ "events": [ … ] }`:
+`index.json` lists the files, in order: `{ "files": ["domestic.json", "world.json", "history_1914.json", …] }`. Each file is `{ "events": [ … ] }`:
 
 ```json
 { "id": "general_strike", "title": "General strike",
@@ -83,8 +83,37 @@ Unknown keys are rejected on load with the file and field named.
   `policy.<group>: "option"`, `family: [ids]`, `gov: [ids]`, and nesting with `any: [ … ]` and
   `not: { … }`.
 - Effect keys: `stability, legitimacy, treasuryMonths, tax, civilShare, manpower, support
-  { faction: delta }, opinion `{ target: "rival" | "neighbour", value }`, popShare, dev, modifier
+  { faction: delta }, opinion `{ target: "rival" | "neighbour" | TAG, value }`, popShare, dev, modifier
   { name, months, effects }`.
+- Historical events (Milestone 5) add `scenario`, `tags`, `date`, `once`, `news`, an option flag
+  `historical`, conditions such as `exists`, `atWarWith`, `warBetween`, `hasTech`, `ownsAny`,
+  `fired`, `year`, and effects such as `war`, `annex`, `transfer`, `release`, `government`,
+  `treaty`, `techs` and `trigger`. The full list and how they fire: [SCENARIOS.md](SCENARIOS.md).
+
+## Technologies — `data/rules/technologies.json`
+
+`eras` (id, name, start year, `manpowerShare`), `fields` (id → name) and `techs`:
+
+```json
+"rifled_firearms": { "name": "Rifled Firearms", "era": "industrial", "field": "army", "year": 1850, "cost": 1.2,
+  "req": ["machine_tools", "firearms"], "effects": { "combat": 0.12 },
+  "unlocks": { "units": ["rifles"] }, "desc": "…" }
+```
+
+- `effects` keys: `farm mine industry research popGrowth combat movement siege devGrowth tax
+  construction` (fractions; normalised against all real technologies up to 2020).
+- `unlocks`: `goods`, `buildings`, `units`, `govTypes`. A unit can also name its technology with
+  `"tech"` in units.json, which must agree. Units have a `role` (`line`, `support`, `mobile`),
+  and optional `munitions` (default 1), `fuel` (default 0) and `siege` (default 1) factors.
+- `fictional: true` marks speculative technologies (never given at a scenario start).
+- Prerequisite cycles, unknown ids and unknown effect keys are rejected when the rules load.
+  Formulas: [TECHNOLOGY.md](TECHNOLOGY.md).
+
+## Historical scenario definitions — `tools/history/*.json`
+
+Historical scenarios are written as country lists with region rules (ISO codes, boxes, polygons,
+province names) and built into scenario files with `node tools/build_history.mjs --economy`.
+Format: [tools/history/README.md](../tools/history/README.md); overview: [SCENARIOS.md](SCENARIOS.md).
 
 ## Scenarios — `data/scenarios/*.json` + `index.json`
 
@@ -122,5 +151,12 @@ Unknown keys are rejected on load with the file and field named.
 - `autoBudget` sets each country's civil spending so its starting army is affordable.
 - Register the file in `data/scenarios/index.json` to show it in the New Game screen.
 - Dates use astronomical years (`-0499-01-01` = 500 BCE).
+- Milestone 5 fields: top-level `techYear` (countries know technologies up to this year),
+  `wars` (`[{ attackers: [tags], defenders: [tags], name? }]`, running at the start) and
+  `releases` (`{ TAG: [province ids] }` for dormant countries). Per country: `techLag`,
+  `techYear`, `techs` (extra ids), `researchShare`, `policies` (`{ group: option }`) and `dormant`
+  (owns nothing until an event releases it).
+- Unit types in `armies` must exist in units.json; a scenario should only give units its
+  countries know.
 
-Planned: technologies and a scenario editor UI (Milestone 5).
+Planned: a scenario editor UI.

@@ -13,7 +13,7 @@ test('ledger: revenue = taxable GDP x tax x efficiency; net balances', () => {
   const L = c.ledger;
   assert.ok(Math.abs(L.gdpMonth - gdpMonth) < 1e-6);
   assert.ok(Math.abs(L.taxRevenue - gdpMonth * c.tax * L.efficiency) < 1e-6);
-  assert.ok(Math.abs(L.net - (L.revenue - L.civil - L.military - L.interest)) < 1e-9);
+  assert.ok(Math.abs(L.net - (L.revenue - L.civil - L.research - L.military - L.interest)) < 1e-9);
 });
 
 test('monthly economy applies the ledger to the treasury', () => {

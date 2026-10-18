@@ -2,6 +2,7 @@
 // at the start and after N years of AI play. Usage: node tools/econ_report.mjs [years=3] [tags…]
 import fs from 'node:fs';
 import { decodeMap, makeRules, newGame } from '../src/core/game.js';
+import { loadRules } from './load_rules.mjs';
 import { tick } from '../src/core/sim.js';
 import { formatDate } from '../src/core/calendar.js';
 
@@ -9,7 +10,7 @@ const rd = (p) => JSON.parse(fs.readFileSync(new URL('../' + p, import.meta.url)
 const years = +(process.argv[2] || 3);
 const tags = process.argv.slice(3).length ? process.argv.slice(3) : ['USA', 'CHN', 'DEU', 'JPN', 'IND', 'RUS', 'SAU', 'BRA', 'NGA', 'EGY', 'FRA', 'KOR'];
 const map = decodeMap(rd('data/map/world.json'));
-const rules = makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'), rd('data/rules/goods.json'), rd('data/rules/buildings.json'), rd('data/rules/governments.json'), [rd('data/events/domestic.json')]);
+const rules = loadRules();
 const game = newGame({ map, scenario: rd('data/scenarios/modern_2026.json'), rules, seed: 'econ-1' });
 const s = game.state, X = rules.econ;
 const gdp0 = Object.fromEntries(s.countries.map((c) => [c.tag, c.cache.gdp]));

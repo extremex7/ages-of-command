@@ -77,16 +77,20 @@ export function sideStats(state, ids, role, terrain, rules, p) {
     // supply: munitions shortages weaken every unit, fuel shortages weaken armour
     const e = state.countries[a.owner].econ;
     const mun = e ? 0.6 + 0.4 * e.supplyMun : 1, fuel = e ? 0.5 + 0.5 * e.supplyFuel : 1;
-    supply += mun * n;
-    if (e) e.battleUse += n * rules.balance.industry.munitionsPerUnitBattleDay;
+    const tech = state.countries[a.owner].tfx?.mult.combat ?? 1;
+    let usesMun = 0;
     for (const t in a.units) {
       const k = a.units[t];
       if (!k) continue;
       const u = U[t];
+      const m = (u.munitions ?? 1) > 0 ? mun : 1;
+      if (m !== 1 || (u.munitions ?? 1) > 0) usesMun += k * (u.munitions ?? 1);
       const base = role === 'att' ? u.attack * (u.terrain[terrain] ?? 1) : u.defense;
-      dmg += k * a.str * base * (0.35 + 0.65 * a.org) * (1 + a.exp * 0.25) * mun * (t === 'armor' ? fuel : 1);
+      dmg += k * a.str * base * (0.35 + 0.65 * a.org) * (1 + a.exp * 0.25) * m * (u.fuel ? fuel : 1) * tech;
       tough += k * u.toughness;
     }
+    supply += (usesMun > 0 ? mun : 1) * n;
+    if (e) e.battleUse += usesMun * rules.balance.industry.munitionsPerUnitBattleDay;
   }
   if (role === 'def') dmg *= (B.defenderTerrain[terrain] ?? 1) * (1 + B.fortBonus * state.prov.fort[p]);
   const width = B.width[terrain] ?? 10;

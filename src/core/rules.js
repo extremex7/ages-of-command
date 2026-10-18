@@ -7,10 +7,12 @@ export function validateRules(rules) {
   for (const [k, u] of Object.entries(rules.units)) {
     for (const f of UNIT_NUM) if (!(typeof u[f] === 'number' && u[f] >= 0)) errs.push(`unit "${k}": "${f}" must be a non-negative number`);
     if (!u.name) errs.push(`unit "${k}": missing name`);
+    if (u.role && !['line', 'support', 'mobile'].includes(u.role)) errs.push(`unit "${k}": role must be line, support or mobile`);
+    for (const f of ['munitions', 'fuel', 'siege']) if (u[f] != null && !(typeof u[f] === 'number' && u[f] >= 0)) errs.push(`unit "${k}": "${f}" must be a non-negative number`);
     for (const t of TERRAINS) if (typeof u.terrain?.[t] !== 'number') errs.push(`unit "${k}": terrain.${t} must be a number`);
   }
   const b = rules.balance;
-  for (const s of ['economy', 'population', 'combat', 'siege', 'war', 'ai', 'industry', 'government', 'diplomacy']) if (!b?.[s]) errs.push(`balance: missing section "${s}"`);
+  for (const s of ['economy', 'population', 'combat', 'siege', 'war', 'ai', 'industry', 'government', 'diplomacy', 'research']) if (!b?.[s]) errs.push(`balance: missing section "${s}"`);
   if (errs.length) throw new Error('Invalid rules:\n' + errs.join('\n'));
 }
 

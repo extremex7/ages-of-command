@@ -28,7 +28,7 @@
       "tundra": 7
     },
     "defenderTerrain": {
-      "plains": 1.0,
+      "plains": 1,
       "hills": 1.25,
       "mountains": 1.6,
       "forest": 1.3,
@@ -85,8 +85,8 @@
     "munitionsPerUnitMonth": 0.05,
     "munitionsPerUnitBattleDay": 0.03,
     "fuelPerArmorMonth": 0.15,
-    "infraCost": 2.0,
-    "infraSteel": 1.0,
+    "infraCost": 2,
+    "infraSteel": 1,
     "infraDays": 150,
     "maxInfra": 10,
     "baseConstructionSlots": 2,
@@ -140,9 +140,24 @@
     "refusalCooldownDays": 180,
     "reputationRecoveryMonth": 0.4,
     "warDeclarationReputation": 5,
-    "breakReputation": { "alliance": 30, "defensive": 25, "nap": 20, "guarantee": 25, "access": 5, "trade": 5 },
+    "breakReputation": {
+      "alliance": 30,
+      "defensive": 25,
+      "nap": 20,
+      "guarantee": 25,
+      "access": 5,
+      "trade": 5
+    },
     "breakStability": 5,
-    "treatyOpinion": { "alliance": 25, "defensive": 20, "nap": 10, "guarantee": 15, "access": 5, "trade": 10, "subject": -10 },
+    "treatyOpinion": {
+      "alliance": 25,
+      "defensive": 20,
+      "nap": 10,
+      "guarantee": 15,
+      "access": 5,
+      "trade": 10,
+      "subject": -10
+    },
     "blocOpinion": 20,
     "warOpinion": -80,
     "truceOpinion": -15,
@@ -168,7 +183,11 @@
     "reparationsShare": 0.1,
     "reparationsYears": 5,
     "subjectTribute": 0.1,
-    "peaceCost": { "reparations": 20, "subject": 70, "independence": 30 },
+    "peaceCost": {
+      "reparations": 20,
+      "subject": 70,
+      "independence": 30
+    },
     "subjectMaxProvinces": 30,
     "callToArmsOpinion": 40,
     "aiEveryMonths": 3,
@@ -177,5 +196,32 @@
     "aiWarMotive": 0.3,
     "blocVoteShare": 0.67,
     "blocVoteOpinion": 30
+  },
+  "research": {
+    "_doc": "Research and eras. See docs/TECHNOLOGY.md. Research points a month = rpScale × sqrt(research spending ÷ price level) × education × research multiplier.",
+    "defaultShare": 0.05,
+    "maxShare": 0.25,
+    "rpScale": 10,
+    "eduMin": 0.3,
+    "maxDiscount": 0.65,
+    "neighbourWeight": 0.5,
+    "bankMonths": 12,
+    "switchKeep": 0.5,
+    "maxQueue": 8,
+    "eraCost": {
+      "ancient": 100,
+      "classical": 150,
+      "medieval": 150,
+      "renaissance": 150,
+      "early_modern": 150,
+      "enlightenment": 150,
+      "industrial": 160,
+      "great_war": 180,
+      "world_war": 220,
+      "cold_war": 350,
+      "information": 600,
+      "near_future": 1100,
+      "future": 1800
+    }
   }
 }

@@ -349,7 +349,8 @@ export class MapRenderer {
       const k = stackOffset.get(a.loc) || 0;
       stackOffset.set(a.loc, k + 1);
       sy -= 8 + k * 15;
-      const n = a.units.infantry + a.units.artillery + a.units.armor;
+      let n = 0;
+      for (const t in a.units) n += a.units[t];
       const label = String(n);
       const w = small ? 14 : 22 + label.length * 5, h = small ? 9 : 14;
       const x = sx - w / 2, y = sy - h / 2;

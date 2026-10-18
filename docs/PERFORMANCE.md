@@ -1,6 +1,6 @@
 # Performance
 
-All numbers below were measured on 2026-10-18 after Milestone 4 (diplomacy and government), in the build container (4 vCPU cloud VM, headless
+All numbers below were measured on 2026-10-18 after Milestone 5 (research, eras and historical scenarios; earlier milestones' columns kept for comparison), in the build container (4 vCPU cloud VM, headless
 Chromium with software rasterisation, 1366×768, device scale 1). They are **not** measurements on
 real minimum-spec hardware; the 4× CPU-throttled run is an emulation of a slower machine.
 
@@ -12,7 +12,48 @@ npm start & node tests/browser/bench.mjs        # browser, per profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs     # emulated 4x slower CPU
 ```
 
-## Simulation (Node, `npm run bench`, seed `bench-1`, 2,358 provinces, 196 countries)
+## Milestone 5 (simulation, Node, seed `bench-1`, AI aggression 1, 10 years)
+
+| Scenario | Countries | Time per game day | Daily tick p50 / p99 | Monthly tick p50 / max |
+| --- | --- | --- | --- | --- |
+| Modern World 2026 (M5) | 196 | 1.08 ms | 0.51 / 2.7 ms | 10.6 / 48 ms |
+| Modern World 2026, M4 build re-measured in the same session | 196 | 0.88 ms | 0.35 / 3.0 ms | 7.1 / 37 ms |
+| The Great War 1914 | 67 alive | 0.79 ms | 0.41 / 2.6 ms | 5.5 / 31 ms |
+| The Cold War 1962 | 123 alive | 0.84 ms | 0.41 / 2.3 ms | 7.7 / 35 ms |
+| Height of Rome 117 | 29 alive | 0.32 ms | 0.12 / 1.5 ms | 2.8 / 20 ms |
+
+Milestone 5 costs about 0.2 ms per game day (+23%) in the Modern World. The extra work is
+monthly research for every country, more events per country (world events, and historical events
+filtered per scenario and country), the per-country technology terms in production, and
+choosing units among 11 types. A profile of the first M5 build showed events and the AI's unit
+choice as the largest new costs. Three changes brought that build from 1.22 ms to 1.08 ms:
+
+- Event lists are now filtered once per game by scenario and country tag.
+- An event's roll now happens before its conditions are evaluated, and the event context is
+  built only when a roll succeeds. The odds are unchanged.
+- The newest unit of each role is cached per country until a technology is learned.
+
+Historical scenarios are cheaper than the modern one (fewer countries; 117 has 1,686 unowned
+provinces). Run with `node tools/bench.mjs 10 1 <scenario>`.
+
+Browser after M5 (Modern World), two runs of `tests/browser/bench.mjs` each:
+
+| Profile | CPU | FPS while panning/zooming | p95 frame | Max-speed sim (5 s) | JS heap |
+| --- | --- | --- | --- | --- | --- |
+| Low | 1× | 60.5 | 18.5 ms | 2,191 days | 22 MB |
+| Balanced | 1× | 60.5 | 17.7 ms | 2,485 days | 36 MB |
+| High | 1× | 60.5 | 18.1 ms | 2,370 days | 68 MB |
+| Low | 4× slower | 45.4 / 45.9 | 46 ms | 258 / 435 days | 21–30 MB |
+| Balanced | 4× slower | 35.6 / 33.7 | 51–61 ms | 334 / 181 days | 18–29 MB |
+| High | 4× slower | 34.4 / 32.8 | 59–60 ms | 198 / 227 days | 31–38 MB |
+
+Throttled fast-forward varies by up to ±40% between identical runs in this container, so M5 is
+within noise of M4 (370 days, low, 4×). Map interaction stays above 30 FPS in every profile, and
+the low profile went from 38 FPS to 45 FPS. The 1× fast-forward is much higher than in the M4
+table: the 1× runs in this session were on a less loaded machine. Treat cross-session
+comparisons with care; the same-session Node comparison above is the reliable one.
+
+## Simulation before Milestone 5 (Node, `npm run bench`, seed `bench-1`, 2,358 provinces, 196 countries)
 
 | Metric | M4, AI aggression 1 (10 years) | M4, AI aggression 4 (5 years) | M3, aggression 1 | M3, aggression 4 |
 | --- | --- | --- | --- | --- |
@@ -59,16 +100,18 @@ now ignore relation changes (`src/ui/client.js`).
 
 | Item | Size |
 | --- | --- |
-| Whole game (code + data, uncompressed) | ~3.5 MB |
+| Whole game (code + data, uncompressed, without screenshots) | ~5.1 MB |
 | `data/map/world.json` | 3.0 MB (0.9 MB gzip; the dev server gzips) |
 | Modern World scenario (incl. economy and diplomacy) | 275 KB (49 KB gzip) |
+| Historical scenarios (117, 1914, 1936, 1962) | 80–222 KB each (16–44 KB gzip) |
+| Technology tree | 46 KB (9 KB gzip) |
 
 ## Provisional targets and status
 
 | Target | Status |
 | --- | --- |
-| ≥30 FPS map interaction on minimum spec | Met in emulation (38 FPS low profile at 4× throttle); needs real-hardware validation |
+| ≥30 FPS map interaction on minimum spec | Met in emulation (45 FPS low profile at 4× throttle); needs real-hardware validation |
 | Idle CPU ≈ 0 when paused | Met (no frames scheduled) |
-| Install < 500 MB | Met (~3.5 MB) |
-| Modest RAM | Met (~15–66 MB JS heap) |
+| Install < 500 MB | Met (~5 MB without screenshots) |
+| Modest RAM | Met (~18–68 MB JS heap in the browser) |
 | Fast-forward without freezing UI | Met (ticks run within a per-frame time budget) |

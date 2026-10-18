@@ -2,32 +2,42 @@
 // sized so the world roughly produces what it consumes at the scenario start. Uses the game's
 // own demand and efficiency functions, so it stays consistent with the simulation.
 //
-// Usage: node tools/build_economy.mjs [scenario=modern_2026]
+// Usage: node tools/build_economy.mjs [scenario=modern_2026] [--deposits-from=<scenario>]
+// With --deposits-from, resource deposits are copied from another scenario (geology does not
+// change) and mines are placed on them; otherwise deposits are sized from resource_table.csv.
+// Buildings and goods a country has no technology for are not placed.
 // Inputs: data/map/world.json, data/rules/*.json, tools/resource_table.csv.
 // Output: adds "economy" (deposits, buildings) and an infrastructure level to every province
 // record of data/scenarios/<scenario>.json.
 import fs from 'node:fs';
 import { decodeMap, makeRules } from '../src/core/game.js';
+import { loadRules } from './load_rules.mjs';
 import { createState } from '../src/core/state.js';
-import { popDemand, milDemand, devEff, infraEff, buildingEff, fertilityMap } from '../src/core/industry.js';
+import { popDemand, milDemand, devEff, infraEff, buildingEff, fertilityMap, buildingInputs, techOutput } from '../src/core/industry.js';
+import { initTechnology } from '../src/core/technology.js';
+import { refreshCountryCache } from '../src/core/state.js';
 
 const ROOT = new URL('../', import.meta.url);
 const rd = (p) => JSON.parse(fs.readFileSync(new URL(p, ROOT)));
-const scenId = process.argv[2] || 'modern_2026';
+const args = process.argv.slice(2);
+const scenId = args.find((a) => !a.startsWith('--')) || 'modern_2026';
+const depFrom = args.find((a) => a.startsWith('--deposits-from='))?.split('=')[1] || null;
 const scenPath = new URL(`data/scenarios/${scenId}.json`, ROOT);
 const map = decodeMap(rd('data/map/world.json'));
-const rules = makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'), rd('data/rules/goods.json'), rd('data/rules/buildings.json'), rd('data/rules/governments.json'), [rd('data/events/domestic.json')]);
+const rules = loadRules();
 const scenario = JSON.parse(fs.readFileSync(scenPath));
 delete scenario.economy;
 for (const rec of Object.values(scenario.provinces)) rec.length = 4;
 const X = rules.econ, I = rules.balance.industry, E = rules.balance.economy;
 const state = createState({ map, scenario, rules, seed: 'build' });
+initTechnology(state, map, rules, scenario);
+refreshCountryCache(state, map, rules);
 const C = state.countries, N = map.count, P = state.prov;
 const fert = fertilityMap(map);
 
 // --- table ---
 const table = {};
-{
+if (!depFrom) {
   const lines = fs.readFileSync(new URL('tools/resource_table.csv', ROOT), 'utf8').split('\n').filter((l) => l && !l.startsWith('#'));
   const head = lines[0].split(',');
   for (const l of lines.slice(1)) {
@@ -65,7 +75,14 @@ const D = C.map((c) => {
 const levels = new Float64Array(N * X.B); // fractional until rounded
 const deposits = new Uint8Array(N * X.R);
 const labourLeft = new Float64Array(N);
-const effOf = (i, b) => infraEff(P.infra[i], rules) * buildingEff(X.buildings[b], devEff(P.dev[i], rules), fert[i]);
+const effOf = (i, b) => infraEff(P.infra[i], rules) * buildingEff(X.buildings[b], devEff(P.dev[i], rules), fert[i]) * techOutput(C[P.owner[i]], b);
+const canHave = (k, b) => !C[k].tfx || C[k].tfx.bld[b];
+// fixed deposits copied from another scenario
+const fixedDep = new Uint8Array(N * X.R);
+if (depFrom) {
+  const src = JSON.parse(fs.readFileSync(new URL(`data/scenarios/${depFrom}.json`, ROOT))).economy.deposits;
+  for (const [i, d] of Object.entries(src)) for (const [r, v] of Object.entries(d)) if (X.resources.includes(r)) fixedDep[+i * X.R + X.resources.indexOf(r)] = v;
+}
 
 // --- deposits ---
 const AFFINITY = { // TERRAINS order: plains hills mountains forest desert tundra
@@ -108,7 +125,7 @@ function placeLevels(k, b, unitsWanted) {
   const outAmt = B.out[0][1];
   let need = unitsWanted / outAmt; // level × efficiency units
   const ps = provs[k].filter((i) => P.dev[i] >= (B.minDev || 0) && (!B.fertility || fert[i] >= 0.2) && (B.dep < 0 || deposits[i * X.R + B.dep] > 0));
-  if (!ps.length || need <= 0) return 0;
+  if (!ps.length || need <= 0 || !canHave(k, b)) return need > 0 ? unitsWanted : 0;
   for (let round = 0; round < 3 && need > 1e-6; round++) {
     const w = ps.map((i) => {
       const room = Math.min(B.maxLevel - levels[i * X.B + b], B.dep >= 0 ? deposits[i * X.R + B.dep] - levels[i * X.B + b] : Infinity, labourLeft[i] / B.workers);
@@ -137,7 +154,7 @@ function inputsOf(k, b, extra) {
     const lv = levels[i * X.B + b];
     if (!lv) continue;
     const e = effOf(i, b);
-    for (const [g, a] of B.inp) extra[k][g] += lv * e * a;
+    for (const [g, a] of buildingInputs(rules, C[k], b)) extra[k][g] += lv * e * a;
   }
 }
 
@@ -152,13 +169,14 @@ let capped = 0;
 for (let iter = 0; iter < 6; iter++) {
   levels.fill(0);
   deposits.fill(0, 0); // re-placed below (timber restored after)
+  if (depFrom) deposits.set(fixedDep);
   for (const i of map.ids) {
     if (P.owner[i] < 0) continue;
     labourLeft[i] = P.pop[i] * I.industrialLaborShare * 0.92;
     const t = map.terrain[i], lat = Math.abs(map.lat[i]);
     const forest = t === 3 ? 1 : (t === 5 && lat < 66) || ((t === 1 || t === 2) && lat > 40 && lat < 65) ? 0.5 : t === 0 ? 0.15 : 0;
     const d = Math.round(forest * Math.min(10, Math.sqrt(map.area[i]) / 12));
-    if (d > 0) deposits[i * X.R + TR] = d;
+    if (d > 0 && !depFrom) deposits[i * X.R + TR] = d;
   }
   extra = C.map(() => new Float64Array(G));
   C.forEach((c, k) => { extra[k][gid.energy] += mineEnergy[k]; });
@@ -180,7 +198,8 @@ for (let iter = 0; iter < 6; iter++) {
     }
     const raw = ['oil', 'coal', 'iron', 'uranium', 'rare_earths'].includes(gname);
     let share;
-    if (raw) share = C.map((c) => table[c.tag]?.[gname] || 0);
+    if (raw && depFrom) { const R = X.resources.indexOf(gname); share = C.map((c, k) => provs[k].reduce((s, i) => s + deposits[i * X.R + R], 0)); }
+    else if (raw) share = C.map((c) => table[c.tag]?.[gname] || 0);
     else if (gname === 'timber') share = C.map((c, k) => provs[k].reduce((s, i) => s + deposits[i * X.R + TR], 0));
     else share = C.map((c, k) => want[k] * spec(c, gname));
     const ts = share.reduce((a, b) => a + b, 0);
@@ -189,7 +208,8 @@ for (let iter = 0; iter < 6; iter++) {
     C.forEach((c, k) => {
       if (!share[k] || !provs[k].length) return;
       const units = (W * share[k]) / ts;
-      if (raw) placeDeposits(gname, k, units / X.buildings[b].out[0][1]);
+      if (raw && depFrom) placeLevels(k, b, units);
+      else if (raw) placeDeposits(gname, k, units / X.buildings[b].out[0][1]);
       else placeLevels(k, b, units);
       inputsOf(k, b, extra);
     });
@@ -199,7 +219,7 @@ for (let iter = 0; iter < 6; iter++) {
     let s = 0;
     for (const b of X.buildings) if (b.dep >= 0) for (const i of provs[k]) {
       const lv = levels[i * X.B + b.i];
-      if (lv) for (const [g, a] of b.inp) if (g === gid.energy) s += lv * effOf(i, b.i) * a;
+      if (lv) for (const [g, a] of buildingInputs(rules, C[k], b.i)) if (g === gid.energy) s += lv * effOf(i, b.i) * a;
     }
     return s;
   });

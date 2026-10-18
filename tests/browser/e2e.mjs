@@ -126,6 +126,21 @@ console.log('event dialog for', evOk, 'open', await page.locator('.dialog').coun
 await page.locator('.dialog .menu-buttons button').first().click();
 const pend = await page.evaluate(() => window.__client.state.pendingEvents.length);
 console.log('pending events after choosing', pend);
+// research: Research tab, queue a technology, technology tree, technology map mode
+await page.evaluate(() => { const c = window.__client; c.view.selectedCountry = -1; c.setTab('research'); });
+await page.waitForTimeout(200);
+await page.screenshot({ path: out + '20-research.png' });
+const q0 = await page.evaluate(() => { const s = window.__client.state; const r = s.countries[s.player].research; return (r.current ? 1 : 0) + r.queue.length; });
+await page.locator('.panel button:has-text("Start")').first().click();
+const q1 = await page.evaluate(() => { const s = window.__client.state; return s.countries[s.player].research.current; });
+console.log('research project', q1, '(projects before:', q0 + ')');
+if (!q1) errors.push('research Start button did not set a project');
+await page.click('.panel button:has-text("Technology tree")');
+await page.waitForTimeout(300);
+await page.screenshot({ path: out + '21-tech-tree.png' });
+if (!(await page.locator('.dialog .tree .tech').count())) errors.push('technology tree is empty');
+await page.keyboard.press('Escape');
+await page.keyboard.press('q'); await page.waitForTimeout(300); await page.screenshot({ path: out + '22-technology-map.png' });
 // declare-war dialog shows joiners and consequences (cancelled)
 await page.evaluate(() => { const c = window.__client, s = c.state; c.view.selectedCountry = s.countries.findIndex((x) => x.tag === 'ESP'); c.setTab('country'); });
 await page.waitForTimeout(150);
@@ -150,6 +165,26 @@ await page.waitForTimeout(600);
 const loaded = await page.evaluate(() => ({ day: window.__client.state.day, player: window.__client.state.player }));
 console.log('loaded', loaded, 'matches saved day', loaded.day === after.day);
 await page.screenshot({ path: out + '06-loaded.png' });
+// a historical scenario: 1914, play as Germany, check era units and run a month
+await page.click('text=Menu');
+await page.click('text=Exit to main menu');
+await page.click('text=New Game');
+await page.click('.list .item:has-text("Great War")');
+await page.waitForTimeout(150);
+await page.screenshot({ path: out + '23-new-game-1914.png' });
+await page.click('text=Choose country');
+await page.waitForSelector('.pick-banner');
+const h1914 = await page.evaluate(() => { const c = window.__client; c.startPlaying(c.state.countries.findIndex((x) => x.tag === 'GER')); c.setTab('military'); const s = c.state; return { era: c.game.rules.tech.eras[s.countries[s.player].tfx.era].id, units: [...new Set(s.armies.filter((a) => a.owner === s.player).flatMap((a) => Object.keys(a.units)))] }; });
+console.log('1914 Germany', h1914);
+if (h1914.era !== 'great_war' || h1914.units.includes('armor')) errors.push('1914 starts with the wrong era or units');
+await page.waitForTimeout(300);
+await page.screenshot({ path: out + '24-military-1914.png' });
+await page.evaluate(() => { const s = window.__client.state; s.countries[s.player].automate = true; });
+await page.keyboard.press('5'); await page.waitForTimeout(3000); await page.keyboard.press(' ');
+while (await page.locator('.dialog .menu-buttons button').count()) { await page.locator('.dialog .menu-buttons button').first().click(); await page.waitForTimeout(100); }
+await page.keyboard.press('p'); await page.waitForTimeout(300);
+await page.screenshot({ path: out + '25-1914-running.png' });
+console.log('1914 fired', await page.evaluate(() => Object.keys(window.__client.state.fired).join(' ')));
 const mem = await page.evaluate(() => performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null);
 console.log('boot ms', bootMs, 'JS heap MB', mem);
 console.log(errors.length ? 'ERRORS:\n' + errors.join('\n') : 'no console errors');

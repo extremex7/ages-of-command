@@ -1,1 +1,1 @@
-{ "_doc": "Event files loaded by the game, in order. Add a file here to add events.", "files": ["domestic.json"] }
+{ "_doc": "Event files loaded by the game, in order. Add a file here to add events.", "files": ["domestic.json", "world.json", "history_117.json", "history_1914.json", "history_1936.json", "history_1962.json"] }

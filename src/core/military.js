@@ -2,14 +2,17 @@
 import { newArmy, unitCount, log, refreshCountryCache } from './state.js';
 import { canEnter, atWar, friendly } from './relations.js';
 import { findPath, stepDays, edgeIndex } from './pathfind.js';
+import { canUseUnit } from './technology.js';
 
-// Slowest unit's speed; armies with armour slow down when the country is short of fuel.
+// Slowest unit's speed, times the country's movement technology; armies with fuel-using units
+// (armour) slow down when the country is short of fuel.
 export function armySpeed(a, rules, state = null) {
-  let s = Infinity;
-  for (const t in a.units) if (a.units[t] > 0) s = Math.min(s, rules.units[t].speed);
+  let s = Infinity, fuel = false;
+  for (const t in a.units) if (a.units[t] > 0) { s = Math.min(s, rules.units[t].speed); if (rules.units[t].fuel) fuel = true; }
   if (s === Infinity) return 20;
-  const e = state?.countries[a.owner]?.econ;
-  if (e && a.units.armor > 0) s *= 0.7 + 0.3 * e.supplyFuel;
+  const c = state?.countries[a.owner];
+  if (c?.econ && fuel) s *= 0.7 + 0.3 * c.econ.supplyFuel;
+  if (c?.tfx) s *= c.tfx.mult.movement;
   return s;
 }
 
@@ -17,6 +20,65 @@ export function armyMen(a, rules) {
   let m = 0;
   for (const t in a.units) m += a.units[t] * rules.units[t].men;
   return m * a.str;
+}
+
+// The newest unit type of each role the country can field ("newest" = latest unlocking
+// technology; types without a technology are the oldest).
+// cached per country until the technology version changes (the AI asks often)
+const bestCache = new WeakMap();
+export function bestUnits(state, rules, k) {
+  let cache = bestCache.get(state);
+  const ver = state.tech?.ver ?? 0;
+  if (!cache || cache.ver !== ver || cache.rules !== rules) { cache = { ver, rules, by: new Map() }; bestCache.set(state, cache); }
+  let v = cache.by.get(k);
+  if (!v) { v = computeBestUnits(state, rules, k); cache.by.set(k, v); }
+  return v;
+}
+
+function computeBestUnits(state, rules, k) {
+  const best = {};
+  for (const [id, u] of Object.entries(rules.units)) {
+    if (!canUseUnit(state, rules, k, id)) continue;
+    const t = rules.tech.unitTech[id];
+    const yr = t == null ? -1e9 : rules.tech.list[t].year;
+    const role = u.role || 'line';
+    if (!best[role] || yr > best[role].yr) best[role] = { id, yr };
+  }
+  return Object.fromEntries(Object.entries(best).map(([r, v]) => [r, v.id]));
+}
+
+// Converting an army's outdated units to the newest type of the same role: pays the price
+// difference (and extra men), and the retrained units lose organisation.
+export function modernizeCost(state, rules, a) {
+  const U = rules.units, best = bestUnits(state, rules, a.owner), c = state.countries[a.owner];
+  let money = 0, men = 0, n = 0;
+  const plan = [];
+  for (const t in a.units) {
+    const k = a.units[t], to = best[U[t].role || 'line'];
+    if (!k || !to || to === t) continue;
+    const ty = rules.tech.unitTech[to], tf = rules.tech.unitTech[t];
+    if ((ty == null ? -1e9 : rules.tech.list[ty].year) <= (tf == null ? -1e9 : rules.tech.list[tf].year)) continue;
+    money += k * Math.max(U[to].cost * 0.6, U[to].cost - U[t].cost) * c.cache.priceLevel;
+    men += k * Math.max(0, U[to].men - U[t].men);
+    n += k;
+    plan.push([t, to, k]);
+  }
+  return { money, men, units: n, plan };
+}
+
+export function modernizeArmy(state, rules, id) {
+  const a = state.armies.find((x) => x.id === id);
+  if (!a) return 'No such army';
+  if (a.battle) return 'Army is in battle';
+  const c = state.countries[a.owner];
+  const m = modernizeCost(state, rules, a);
+  if (!m.units) return 'The army already has the newest equipment you can field';
+  if (c.treasury < m.money) return `Costs ${m.money.toFixed(2)}B; treasury has ${c.treasury.toFixed(1)}B`;
+  if (c.manpower < m.men) return `Needs ${Math.round(m.men).toLocaleString()} more men`;
+  c.treasury -= m.money; c.manpower -= m.men;
+  for (const [t, to, k] of m.plan) { delete a.units[t]; a.units[to] = (a.units[to] || 0) + k; }
+  a.org = Math.min(a.org, 0.3);
+  return null;
 }
 
 export function recruitCost(state, rules, country, type, count = 1) {
@@ -30,6 +92,7 @@ export function canRecruit(state, map, rules, country, prov, type, count = 1) {
   const c = state.countries[country];
   if (!c || !c.alive) return 'Country does not exist';
   if (!rules.units[type]) return `Unknown unit type ${type}`;
+  if (state.tech && !canUseUnit(state, rules, country, type)) return `Needs the technology ${rules.tech.list[rules.tech.unitTech[type]].name}`;
   if (!Number.isInteger(count) || count < 1 || count > 20) return 'Invalid amount';
   if (!map.exists[prov]) return 'Invalid province';
   if (state.prov.owner[prov] !== country || state.prov.controller[prov] !== country) return 'You must own and control the province';
@@ -66,7 +129,7 @@ export function processRecruitment(state, map, rules) {
       const n = unitCount(army);
       army.str = (army.str * n + 1) / (n + 1);
       army.org = (army.org * n + 0.6) / (n + 1);
-      army.units[r.type]++;
+      army.units[r.type] = (army.units[r.type] || 0) + 1;
     } else {
       army = newArmy(state, r.owner, r.prov, { [r.type]: 1 });
       army.org = 0.6;
@@ -138,7 +201,11 @@ export function processSieges(state, map, rules) {
     for (const a of armies) {
       if (!atWar(state, a.owner, ctl)) continue;
       if (besieger < 0) besieger = a.owner;
-      if (friendly(state, a.owner, besieger)) power += unitCount(a) * a.str;
+      if (!friendly(state, a.owner, besieger)) continue;
+      // siege engines and artillery count more ("siege" in units.json), times siege technology
+      let w = 0;
+      for (const t in a.units) w += a.units[t] * (rules.units[t].siege ?? 1);
+      power += w * a.str * (state.countries[a.owner].tfx?.mult.siege ?? 1);
     }
     if (besieger < 0) continue;
     // hostile armies still present -> combat handles it
@@ -219,7 +286,7 @@ export function mergeArmies(state, ids) {
     const n1 = unitCount(a);
     base.str = (base.str * n0 + a.str * n1) / (n0 + n1);
     base.org = (base.org * n0 + a.org * n1) / (n0 + n1);
-    for (const t in a.units) base.units[t] += a.units[t];
+    for (const t in a.units) base.units[t] = (base.units[t] || 0) + a.units[t];
     n0 += n1;
     state.armies.splice(state.armies.indexOf(a), 1);
   }

@@ -1,7 +1,8 @@
 // Reproducible simulation benchmark: fixed scenario, seed and AI settings.
-// Usage: node tools/bench.mjs [years=10] [aggression=1]
+// Usage: node tools/bench.mjs [years=10] [aggression=1] [scenario=modern_2026]
 import fs from 'node:fs';
 import { decodeMap, makeRules, newGame, saveGame, loadGame } from '../src/core/game.js';
+import { loadRules } from './load_rules.mjs';
 import { tick } from '../src/core/sim.js';
 import { formatDate } from '../src/core/calendar.js';
 
@@ -13,8 +14,8 @@ const world = rd('data/map/world.json');
 const tParse = performance.now() - t;
 t = performance.now();
 const map = decodeMap(world);
-const rules = makeRules(rd('data/rules/units.json'), rd('data/rules/balance.json'), rd('data/rules/goods.json'), rd('data/rules/buildings.json'), rd('data/rules/governments.json'), [rd('data/events/domestic.json')]);
-const scenario = rd('data/scenarios/modern_2026.json');
+const rules = loadRules();
+const scenario = rd(`data/scenarios/${process.argv[4] || 'modern_2026'}.json`);
 const tDecode = performance.now() - t;
 t = performance.now();
 const game = newGame({ map, scenario, rules, seed: 'bench-1', settings: { aiAggression: aggression } });

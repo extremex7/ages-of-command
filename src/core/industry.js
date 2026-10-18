@@ -108,7 +108,8 @@ export function efficiencyBreakdown(state, map, rules, i, b) {
   const fert = fertilityMap(map)[i];
   const be = buildingEff(B, de, fert);
   const occ = state.prov.controller[i] !== state.prov.owner[i] ? 0 : 1;
-  return { labour: lab.factor, dev: de, infra: ie, fert, building: be, occupied: !occ, total: lab.factor * ie * be * occ };
+  const tech = techOutput(state.countries[state.prov.owner[i]], b);
+  return { labour: lab.factor, dev: de, infra: ie, fert, building: be, tech, occupied: !occ, total: lab.factor * ie * be * tech * occ };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -183,25 +184,38 @@ export function popDemand(rules, c, out) {
   const X = rules.econ, E = rules.balance.economy;
   const pm = (c.cache?.pop || 0) / 1e6;
   const rel = Math.pow(E.devGrowth, (c.cache?.avgDev ?? E.refDev) - E.refDev);
-  for (const g of X.goods) out[g.i] = g.demand > 0 ? pm * g.demand * Math.pow(rel, g.incomeExp) : 0;
+  const av = c.tfx?.goods;
+  for (const g of X.goods) out[g.i] = g.demand > 0 && (!av || av[g.i]) ? pm * g.demand * Math.pow(rel, g.incomeExp) : 0;
   return out;
 }
 
-// Army demand per good this month (munitions for every unit plus battle use, fuel for armour).
-// counts = optional precomputed { units, armor } arrays per country.
+// Army demand per good this month: munitions for every unit that uses them (weighted by the
+// unit's "munitions" factor) plus battle use, fuel for units with a "fuel" factor (armour).
+// counts = optional precomputed { mun, fuel } arrays per country (see armyCounts).
 export function milDemand(state, rules, c, out, counts = null) {
   const X = rules.econ, I = rules.balance.industry;
   out.fill(0);
-  let units = 0, armor = 0;
-  if (counts) { units = counts.units[c.idx]; armor = counts.armor[c.idx]; }
-  else for (const a of state.armies) {
-    if (a.owner !== c.idx) continue;
-    units += a.units.infantry + a.units.artillery + a.units.armor;
-    armor += a.units.armor;
-  }
-  if ('munitions' in X.gi) out[X.gi.munitions] = units * I.munitionsPerUnitMonth + (c.econ?.battleUse || 0);
-  if ('fuel' in X.gi) out[X.gi.fuel] = armor * I.fuelPerArmorMonth;
+  let mun = 0, fuel = 0;
+  if (counts) { mun = counts.mun[c.idx]; fuel = counts.fuel[c.idx]; }
+  else for (const a of state.armies) if (a.owner === c.idx) for (const t in a.units) { const u = rules.units[t]; mun += a.units[t] * (u.munitions ?? 1); fuel += a.units[t] * (u.fuel ?? 0); }
+  const av = c.tfx?.goods;
+  if ('munitions' in X.gi && (!av || av[X.gi.munitions])) out[X.gi.munitions] = mun * I.munitionsPerUnitMonth + (c.econ?.battleUse || 0);
+  if ('fuel' in X.gi && (!av || av[X.gi.fuel])) out[X.gi.fuel] = fuel * I.fuelPerArmorMonth;
   return out;
+}
+
+export function armyCounts(state, rules) {
+  const C = state.countries.length, mun = new Float64Array(C), fuel = new Float64Array(C);
+  for (const a of state.armies) for (const t in a.units) { const u = rules.units[t]; mun[a.owner] += a.units[t] * (u.munitions ?? 1); fuel[a.owner] += a.units[t] * (u.fuel ?? 0); }
+  return { mun, fuel };
+}
+
+// Inputs building b needs in country c (technology may waive some) and its output multiplier.
+export function buildingInputs(rules, c, b) {
+  return c?.tfx ? c.tfx.inp[b] : rules.econ.buildings[b].inp;
+}
+export function techOutput(c, b) {
+  return c?.tfx ? c.tfx.bm[b] : 1;
 }
 
 // National output potential per building type (units of "level × efficiency") and the
@@ -227,9 +241,10 @@ function potentials(state, map, rules) {
     const bs = lab * infraEff(P.infra[i], rules);
     base[i] = bs;
     const de = devEff(P.dev[i], rules);
+    const tc = state.countries[o];
     for (let b = 0; b < B; b++) {
       const L = ec.bld[off + b];
-      if (L) pot[o * B + b] += L * bs * buildingEff(X.buildings[b], de, fert[i]);
+      if (L) pot[o * B + b] += L * bs * buildingEff(X.buildings[b], de, fert[i]) * techOutput(tc, b);
     }
   }
   return { pot, base };
@@ -242,7 +257,7 @@ function countryNeeds(state, rules, c, pot) {
   milDemand(state, rules, c, tmp); for (let g = 0; g < X.G; g++) need[g] += tmp[g];
   for (const b of X.buildings) {
     const p = pot[c.idx * X.B + b.i];
-    if (p) for (const [g, a] of b.inp) need[g] += p * a;
+    if (p) for (const [g, a] of buildingInputs(rules, c, b.i)) need[g] += p * a;
   }
   return need;
 }
@@ -265,8 +280,7 @@ export function industryMonth(state, map, rules, opts = {}) {
   const fac = new Float64Array(C * B).fill(1);
   const popD = new Float64Array(C * G), milD = new Float64Array(C * G);
   const tmp = new Float64Array(G);
-  const counts = { units: new Float64Array(C), armor: new Float64Array(C) };
-  for (const a of state.armies) { counts.units[a.owner] += a.units.infantry + a.units.artillery + a.units.armor; counts.armor[a.owner] += a.units.armor; }
+  const counts = armyCounts(state, rules);
 
   // 1. production
   for (const c of alive) {
@@ -277,14 +291,15 @@ export function industryMonth(state, map, rules, opts = {}) {
       const p = pot[k * B + b.i];
       if (!p) continue;
       let f = 1;
-      for (const [g, a] of b.inp) {
+      const inp = buildingInputs(rules, c, b.i);
+      for (const [g, a] of inp) {
         const req = p * a;
         indNeed[g] += req;
         if (req > 0) f = Math.min(f, st[g] / req);
       }
       f = Math.max(0, f);
       fac[k * B + b.i] = f;
-      for (const [g, a] of b.inp) { st[g] = Math.max(0, st[g] - p * a * f); indGot[g] += p * a * f; }
+      for (const [g, a] of inp) { st[g] = Math.max(0, st[g] - p * a * f); indGot[g] += p * a * f; }
       for (const [g, a] of b.out) { const v = p * a * f; st[g] += v; e.prod[g] += v; }
     }
     for (let g = 0; g < G; g++) e.inSat[g] = indNeed[g] > 0 ? indGot[g] / indNeed[g] : 1;
@@ -422,15 +437,17 @@ export function industryMonth(state, map, rules, opts = {}) {
   }
 
   // per-province value added (at world prices), idle workforce, unemployment
-  const net = new Float64Array(B);
-  for (const b of X.buildings) {
+  // net value of one unit of output, per country (waived inputs cost nothing)
+  const net = new Float64Array(C * B);
+  for (const c of alive) for (const b of X.buildings) {
     let v = 0;
     for (const [g, a] of b.out) v += a * prices[g];
-    for (const [g, a] of b.inp) v -= a * prices[g];
-    net[b.i] = v;
+    for (const [g, a] of buildingInputs(rules, c, b.i)) v -= a * prices[g];
+    net[c.idx * B + b.i] = v;
   }
   const vaC = new Float64Array(C), idle = new Float64Array(C), jobs = new Float64Array(C), potV = new Float64Array(C);
   const fert = fertilityMap(map);
+  const bmC = state.countries.map((c) => c.tfx?.bm || null);
   for (const i of map.ids) {
     const o = state.prov.owner[i];
     if (o < 0) continue;
@@ -442,10 +459,10 @@ export function industryMonth(state, map, rules, opts = {}) {
         const L = ec.bld[off + b];
         if (!L) continue;
         const Bd = X.buildings[b];
-        const p = L * base[i] * buildingEff(Bd, de, fert[i]);
+        const p = L * base[i] * buildingEff(Bd, de, fert[i]) * (bmC[o] ? bmC[o][b] : 1);
         const f = fac[o * B + b];
-        va += p * f * net[b];
-        potV[o] += p * Math.max(0, net[b]);
+        va += p * f * net[o * B + b];
+        potV[o] += p * Math.max(0, net[o * B + b]);
         const w = L * Bd.workers * Math.min(1, base[i] / infraEff(state.prov.infra[i], rules));
         jobs[o] += w;
         idle[o] += w * (1 - f);
@@ -540,7 +557,7 @@ function queued(state, prov, kind, b) {
 // Money and goods a project needs; goods missing from the stockpile are bought at a premium.
 export function projectCost(state, map, rules, country, prov, kind, b) {
   const X = rules.econ, I = rules.balance.industry, c = state.countries[country];
-  const pl = c.cache.priceLevel * (c.govt?.fx?.construction ?? 1);
+  const pl = c.cache.priceLevel * (c.govt?.fx?.construction ?? 1) * (c.tfx?.mult.construction ?? 1);
   let money, goods, days, name;
   if (kind === 'infra') {
     const lvl = state.prov.infra[prov] + queued(state, prov, 'infra');
@@ -555,6 +572,8 @@ export function projectCost(state, map, rules, country, prov, kind, b) {
     goods = B.goods.map(([g, a]) => [g, a]);
     days = B.days; name = B.name;
   }
+  // goods a country has no technology for are not needed (older building methods)
+  if (c.tfx) goods = goods.filter(([g]) => c.tfx.goods[g]);
   let premium = 0;
   const missing = [];
   for (const [g, a] of goods) {
@@ -586,6 +605,7 @@ export function canBuild(state, map, rules, country, prov, kind, b = -1) {
       if (lvl >= d) return `The ${X.resources[B.dep].replace('_', ' ')} deposit supports ${d} level(s)`;
     }
     if (B.minDev && P.dev[prov] < B.minDev) return `Needs development ${B.minDev} (province has ${P.dev[prov].toFixed(0)})`;
+    if (c.tfx && !c.tfx.bld[b]) return `Needs the technology ${rules.tech.list[rules.tech.bldTech[b]].name}`;
   } else return 'Unknown project';
   const cost = projectCost(state, map, rules, country, prov, kind, b);
   if (c.treasury < cost.total) return `Costs ${cost.total.toFixed(1)}B; treasury has ${c.treasury.toFixed(1)}B`;

@@ -99,6 +99,9 @@ function bestElectable(rules, support) {
 export function initGovernment(state, map, rules) {
   for (const c of state.countries) {
     c.govt = newGovt(state, rules, c);
+    // policies a scenario sets for the start (ignored where the rules do not define them)
+    for (const [grp, o] of Object.entries(c.startPolicies || {})) if (rules.politics.policies[grp]?.options[o]) c.govt.policies[grp] = o;
+    delete c.startPolicies;
     c.govt.fx = govEffects(rules, c);
   }
   for (let i = 0; i < 12; i++) for (const c of state.countries) if (c.alive) updateApproval(state, map, rules, c, 1);
@@ -372,6 +375,8 @@ export function canReform(state, rules, k, to) {
   if (!c?.alive) return 'Country does not exist';
   if (!P.types[to]) return 'Unknown government type';
   if (!(govType(rules, c).reformsTo || []).includes(to)) return `${govType(rules, c).name} cannot reform into ${P.types[to].name}`;
+  const gt = rules.tech?.govTech[to];
+  if (gt != null && state.tech && !state.tech.known[k * state.tech.T + gt]) return `Needs the technology ${rules.tech.list[gt].name}`;
   if (isAtWar(state, k)) return 'Not while at war';
   if (c.stability < G.reformMinStability) return `Needs stability ${G.reformMinStability}`;
   const wait = c.govt.reformDay + G.reformCooldownDays - state.day;

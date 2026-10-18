@@ -6,7 +6,9 @@ import { money, signedMoney, people, pct } from './format.js';
 import { formatDate } from '../core/calendar.js';
 import { TERRAINS } from '../core/mapdata.js';
 import { computeLedgers } from '../core/economy.js';
-import { recruit, recruitCost, canRecruit, mergeArmies, splitArmy, armyMen, siegeDays } from '../core/military.js';
+import { recruit, recruitCost, canRecruit, mergeArmies, splitArmy, armyMen, siegeDays, bestUnits, modernizeCost, modernizeArmy } from '../core/military.js';
+import { canUseUnit, eraOf } from '../core/technology.js';
+import { researchTab } from './research_ui.js';
 import { unitCount, provinceGdp } from '../core/state.js';
 import { canDeclareWar } from '../core/war.js';
 import { declareDialog } from './dialogs.js';
@@ -20,6 +22,7 @@ export const TABS = [
   { id: 'government', name: 'Government', key: 'b', tip: 'Government type, factions, elections, policies and reforms.' },
   { id: 'economy', name: 'Economy', key: 'e', tip: 'Budget, taxes, tariffs, indicators and history.' },
   { id: 'industry', name: 'Industry', key: 'u', tip: 'Goods, production, construction and trade.' },
+  { id: 'research', name: 'Research', key: 'a', tip: 'Technologies, research spending and the technology tree.' },
   { id: 'military', name: 'Military', key: 'm', tip: 'Recruit units, manage armies, battle reports.' },
   { id: 'diplomacy', name: 'Diplomacy', key: 'd', tip: 'Proposals, wars and peace, treaties, organisations, relations.' },
   { id: 'log', name: 'Events', key: 'l', tip: 'Notification history.' },
@@ -36,7 +39,7 @@ function bar(v, cls = '') {
 }
 
 export function renderPanel(cl, el) {
-  const fn = { country: countryTab, government: governmentTab, economy: economyTab, industry: industryTab, military: militaryTab, diplomacy: diplomacyTab, log: logTab, ai: aiTab }[cl.tab];
+  const fn = { country: countryTab, government: governmentTab, economy: economyTab, industry: industryTab, research: researchTab, military: militaryTab, diplomacy: diplomacyTab, log: logTab, ai: aiTab }[cl.tab];
   mount(el, fn(cl));
 }
 
@@ -61,6 +64,7 @@ function countryTab(cl) {
       'GDP (annual)', money(K.gdp),
       'GDP per person', '$' + Math.round((K.gdp * 1e9) / Math.max(1, K.pop)).toLocaleString(),
       'Development (avg.)', K.avgDev.toFixed(1),
+      c.tfx && 'Era', c.tfx && h('a', { href: '#', tip: `${c.tfx.known} technologies known. Open the Research tab.`, on: { click: (e) => { e.preventDefault(); cl.setTab('research'); } } }, eraOf(cl.game.rules, c).name),
       'Provinces', K.provinces + (K.occupied ? ` (${K.occupied} occupied)` : ''),
       'Treasury', money(c.treasury),
       'Monthly balance', L ? signedMoney(L.net) : '—',
@@ -88,11 +92,14 @@ function militaryTab(cl) {
   const c = s.countries[me];
   const sel = cl.view.selected;
   const site = sel >= 0 && s.prov.owner[sel] === me && s.prov.controller[sel] === me ? sel : c.capital;
-  const recruitRow = Object.entries(R.units).map(([t, u]) => {
+  const usable = Object.keys(R.units).filter((t) => !s.tech || canUseUnit(s, R, me, t));
+  const newest = new Set(Object.values(s.tech ? bestUnits(s, R, me) : {}));
+  const locked = Object.keys(R.units).filter((t) => !usable.includes(t));
+  const recruitRow = usable.map((t) => [t, R.units[t]]).map(([t, u]) => {
     const cost = recruitCost(s, R, me, t);
     const why = canRecruit(s, map, R, me, site, t);
     return h('tr',
-      h('td', { tip: `${u.name}\nAttack ${u.attack}, defence ${u.defense}, speed ${u.speed} km/day, ${u.men.toLocaleString()} men\nUpkeep ${money(u.upkeep * c.cache.priceLevel)}/month` }, u.name),
+      h('td', { tip: `${u.name} (${u.role || 'line'})\nAttack ${u.attack}, defence ${u.defense}, speed ${u.speed} km/day, ${u.men.toLocaleString()} men\nUpkeep ${money(u.upkeep * c.cache.priceLevel)}/month` }, u.name, newest.has(t) ? null : h('span.muted', ' (outdated)')),
       h('td.n', money(cost.money)), h('td.n', people(cost.men)), h('td.n', cost.days + 'd'),
       h('td', h('button', { disabled: !!why, tip: why || `Recruit in ${map.name[site]}`, on: { click: () => { const e = recruit(s, map, R, me, site, t); if (e) cl.toast(e, true); cl.uiDirty = true; cl.requestFrame(); } } }, '+')));
   });
@@ -103,15 +110,29 @@ function militaryTab(cl) {
     h('h3', 'Recruit'),
     h('div.muted', `Training site: ${site >= 0 ? map.name[site] : 'none'} (select one of your provinces to change)`),
     h('table.t', h('tr', h('th', 'Unit'), h('th.n', 'Cost'), h('th.n', 'Men'), h('th.n', 'Time'), h('th', '')), recruitRow),
+    locked.length > 0 && h('div.muted', { style: { marginTop: '0.3em', fontSize: '0.9em' } }, 'Not yet available: ' + locked.map((t) => `${R.units[t].name} (${R.tech.list[R.tech.unitTech[t]].name})`).join(', ')),
     queue.length > 0 && h('div.muted', { style: { marginTop: '0.4em' } }, `In training: ${queue.map((r) => `${R.units[r.type].short} ${r.days}d`).join(', ')}`),
     h('h3', { style: { marginTop: '1em' } }, `Armies (${armies.length})`),
     selected.length > 0 && h('div.row', { style: { marginBottom: '0.5em' } },
       h('button', { disabled: selected.length < 2, on: { click: () => { const e = mergeArmies(s, selected.map((a) => a.id)); if (e) cl.toast(e, true); cl.view.selectedArmies = new Set([selected[0].id]); cl.uiDirty = true; } } }, 'Merge'),
       h('button', { disabled: selected.length !== 1, on: { click: () => { const e = splitArmy(s, selected[0].id); if (e) cl.toast(e, true); cl.uiDirty = true; } } }, 'Split'),
       h('button', { on: { click: () => { for (const a of selected) { a.path = []; a.prog = 0; } cl.uiDirty = true; } } }, 'Stop'),
+      modernizeButton(cl, selected),
       h('span.muted', 'Right-click the map to move')),
     armies.length ? armies.map((a) => armyCard(cl, a)) : h('p.muted', 'No armies.'),
     reportsList(cl));
+}
+
+// Re-equips the selected armies with the newest unit of each role.
+function modernizeButton(cl, armies) {
+  const s = cl.state, R = cl.game.rules;
+  if (!s.tech) return null;
+  const costs = armies.map((a) => modernizeCost(s, R, a));
+  const money_ = costs.reduce((t, m) => t + m.money, 0), units = costs.reduce((t, m) => t + m.units, 0);
+  const men = costs.reduce((t, m) => t + m.men, 0);
+  const plan = [...new Set(costs.flatMap((m) => m.plan.map(([f, to]) => `${R.units[f].name} → ${R.units[to].name}`)))];
+  return h('button', { disabled: !units, tip: units ? `Re-equip ${units} outdated units: ${plan.join(', ')}\nCost ${money(money_)}${men ? ` and ${people(men)} more men` : ''}; organisation drops to 30%.` : 'Nothing to modernise: these armies have the newest equipment you can field.',
+    on: { click: () => { for (const a of armies) { const e = modernizeArmy(s, R, a.id); if (e && costs.length === 1) cl.toast(e, true); } cl.uiDirty = true; cl.requestFrame(); } } }, 'Modernise');
 }
 
 function armyCard(cl, a) {
@@ -130,7 +151,7 @@ function armyCard(cl, a) {
     cl.uiDirty = true; cl.requestFrame();
   } } },
     h('div.row.spread', h('b', a.name), h('span.muted', map.name[a.loc])),
-    h('div.muted', `${u.infantry} inf · ${u.artillery} art · ${u.armor} arm · ${people(armyMen(a, R))} men`),
+    h('div.muted', `${Object.entries(u).map(([t, n]) => `${n} ${R.units[t].short}`).join(' · ')} · ${people(armyMen(a, R))} men`),
     h('div.row', { style: { gap: '0.4em' } }, h('span.muted', 'Str'), h('div', { style: { flex: 1 }, tip: `Strength ${pct(a.str)}: share of full manpower. Reinforced monthly in friendly territory.` }, bar(a.str)),
       h('span.muted', 'Org'), h('div', { style: { flex: 1 }, tip: `Organisation ${pct(a.org)}: combat readiness. Lost in battle, recovers daily.` }, bar(a.org, 'var(--blue)'))),
     h('div', { className: a.battle ? 'bad' : 'muted' }, status));
@@ -200,7 +221,7 @@ export function renderProvince(cl, el) {
     provinceEconomy(cl, p),
     here.length > 0 && h('h4', 'Armies here'),
     here.map((a) => h('div.row.spread', h('span', flagCanvas(C[a.owner]), ' ', a.name), h('span.muted', `${unitCount(a)} units · ${pct(a.org)} org`))),
-    canRec && h('div', h('h4', 'Recruit here'), h('div.row', Object.entries(R.units).map(([t, u]) => {
+    canRec && h('div', h('h4', 'Recruit here'), h('div.row', Object.entries(R.units).filter(([t]) => !s.tech || canUseUnit(s, R, me, t)).map(([t, u]) => {
       const why = canRecruit(s, map, R, me, p, t);
       const cost = recruitCost(s, R, me, t);
       return h('button', { disabled: !!why, tip: why || `${u.name}: ${money(cost.money)}, ${people(cost.men)} men, ${cost.days} days`, on: { click: () => { const e = recruit(s, map, R, me, p, t); if (e) cl.toast(e, true); cl.uiDirty = true; cl.requestFrame(); } } }, '+' + u.short);

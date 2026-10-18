@@ -20,15 +20,15 @@ async function boot() {
   const t0 = performance.now();
   applyUiScale();
   try {
-    const [world, units, balance, goods, buildings, governments, evIndex, index] = await Promise.all([
+    const [world, units, balance, goods, buildings, governments, technologies, evIndex, index] = await Promise.all([
       json('data/map/world.json'), json('data/rules/units.json'), json('data/rules/balance.json'),
       json('data/rules/goods.json'), json('data/rules/buildings.json'), json('data/rules/governments.json'),
-      json('data/events/index.json'), json('data/scenarios/index.json'),
+      json('data/rules/technologies.json'), json('data/events/index.json'), json('data/scenarios/index.json'),
     ]);
     const events = await Promise.all(evIndex.files.map((f) => json('data/events/' + f)));
     const t1 = performance.now();
     data.map = decodeMap(world);
-    data.rules = makeRules(units, balance, goods, buildings, governments, events);
+    data.rules = makeRules(units, balance, goods, buildings, governments, events, technologies);
     data.scenarios = index.scenarios;
     data.timings.fetch = t1 - t0;
     data.timings.decode = performance.now() - t1;
@@ -67,7 +67,7 @@ export function mainMenu() {
 
 function newGameScreen() {
   let sel = data.scenarios[0]?.id;
-  const opts = { difficulty: 'normal', aiAggression: 1, seed: '' };
+  const opts = { difficulty: 'normal', aiAggression: 1, seed: '', historicalEvents: 'historical', eventRate: 1 };
   const detail = h('div');
   const list = h('div.list');
   function renderList() {
@@ -84,6 +84,10 @@ function newGameScreen() {
     ['easy', 'normal', 'hard'].map((d) => h('option', { value: d, selected: d === 'normal' }, d[0].toUpperCase() + d.slice(1))));
   const aggr = h('select', { on: { change: (e) => (opts.aiAggression = +e.target.value) } },
     [['0', 'Passive (AI never starts wars)'], ['0.5', 'Low'], ['1', 'Normal'], ['2', 'High'], ['4', 'Warmongering']].map(([v, n]) => h('option', { value: v, selected: v === '1' }, n)));
+  const hist = h('select', { on: { change: (e) => (opts.historicalEvents = e.target.value) } },
+    [['historical', 'Historical (countries usually choose what happened)'], ['plausible', 'Plausible (every option weighed on its merits)'], ['off', 'Off (no historical events)']].map(([v, n]) => h('option', { value: v, selected: v === 'historical' }, n)));
+  const rate = h('select', { on: { change: (e) => (opts.eventRate = +e.target.value) } },
+    [['0.5', 'Rare'], ['1', 'Normal'], ['2', 'Frequent']].map(([v, n]) => h('option', { value: v, selected: v === '1' }, n)));
   const seed = h('input', { placeholder: 'random', on: { input: (e) => (opts.seed = e.target.value.trim()) } });
   mount(app, h('div.screen', h('div.menu-card.wide',
     h('h2', 'New Game'),
@@ -93,6 +97,8 @@ function newGameScreen() {
         h('h4', 'Rules'),
         h('div.field', h('label', 'Difficulty (AI decision quality and ambition)'), diff),
         h('div.field', h('label', 'AI aggressiveness'), aggr),
+        h('div.field', h('label', 'Historical events (dated events of the scenario\'s period; each still needs its conditions)'), hist),
+        h('div.field', h('label', 'Random events (disasters, scandals, booms)'), rate),
         h('div.field', h('label', 'Random seed (same seed + same choices = same game)'), seed))),
     h('div.row.spread', { style: { marginTop: '1em' } },
       h('button', { on: { click: mainMenu } }, 'Back'),
@@ -100,7 +106,7 @@ function newGameScreen() {
         const sc = await getScenario(sel);
         const game = newGame({ map: data.map, scenario: sc, rules: data.rules, playerTag: null,
           seed: opts.seed || String(Math.floor(Math.random() * 1e9)),
-          settings: { difficulty: opts.difficulty, aiAggression: opts.aiAggression, autosaveMonths: data.settings.autosaveMonths, autosaveKeep: data.settings.autosaveKeep } });
+          settings: { difficulty: opts.difficulty, aiAggression: opts.aiAggression, historicalEvents: opts.historicalEvents, eventRate: opts.eventRate, autosaveMonths: data.settings.autosaveMonths, autosaveKeep: data.settings.autosaveKeep } });
         startClient(game, 'pick');
       } } }, 'Choose country →')))));
 }

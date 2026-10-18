@@ -3,7 +3,7 @@
 import { parseDate } from './calendar.js';
 import { seedState } from './rng.js';
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export function createState({ map, scenario, rules, playerTag = null, seed = 'aoc3', settings = {} }) {
   const N = map.count;
@@ -37,6 +37,9 @@ export function createState({ map, scenario, rules, playerTag = null, seed = 'ao
     alliances: [],
     offers: [],
     pendingEvents: [],
+    eventQueue: [],
+    fired: {},
+    releases: scenario.releases || {},
     dip: { treaties: [], mods: [], refused: {}, modVer: 0 },
     recruit: [],
     construction: [],
@@ -52,7 +55,7 @@ export function createState({ map, scenario, rules, playerTag = null, seed = 'ao
       capital: c.capital ?? -1, treasury: c.treasury ?? 0, tax: c.tax ?? rules.balance.economy.defaultTax,
       civilShare: c.civilShare ?? rules.balance.economy.civilShare, stability: c.stability ?? 60,
       manpower: c.manpower ?? 0, aggression: c.aggression ?? 0.5, flag: c.flag || null,
-      alive: true, truces: {}, ledger: null, cache: null, automate: false,
+      alive: true, truces: {}, ledger: null, cache: null, automate: false, startPolicies: c.policies || null,
     });
   }
   const P = scenario.provinces;
@@ -88,7 +91,7 @@ export function newArmy(state, owner, loc, units) {
   const id = state.nextId++;
   return {
     id, owner, loc, name: `${ordinal(countArmies(state, owner) + 1)} Army`,
-    units: { infantry: units.infantry || 0, artillery: units.artillery || 0, armor: units.armor || 0 },
+    units: Object.fromEntries(Object.entries(units || {}).filter(([, n]) => n > 0)),
     str: 1, org: 1, exp: 0, path: [], prog: 0, battle: 0, arrived: state.day, stance: 'hold',
   };
 }
@@ -115,7 +118,9 @@ export function pickCapital(state, map, c) {
 }
 
 export function unitCount(a) {
-  return a.units.infantry + a.units.artillery + a.units.armor;
+  let n = 0;
+  for (const t in a.units) n += a.units[t];
+  return n;
 }
 
 // Per-country aggregates recomputed when ownership changes or monthly; consumers read cache
@@ -145,7 +150,8 @@ export function refreshCountryCache(state, map, rules) {
     c.cache = {
       provinces: n[k], pop: pop[k], gdp: gdp[k], avgDev, occupied: occupied[k],
       priceLevel: (0.35 + 0.65 * Math.min(1.5, prod / refProd)) * (c.econ ? Math.max(0.5, Math.min(3, c.econ.cpi)) : 1),
-      maxManpower: pop[k] * rules.balance.population.manpowerShare * (c.govt?.fx?.manpower ?? 1),
+      // the mobilisable share depends on the era (see docs/TECHNOLOGY.md)
+      maxManpower: pop[k] * (rules.tech?.eras[c.tfx?.era ?? -1]?.manpowerShare ?? rules.balance.population.manpowerShare) * (c.govt?.fx?.manpower ?? 1),
       armyPower: armyStr[k],
     };
     if (n[k] === 0 && c.alive) c.alive = false;

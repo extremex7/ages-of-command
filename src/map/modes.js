@@ -16,6 +16,7 @@ export const MAP_MODES = [
   { id: 'infrastructure', name: 'Infrastructure', key: 'f', tip: 'Infrastructure level 0–10: building efficiency and movement speed.' },
   { id: 'military', name: 'Military', key: 'r', tip: 'Fronts: your side, enemies, and provinces under siege.' },
   { id: 'diplomacy', name: 'Diplomacy', key: 'y', tip: 'Opinion of each country toward the selected (or your) country, red to green; allies blue, enemies dark red, subjects purple.' },
+  { id: 'technology', name: 'Technology', key: 'q', tip: 'Each country\'s era (from its known technologies); lighter = more technologies within that era.' },
   { id: 'government', name: 'Government', key: 'j', tip: 'Form of government: democracies, autocracies, theocracies and military rule; darker = lower stability.' },
 ];
 
@@ -43,6 +44,10 @@ export function provinceColors(mode, state, map, focus, rules) {
   const P = state.prov;
   // per-country colours for the diplomatic and government modes, computed once
   let cc = null;
+  if (mode === 'technology' && rules?.tech) {
+    const n = rules.tech.eras.length - 1;
+    cc = C.map((c) => (c.alive && c.tfx ? ramp3(Math.min(1, (c.tfx.era + Math.min(1, c.tfx.known / rules.tech.T)) / n), '#6a4a3a', '#c8b86a', '#4a8ab8') : '#555'));
+  }
   if ((mode === 'diplomacy' && focus >= 0 && rules && state.dip) || (mode === 'government' && rules?.politics)) {
     cc = C.map((c) => {
       if (!c.alive) return '#555';
@@ -99,7 +104,7 @@ export function provinceColors(mode, state, map, focus, rules) {
         if (P.siege[i] > 0) out[i] = '#e0a040';
         break;
       }
-      case 'government': out[i] = cc ? cc[o] : C[o].color; break;
+      case 'government': case 'technology': out[i] = cc ? cc[o] : C[o].color; break;
       case 'diplomacy': {
         const me = focus;
         if (me < 0) { out[i] = C[o].color; break; }
@@ -132,4 +137,5 @@ export const MODE_LEGENDS = {
   resources: [['Oil', '#1f1f1f'], ['Coal', '#6b5640'], ['Iron ore', '#b5582a'], ['Uranium', '#6fbf2f'], ['Rare earths', '#9b45b8'], ['Timber', '#3f7a3a'], ['None', '#d6d1c6']],
   industry: [['None', '#e9e5dc'], ['~1B/yr', '#efe3c4'], ['~30B/yr', '#d08a4a'], ['1T+/yr', '#6a2a1a']],
   infrastructure: [['0', '#d9cbb0'], ['5', '#9ab07a'], ['10', '#2f6f5a']],
+  technology: [['Ancient', '#6a4a3a'], ['Industrial', '#c8b86a'], ['Future', '#4a8ab8']],
 };

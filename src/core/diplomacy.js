@@ -43,7 +43,11 @@ export function initDiplomacy(state, map, rules, scenario = null) {
   }
   for (const r of D.rivals || []) {
     const a = idx.get(r[0]), b = idx.get(r[1]);
-    if (a != null && b != null) state.countries[a].rival = b;
+    if (a != null && b != null) {
+      state.countries[a].rival = b;
+      // the scenario's enmities fade over about a decade unless events renew them
+      addMod(state, a, b, -50, 0.4, 'Historic enmity');
+    }
   }
   touchRelations(state);
 }

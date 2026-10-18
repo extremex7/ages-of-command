@@ -10,6 +10,8 @@ import { resolveEvent, describeEffects } from '../core/events.js';
 import { people } from './format.js';
 import { kvbox } from './panels.js';
 
+export function openDialog(cl, ...content) { return open(cl, ...content); }
+
 function open(cl, ...content) {
   document.querySelector('.dialog-wrap')?.remove();
   const wrap = h('div.dialog-wrap', { on: { mousedown: (e) => { if (e.target === wrap) wrap.remove(); } } }, h('div.dialog', ...content));
@@ -63,7 +65,7 @@ function perfDialog(cl) {
 
 function helpDialog(cl) {
   const rows = [['Left click', 'Select province / army (Shift adds armies)'], ['Right click', 'Move selected armies'], ['Drag / arrows', 'Pan map'], ['Wheel / + −', 'Zoom'],
-    ['Space', 'Pause / resume'], ['1–5', 'Game speed'], ['P T O V G X K F R Y J', 'Map modes'], ['N B E U M D L I', 'Sidebar tabs'], ['C / H', 'Centre on capital / whole world'], ['Ctrl+S', 'Quick save'], ['Esc', 'Clear selection / close dialog']];
+    ['Space', 'Pause / resume'], ['1–5', 'Game speed'], ['P T O V G X K F R Y J Q', 'Map modes'], ['N B E U A M D L I', 'Sidebar tabs'], ['C / H', 'Centre on capital / whole world'], ['Ctrl+S', 'Quick save'], ['Esc', 'Clear selection / close dialog']];
   open(cl, h('h2', 'Controls'), h('table.t', rows.map(([k, v]) => h('tr', h('td', h('b', k)), h('td', v)))));
 }
 
@@ -172,5 +174,5 @@ export function eventDialog(cl, pend) {
     h('div.menu-buttons', ev.options.map((o, i) => h('button', { on: { click: () => {
       resolveEvent(s, cl.game.map, R, pend, i);
       w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame();
-    } } }, h('b', o.text), h('div.muted', { style: { fontSize: '0.85em', whiteSpace: 'normal' } }, describeEffects(R, o.effects || {}).join(' · ') || 'No effects')))));
+    } } }, h('b', o.text), h('div.muted', { style: { fontSize: '0.85em', whiteSpace: 'normal' } }, describeEffects(R, o.effects || {}, s).join(' · ') || 'No effects')))));
 }

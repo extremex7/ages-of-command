@@ -239,7 +239,7 @@ export function monthlyGovernment(state, map, rules, warScores) {
     else if (state.day - g.upheavalDay > G.upheavalCooldownDays) {
       if (!tryCoup(state, map, rules, c)) tryRevolution(state, map, rules, c);
     }
-    if (c.idx !== state.player || c.automate) aiPolicy(state, rules, c, warScores);
+    if (c.idx !== state.player || c.automate) { aiPolicy(state, rules, c, warScores); aiReform(state, rules, c, warScores); }
   }
 }
 
@@ -401,6 +401,47 @@ export function addGovModifier(state, rules, c, name, months, effects) {
   c.govt.mods = c.govt.mods.filter((m) => m.name !== name);
   c.govt.mods.push({ name, until: addMonths(state.day, months), effects });
   refreshEffects(rules, c);
+}
+
+// AI reform: once a year, a stable country at peace whose government has lost legitimacy or
+// approval considers the government types it can reform into. Each is scored like a policy change
+// (support-weighted faction approval under the new type, ruling faction double) plus the backing
+// of unhappy factions that prefer that type, and its stability;
+// it reforms (with chance `aiReformChance` a year) when the gain beats `aiReformGain`, never into a type the ruling faction would like
+// less.
+function aiReform(state, rules, c, warScores) {
+  const G = rules.balance.government, P = rules.politics, g = c.govt;
+  if (!G.aiReformGain || (c.idx + civilFromDays(state.day).m + 6) % 12 !== 0) return;
+  // a government people are content with is not reformed
+  if (g.legitimacy >= G.aiReformLegitimacy && g.approvalAll >= G.aiReformApproval) return;
+  const cands = (govType(rules, c).reformsTo || []).filter((to) => !canReform(state, rules, c.idx, to));
+  if (!cands.length) return;
+  const score = (t) => {
+    let s = 0;
+    for (const f in t) s += g.support[f] * t[f] * (f === g.ruling ? 2 : 1);
+    return s;
+  };
+  // factions that are unhappy now push for the type they prefer
+  const backing = (type) => { let s = 0; for (const f in g.support) if (P.factions[f]?.prefers === type && g.approval[f] < G.aiReformApproval) s += g.support[f]; return s; };
+  const now = factionTargets(state, rules, c, warScores);
+  const base = score(now) + backing(c.gov) * 30 + (P.types[c.gov].stability || 0) * 0.5;
+  const saved = { gov: c.gov, ruling: g.ruling };
+  let best = null;
+  for (const to of cands) {
+    const T = P.types[to];
+    c.gov = to; // policies kept: they can change without a reform, so they should not decide one
+    g.ruling = T.ruling || (P.factions[saved.ruling]?.electable ? saved.ruling : bestElectable(rules, g.support));
+    const fx = govEffects(rules, c);
+    const t = factionTargets(state, rules, c, warScores, fx);
+    const s = score(t) + backing(to) * 30 + (T.stability || 0) * 0.5;
+    c.gov = saved.gov; g.ruling = saved.ruling;
+    // rulers do not reform themselves out of favour
+    if (t[saved.ruling] < now[saved.ruling] - 5) continue;
+    if (!best || s > best.s) best = { to, s };
+  }
+  if (!best || best.s - base < G.aiReformGain || rand(state) > (G.aiReformChance ?? 1)) return;
+  const name = P.types[best.to].name;
+  if (!reformGovernment(state, rules, c.idx, best.to)) aiLog(state, c.idx, `Reformed into a ${name.toLowerCase()}: weighted faction approval and backing ${Math.round(base)} → ${Math.round(best.s)}.`);
 }
 
 // AI policy: once a year, look at two policy areas (in rotation) and adopt the single change

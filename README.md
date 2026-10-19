@@ -87,7 +87,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 134 unit/integration tests of the simulation (node:test)
+npm test                            # 135 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary

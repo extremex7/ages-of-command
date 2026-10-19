@@ -96,7 +96,7 @@ See [DIPLOMACY.md](DIPLOMACY.md) and [GOVERNMENT.md](GOVERNMENT.md).
 | Civil wars (a country splitting) | ✅ | The most disgruntled faction takes a block of provinces as a new country; the player picks a side |
 | Espionage and puppet governments by coup | ✅ | Spy networks in every era: steal technology, sabotage, fund the opposition, coups (ESPIONAGE.md) |
 | Demilitarised zones, ceasefires | ✅ | Passed by the world council |
-| AI reforming its own government type | ⬜ | AI changes policies only |
+| AI reforming its own government type | ✅ | Only when its government is in trouble; never against its ruling faction (GOVERNMENT.md) |
 
 ## Milestone 5 — research, eras and historical scenarios
 
@@ -223,5 +223,5 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
    planning, supply with goods cost, winning back the simulation speed lost in M6.
 2. **Milestone 5 follow-ups**: a scenario editor UI, more start dates (1444, 1815, 1861),
    colonisation of unowned land, a war AI that sustains long wars, technology trading.
-3. **Milestone 4 follow-ups**: the player's own bloc votes, AI government reform.
+3. **Milestone 4 follow-ups**: the player's own bloc votes.
 4. Economy follow-ups: a gas and renewable energy split, transport costs.

@@ -122,7 +122,17 @@ defaults.
 
 The AI reviews two policy groups a year and adopts an option when it raises the
 support-weighted approval target (the ruling faction counts double), also valuing manpower at
-war and money in deficit. It does not reform its government type.
+war and money in deficit.
+
+The AI reforms its government type only when the government is in trouble (legitimacy under 40
+or overall approval under 38, `government.aiReformLegitimacy` / `aiReformApproval`) and a reform
+is allowed. Once a year it scores each type it could reform into like a policy change, keeping
+its current policies (those can change without a reform): support-weighted approval under the
+new type, plus 30 × the support of unhappy factions that prefer that type, plus half the type's
+stability. It never picks a type its ruling faction would like less. If the best type beats the
+current one by 8 (`aiReformGain`), it reforms with a 25% chance that year (`aiReformChance`). In
+20-year runs this gives a handful of reforms worldwide, mostly presidential republics becoming
+parliamentary ones.
 
 ## Domestic events
 

@@ -571,3 +571,11 @@ partial sanctions cost nothing when none are in force. Wars now record whether t
 justified. In 10-year runs the AI proposed a few resolutions a decade; the great powers vetoed
 those aimed at themselves (Germany in 1938, China in 2037), as on the real Security Council.
 
+## Session 17: AI government reform
+
+AI countries now reform their government type when it is in trouble, choosing the type their
+factions would back most without hurting the ruling faction (GOVERNMENT.md). A first version that
+also compared the new type's default policies turned most federal republics into presidential
+ones; scoring with the current policies, the trouble condition and a 25% yearly chance bring it
+down to 3–4 reforms in 20 years per scenario.
+

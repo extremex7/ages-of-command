@@ -11,6 +11,8 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 
 http.createServer((req, res) => {
   const url = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  // the desktop launcher answers /api/*; this development server is not it (saves stay in the browser)
+  if (url.startsWith('/api/')) { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end('{"app":"dev-server"}'); }
   const file = path.normalize(path.join(root, url === '/' ? 'index.html' : url));
   if (!file.startsWith(root) || file.includes(`${path.sep}build${path.sep}`)) { res.writeHead(403); return res.end(); }
   fs.readFile(file, (err, buf) => {

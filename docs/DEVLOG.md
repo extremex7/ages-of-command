@@ -304,3 +304,36 @@ counts the player's own hypersonic weapons against them; nuclear powers' AI buil
 missile submarines; supply no longer spreads through unowned land; AI depot replacement refreshes
 supply; Greenland in Flashpoint 2035 gets a technology lag like other countries; `air.minInfra`
 is in balance.json; the forces builder clears stale station and colony counts.
+
+## 2026-10-19 — Session 6: testing Milestone 6, desktop app and installer
+
+**Testing Milestone 6.** Every scenario ran for 10 simulated years at AI aggression 2, saved and
+reloaded every year, with checks on state invariants after each load. Naval battles, armies
+carried by sea, depots, air wings and nuclear use all happened. Findings fixed:
+- In Flashpoint 2035, Taiwan sank into debt (−505) because the AI never shrank a force it could
+  not pay for in peacetime. The AI now retires its costliest unit when it runs a deficit at peace
+  (ECONOMY.md); Taiwan's treasury now stays near −50.
+- AI anti-satellite strikes pushed orbital debris to 27 and beyond. The AI now fires only while
+  debris is under `strategic.aiAsatDebrisMax` (4) or once it has orbital defence (STRATEGIC.md).
+- A starting "massive" nuclear programme made the United States build up to 6,000 warheads; the
+  programme is now the largest level the starting arsenal already meets. Starting satellites are
+  capped at three times the coverage threshold.
+- Naval map mode showed zones holding only submarines as contested; they now count as
+  uncontrolled. The map legend no longer overlaps the two-row map-mode bar.
+- `tests/browser/m6.mjs` now also orders an army to Hawaii and checks it sails.
+
+**Desktop app.** Electron and Neutralino could not be downloaded (GitHub is blocked here), and
+both would add 50–150 MB. Instead a Go launcher (about 7 MB, standard library only) serves the
+game on 127.0.0.1, opens it in an app-mode window of Edge, Chrome, Brave or Chromium (Edge ships
+with every Windows 10 and 11 PC), and stores saves and settings as files through a small API,
+because a browser profile can be wiped and its storage is capped. Details in launcher/README.md.
+- `src/ui/storage.js` detects the launcher and switches to the disk store; in a browser nothing
+  changes. The dev server answers `/api/*` so the browser shows no errors there.
+- `tools/build_desktop.sh` builds a Windows installer (NSIS, per user, no admin rights, 3.5 MB),
+  a Windows portable zip, and Linux and macOS packages. The program and installer have an icon
+  (`tools/make_icon.py`), which the page now also uses as its favicon.
+- Checked: the store API, `tests/browser/desktop.mjs` against both the Linux launcher and the
+  Windows launcher under Wine, the installer's silent install and uninstall under Wine, and the
+  windowed mode on Linux with Chromium (the launcher stops when the window closes).
+- Not checked: real Windows or macOS hardware. Nothing is code-signed, so SmartScreen and
+  Gatekeeper warn on first run.

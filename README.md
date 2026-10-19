@@ -27,8 +27,16 @@ modes. What is still missing is listed in [docs/FEATURES.md](docs/FEATURES.md).
 
 ## Run it
 
-Requirements: any modern browser and **Node.js 18+** (only used as a tiny static file server).
-No `npm install` is needed — the game has zero runtime dependencies.
+**Easiest (Windows):** run `AgesOfCommand-<version>-windows-setup.exe`. It installs for your user
+only (no administrator rights), adds Start menu and desktop shortcuts, and the game opens in its
+own window. Saves are kept in `%APPDATA%\AgesOfCommand`. Prefer no install? Unzip
+`AgesOfCommand-<version>-windows-portable.zip` and run `AgesOfCommand.exe`. Linux and macOS
+packages work the same way. Build them all with `tools/build_desktop.sh`; see
+[launcher/README.md](launcher/README.md).
+
+From source: any modern browser and **Node.js 18+** (only used as a tiny static file server).
+No `npm install` is needed — the game has zero runtime dependencies. On Windows, `start.bat`
+does the same as `npm start`.
 
 ```bash
 npm start            # serves the game at http://localhost:8080/
@@ -103,7 +111,8 @@ src/core/                  simulation (pure JS, no DOM): calendar, rng, mapdata,
                            combat, naval, air, supply, strategic, war, relations, diplomacy,
                            government, events, technology, ai, ai_diplomacy, sim (clock), save, rules
 src/map/                   Canvas 2D renderer, map modes, spatial index / picking
-src/ui/                    menus, HUD, panels, dialogs, local save slots
+src/ui/                    menus, HUD, panels, dialogs, save slots (browser storage, or disk in the desktop app)
+launcher/                  desktop launcher (Go), Windows installer script, icon
 data/map/                  generated world map (2,358 provinces), sea zones (seas.json) + stable id registry
 data/rules/                units.json, balance.json, goods.json, buildings.json, governments.json, technologies.json — editable game rules
 data/events/               domestic, world, historical, strategic and future-scenario events + index.json
@@ -129,6 +138,7 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 - [docs/FEATURES.md](docs/FEATURES.md) — implemented / partial / planned checklist and the continuation plan
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — measured numbers and how to reproduce them
 - [docs/MODDING.md](docs/MODDING.md) — data formats for units, balance, goods, buildings, governments, events, sea zones, forces and scenarios
+- [launcher/README.md](launcher/README.md) — the desktop launcher, installer and packages
 - [docs/DEVLOG.md](docs/DEVLOG.md) — development log
 
 ## Data sources and honesty notes

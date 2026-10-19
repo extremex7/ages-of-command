@@ -3,7 +3,7 @@ import { h, mount } from './dom.js';
 import { decodeMap, makeRules, newGame, loadGame } from '../core/game.js';
 import { validateScenario } from '../core/rules.js';
 import { formatDate, parseDate } from '../core/calendar.js';
-import { loadSettings, saveSettings, listSlots, readSave, deleteSave } from './storage.js';
+import { loadSettings, saveSettings, listSlots, readSave, deleteSave, initStorage, isDesktop } from './storage.js';
 import { Client } from './client.js';
 
 const app = document.getElementById('app');
@@ -18,6 +18,9 @@ async function json(path) {
 
 async function boot() {
   const t0 = performance.now();
+  // the desktop app keeps settings and saves on disk; reload the settings from there
+  data.desktop = await initStorage();
+  if (data.desktop) data.settings = loadSettings();
   applyUiScale();
   try {
     const [world, seas, units, balance, goods, buildings, governments, technologies, evIndex, index] = await Promise.all([
@@ -125,7 +128,7 @@ function loadScreen() {
     if (f) loadText(await f.text());
   } } });
   mount(app, h('div.screen', h('div.menu-card.wide', h('h2', 'Load Game'),
-    slots.length ? list : h('p.muted', 'No saved games in this browser.'),
+    slots.length ? list : h('p.muted', isDesktop() ? 'No saved games yet.' : 'No saved games in this browser.'),
     h('div.field', { style: { marginTop: '1em' } }, h('label', 'Import a save file'), file),
     h('div.row', h('button', { on: { click: mainMenu } }, 'Back')))));
 }

@@ -1,10 +1,45 @@
-// Save slots and settings in localStorage. Every access is guarded: storage can be full,
-// disabled or unavailable (private windows), and the game must keep working without it.
+// Save slots and settings. In a browser they live in localStorage; every access is guarded:
+// storage can be full, disabled or unavailable (private windows), and the game must keep working
+// without it. In the desktop app (launcher/, which answers /api/info) they are files in the
+// player's data folder instead, with no size limit: initStorage() reads them all at start, and
+// writes go to memory at once and to disk in the background.
 const PREFIX = 'aoc3.';
+let disk = null; // desktop app: { files: Map(key -> text) }
 
-function get(k) { try { return localStorage.getItem(PREFIX + k); } catch { return null; } }
-function set(k, v) { try { localStorage.setItem(PREFIX + k, v); return true; } catch { return false; } }
-function del(k) { try { localStorage.removeItem(PREFIX + k); } catch { /* ignore */ } }
+function get(k) {
+  if (disk) return disk.files.get(k) ?? null;
+  try { return localStorage.getItem(PREFIX + k); } catch { return null; }
+}
+function set(k, v) {
+  if (disk) {
+    disk.files.set(k, v);
+    fetch('/api/store/' + encodeURIComponent(k), { method: 'PUT', body: v }).catch(() => {});
+    return true;
+  }
+  try { localStorage.setItem(PREFIX + k, v); return true; } catch { return false; }
+}
+function del(k) {
+  if (disk) { disk.files.delete(k); fetch('/api/store/' + encodeURIComponent(k), { method: 'DELETE' }).catch(() => {}); return; }
+  try { localStorage.removeItem(PREFIX + k); } catch { /* ignore */ }
+}
+
+// Detects the desktop app and loads its stored files. Returns its info ({ app, version, dataDir }) or null.
+export async function initStorage() {
+  try {
+    const r = await fetch('/api/info', { cache: 'no-store' });
+    if (!r.ok) return null;
+    const info = await r.json();
+    if (info.app !== 'ages-of-command') return null;
+    const all = await (await fetch('/api/store', { cache: 'no-store' })).json();
+    disk = { files: new Map(Object.entries(all)) };
+    // keep the launcher alive while the window is open (it exits when the game is closed)
+    setInterval(() => { fetch('/api/ping', { method: 'POST' }).catch(() => {}); }, 5000);
+    return info;
+  } catch {
+    return null;
+  }
+}
+export function isDesktop() { return !!disk; }
 
 export function loadSettings() {
   const def = { profile: 'balanced', uiScale: 1, autosaveMonths: 6, autosaveKeep: 3, tooltips: true };
@@ -39,8 +74,11 @@ export async function writeSave(name, text, info) {
   if (typeof CompressionStream !== 'undefined') {
     try { data = await gzip(text); } catch { data = text; }
   }
-  const ok = set('save.' + name, data);
-  if (!ok) return 'Browser storage is full or unavailable. Use "Export file" instead.';
+  if (disk) { // wait for the file to reach the disk before reporting success
+    const r = await fetch('/api/store/' + encodeURIComponent('save.' + name), { method: 'PUT', body: data }).catch(() => null);
+    if (!r?.ok) return 'Could not write the save file to disk.';
+    disk.files.set('save.' + name, data);
+  } else if (!set('save.' + name, data)) return 'Browser storage is full or unavailable. Use "Export file" instead.';
   const list = listSlots().filter((s) => s.name !== name);
   list.unshift({ name, ...info, size: data.length });
   writeSlots(list);

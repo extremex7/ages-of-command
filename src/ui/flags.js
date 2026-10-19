@@ -78,3 +78,6 @@ function patternFlag(country) {
   patterns.set(country.tag, c);
   return c;
 }
+
+// Forgets the drawn pattern flags (the scenario editor changes country colours).
+export function forgetFlags() { patterns.clear(); }

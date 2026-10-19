@@ -87,7 +87,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 135 unit/integration tests of the simulation (node:test)
+npm test                            # 136 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -101,6 +101,7 @@ node tests/browser/flags.mjs        # every scenario's flags load; the game resu
 node tests/browser/techtree.mjs     # top-bar points, technology tree (pan, zoom, pinch, queue), music moods and sound settings
 node tests/browser/session10.mjs    # side panel toggle, leaderboard, tutorial, cheats
 node tests/browser/features2.mjs    # generals, battle plans, the civil-war choice, intelligence, the world council
+node tests/browser/editor.mjs       # scenario editor: paint a new country, save, play, reload
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```

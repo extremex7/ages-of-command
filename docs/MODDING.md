@@ -226,4 +226,7 @@ them (saves drop fleets in zones that no longer exist).
   `stations`, `colonies`, each installed only if the country knows the matching technology.
   Treaties may include `arms_control` (both countries need warheads).
 
-Planned: a scenario editor UI.
+The in-game scenario editor (main menu → Scenario Editor, see SCENARIOS.md) writes this same
+format: start from any scenario, change it, and use **Export file** to get a JSON file that can go
+into `data/scenarios/` with an entry in `index.json`. Scenarios made in the editor also carry
+`custom: true` and `flagScenario` (whose flag set to use, normally the scenario they started from).

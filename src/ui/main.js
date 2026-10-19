@@ -3,7 +3,9 @@ import { h, mount } from './dom.js';
 import { decodeMap, makeRules, newGame, loadGame } from '../core/game.js';
 import { validateScenario } from '../core/rules.js';
 import { formatDate, parseDate } from '../core/calendar.js';
-import { loadSettings, listSlots, readSave, deleteSave, initStorage, isDesktop } from './storage.js';
+import { loadSettings, listSlots, readSave, deleteSave, initStorage, isDesktop, listScenarios, readScenario, deleteScenario } from './storage.js';
+import { editorGame } from './editor.js';
+import { startEdit, cloneScenario, slug } from '../core/scenario_edit.js';
 import { Client } from './client.js';
 import { icon } from './icons.js';
 import { loadFlagIndex } from './flags.js';
@@ -43,7 +45,8 @@ async function boot() {
     const t1 = performance.now();
     data.map = decodeMap(world, seas);
     data.rules = makeRules(units, balance, goods, buildings, governments, events, technologies);
-    data.scenarios = index.scenarios;
+    data.builtin = index.scenarios;
+    data.scenarios = [...index.scenarios, ...listScenarios()];
     data.timings.fetch = t1 - t0;
     data.timings.decode = performance.now() - t1;
     data.timings.boot = performance.now() - t0;
@@ -58,7 +61,9 @@ async function boot() {
 async function getScenario(id) {
   if (data.scenarioCache.has(id)) return data.scenarioCache.get(id);
   const meta = data.scenarios.find((s) => s.id === id);
-  const sc = await json('data/scenarios/' + meta.file);
+  if (!meta) throw new Error(`Scenario "${id}" is not installed (a custom scenario that was deleted?)`);
+  const sc = meta.custom ? await readScenario(id) : await json('data/scenarios/' + meta.file);
+  if (!sc) throw new Error(`Scenario "${meta.name}" could not be read`);
   validateScenario(sc, data.map);
   data.scenarioCache.set(id, sc);
   return sc;
@@ -72,19 +77,20 @@ export function mainMenu() {
     h('div.menu-buttons',
       h('button.primary', { on: { click: newGameScreen } }, icon('new_game'), 'New Game'),
       h('button', { on: { click: loadScreen }, disabled: !listSlots().length }, icon('load'), 'Load Game'),
+      h('button', { on: { click: () => editorScreen() } }, icon('editor'), 'Scenario Editor'),
       h('button', { on: { click: settingsScreen } }, icon('settings'), 'Settings'),
       canExit() && h('button', { on: { click: exitGame } }, icon('exit'), 'Exit')),
     h('p.note', `Map: ${data.map.ids.length.toLocaleString()} provinces from ${data.map.source}. Loaded in ${Math.round(data.timings.boot)} ms.`))));
 }
 
-function newGameScreen() {
-  let sel = data.scenarios[0]?.id;
+function newGameScreen(pick) {
+  let sel = data.scenarios.some((s) => s.id === pick) ? pick : data.scenarios[0]?.id;
   const opts = { difficulty: 'normal', aiAggression: 1, seed: '', historicalEvents: 'historical', eventRate: 1 };
   const detail = h('div');
   const list = h('div.list');
   function renderList() {
     mount(list, data.scenarios.map((s) => h('div.item' + (s.id === sel ? '.sel' : ''), { on: { click: () => { sel = s.id; renderList(); renderDetail(); } } },
-      h('b', s.name), ' ', h('span.muted', `· ${s.era} · ${formatDate(parseDate(s.startDate))}`))));
+      h('b', s.name), ' ', h('span.muted', `· ${s.custom ? 'custom' : s.era} · ${formatDate(parseDate(s.startDate))}`))));
   }
   function renderDetail() {
     const s = data.scenarios.find((x) => x.id === sel);
@@ -169,6 +175,70 @@ function settingsScreen() {
   mount(app, h('div.screen', h('div.menu-card.settings-card', h('h2', 'Settings'),
     settingsForm(data.settings),
     h('div.row', { style: { marginTop: '1em' } }, h('button.primary', { on: { click: mainMenu } }, 'Back')))));
+}
+
+// The scenario editor's first screen: edit a custom scenario, start one from any scenario, or
+// import a scenario file.
+function editorScreen() {
+  let sel = data.scenarios[0]?.id;
+  const list = h('div.list'), detail = h('div');
+  const name = h('input', { placeholder: 'Name of the new scenario', style: { width: '100%' } });
+  const msg = h('p.muted');
+  const render = () => {
+    mount(list, data.scenarios.map((s) => h('div.item' + (s.id === sel ? '.sel' : ''), { on: { click: () => { sel = s.id; render(); } } },
+      h('b', s.name), ' ', h('span.muted', `· ${s.custom ? 'custom' : s.era} · ${formatDate(parseDate(s.startDate))}`))));
+    const s = data.scenarios.find((x) => x.id === sel);
+    mount(detail, s && h('div',
+      h('h3', s.name), h('p', s.description || ''),
+      h('div.field', h('label', 'Start a new scenario from this one'), name),
+      h('div.row',
+        h('button.primary', { on: { click: async () => {
+          const base = await getScenario(sel);
+          const n = name.value.trim() || `${base.name} (custom)`;
+          let id = slug(n);
+          for (let i = 2; data.scenarios.some((x) => x.id === id); i++) id = slug(n) + '_' + i;
+          openEditor(startEdit(base, { name: n, id }));
+        } } }, 'New scenario from this'),
+        s.custom && h('button', { on: { click: async () => openEditor(cloneScenario(await getScenario(s.id))) } }, 'Edit'),
+        s.custom && h('button.danger', { on: { click: () => {
+          deleteScenario(s.id); data.scenarioCache.delete(s.id);
+          data.scenarios = data.scenarios.filter((x) => x.id !== s.id); sel = data.scenarios[0]?.id; render();
+        } } }, 'Delete'))));
+  };
+  render();
+  const file = h('input', { type: 'file', accept: '.json', on: { change: async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try {
+      const sc = JSON.parse(await f.text());
+      validateScenario(sc, data.map);
+      if (!sc.custom || data.builtin.some((x) => x.id === sc.id)) { sc.flagScenario ||= sc.id; sc.id = slug(sc.name); sc.custom = true; }
+      openEditor(sc);
+    } catch (err) { msg.textContent = 'Could not import: ' + (err.message || err); msg.className = 'bad'; }
+  } } });
+  mount(app, h('div.screen', h('div.menu-card.wide',
+    h('h2', 'Scenario Editor'),
+    h('p.muted', 'Make your own start: paint borders, add or delete countries, set governments, armies, treaties and wars. Saved scenarios appear in the New Game list.'),
+    h('div.grid2', h('div', h('h4', 'Scenarios'), list), detail),
+    h('div.field', { style: { marginTop: '1em' } }, h('label', 'Import a scenario file (exported from the editor, or a mod\'s data/scenarios file)'), file), msg,
+    h('div.row', h('button', { on: { click: mainMenu } }, 'Back')))));
+}
+
+function openEditor(sc) {
+  let game;
+  try { game = editorGame(data, sc); } catch (e) { return alertMsg('This scenario cannot be opened: ' + (e.message || e)); }
+  if (client) client.destroy();
+  client = new Client(app, data, game, {
+    mode: 'edit', editScenario: sc,
+    onExit: () => { client.destroy(); client = null; editorScreen(); },
+    onScenarioSaved: (saved) => {
+      const entry = { id: saved.id, name: saved.name, era: saved.era, startDate: saved.startDate, description: saved.description || '', approximations: saved.approximations || '', custom: true };
+      data.scenarios = [...data.scenarios.filter((x) => x.id !== saved.id), entry];
+      data.scenarioCache.set(saved.id, cloneScenario(saved));
+    },
+    onPlayScenario: (id) => { client.destroy(); client = null; newGameScreen(id); },
+  });
+  window.__client = client;
 }
 
 let client = null;

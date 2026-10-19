@@ -119,7 +119,7 @@ See [TECHNOLOGY.md](TECHNOLOGY.md) and [SCENARIOS.md](SCENARIOS.md).
 | Alternate history, events not forced | ✅ | Historical / Plausible / Off setting; every option possible; events skip when their premise fails |
 | Starting wars, subjects, blocs and policies from the scenario | ✅ | |
 | Save v5 with migration; tech file remapping | ✅ | |
-| Scenario editor UI | ⬜ | Scenarios are JSON definitions plus the builder |
+| Scenario editor UI | ✅ | Paint borders, add and delete countries, edit them, armies, treaties and starting wars; save, play, export and import |
 | Colonisation of unowned land | ⬜ | Unowned land is impassable in Height of Rome |
 | Technology espionage | ✅ | Spies (any era) and cyber espionage (modern) steal research |
 | Technology trading | ⬜ | Diffusion models spread instead |
@@ -170,7 +170,7 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 
 | Area | Status |
 | --- | --- |
-| Scenario editor UI | ⬜ |
+| Scenario editor UI | ✅ |
 | Navies, air forces, nuclear, cyber, space (M6) | ✅ See the Milestone 6 table |
 | Rivers, real terrain/elevation data | ⬜ Terrain is estimated from coarse regions |
 | Map projections other than Miller | ⬜ |
@@ -221,7 +221,7 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 
 1. **Milestone 6 follow-ups**: transport capacity, aircraft against fleets, AI amphibious
    planning, supply with goods cost, winning back the simulation speed lost in M6.
-2. **Milestone 5 follow-ups**: a scenario editor UI, more start dates (1444, 1815, 1861),
+2. **Milestone 5 follow-ups**: more start dates (1444, 1815, 1861),
    colonisation of unowned land, a war AI that sustains long wars, technology trading.
 3. **Milestone 4 follow-ups**: the player's own bloc votes.
 4. Economy follow-ups: a gas and renewable energy split, transport costs.

@@ -114,3 +114,33 @@ export function rotateAutosaves(keep) {
   const autos = list.filter((s) => s.name.startsWith('autosave-')).sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
   for (const s of autos.slice(Math.max(0, keep))) deleteSave(s.name);
 }
+
+// Custom scenarios made in the scenario editor: the index under "scenarios" and each scenario
+// (compressed like saves) under "scenario.<id>".
+export function listScenarios() {
+  try { return JSON.parse(get('scenarios') || '[]'); } catch { return []; }
+}
+export async function writeScenario(sc, entry) {
+  const text = JSON.stringify(sc);
+  let data = text;
+  if (typeof CompressionStream !== 'undefined') {
+    try { data = await gzip(text); } catch { data = text; }
+  }
+  if (disk) {
+    if (!(await disk.put('scenario.' + sc.id, data))) return 'Could not write the scenario file to disk.';
+    disk.files.set('scenario.' + sc.id, data);
+  } else if (!set('scenario.' + sc.id, data)) return 'Browser storage is full or unavailable. Use "Export file" instead.';
+  const list = listScenarios().filter((s) => s.id !== sc.id);
+  list.push({ ...entry, size: data.length });
+  set('scenarios', JSON.stringify(list));
+  return null;
+}
+export async function readScenario(id) {
+  const data = get('scenario.' + id);
+  if (!data) return null;
+  return JSON.parse(data.startsWith('gz:') ? await gunzip(data) : data);
+}
+export function deleteScenario(id) {
+  del('scenario.' + id);
+  set('scenarios', JSON.stringify(listScenarios().filter((s) => s.id !== id)));
+}

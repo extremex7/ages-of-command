@@ -21,6 +21,7 @@ export const ICONS = {
   // top bar and menus
   treasury: 'wallet', monthly: 'trending-up', stability: 'scale', manpower: 'hard-hat', era: 'graduation-cap', wars: 'swords',
   play: 'play', pause: 'pause', save: 'save', menu: 'menu', new_game: 'play', load: 'folder-open', settings: 'settings', exit: 'log-out',
+  editor: 'pencil-ruler', achievements: 'medal', summary: 'award',
   army: 'shield', fleet: 'ship', wing: 'plane', events: 'bell', close: 'x',
   influence: 'megaphone', research_points: 'flask-conical', tech_tree: 'network', zoom_in: 'zoom-in', zoom_out: 'zoom-out', fit: 'maximize',
   music: 'music', sound: 'volume-2', mute: 'volume-x',

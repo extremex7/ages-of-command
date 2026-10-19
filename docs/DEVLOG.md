@@ -579,3 +579,12 @@ also compared the new type's default policies turned most federal republics into
 ones; scoring with the current policies, the trouble condition and a 25% yearly chance bring it
 down to 3–4 reforms in 20 years per scenario.
 
+
+## Session 18: scenario editor
+
+A scenario editor in the main menu (SCENARIOS.md): paint provinces, fill whole regions, add and
+delete countries, edit their governments and treasuries, place armies, add treaties and starting
+wars, then save, play or export. The edits work on the scenario JSON itself
+(`src/core/scenario_edit.js`), so an edited scenario is an ordinary scenario file; the shown map
+is rebuilt from it after larger changes (about 70 ms for the Modern World). Custom scenarios are
+stored next to the saves and listed under New Game.

@@ -27,6 +27,7 @@ import { money, signedMoney, people, pct } from './format.js';
 import { writeSave, rotateAutosaves } from './storage.js';
 import { renderPanel, renderProvince, TABS } from './panels.js';
 import { icon } from './icons.js';
+import { renderEditor, editorClick } from './editor.js';
 import { saveDialog, peaceDialog, menuDialog, reportDialog, separatePeaceDialog, eventDialog, civilWarDialog } from './dialogs.js';
 
 export const SPEEDS = [0, 1, 3, 8, 20, 0]; // days per second; 5 = as fast as the frame budget allows
@@ -46,14 +47,15 @@ function soundFor(l) {
 export class Client {
   constructor(root, data, game, opts) {
     this.root = root; this.data = data; this.game = game; this.opts = opts;
-    this.mode = opts.mode; // 'pick' | 'play'
+    this.mode = opts.mode; // 'pick' | 'play' | 'edit' (the scenario editor)
     this.view = { hover: -1, selected: -1, selectedCountry: -1, selectedArmies: new Set(), selectedFleets: new Set(), selectedWings: new Set(), highlight: null };
     this.speed = 0; this.acc = 0; this.lastFrame = 0;
     this.tab = 'country';
     this.logSeen = game.state.logSeq || 0;
     this.uiDirty = true; this.lastUi = 0;
     this.index = buildIndex(game.map);
-    setFlagScenario(game.state.scenarioId, game.state.countries);
+    setFlagScenario(game.scenario?.flagScenario || game.state.scenarioId, game.state.countries);
+    if (this.mode === 'edit') this.editor = { sc: opts.editScenario, tool: 'select', brush: null, dirty: false };
     this.updateMood();
     this.build();
     this.renderer = new MapRenderer(this.canvas, game.map);
@@ -332,6 +334,7 @@ export class Client {
     const [wx, wy] = this.renderer.screenToWorld(sx, sy);
     const p = pickProvince(this.game.map, this.index, wx, wy);
     if (p < 0) { this.clearSelection(); return; }
+    if (this.mode === 'edit') { editorClick(this, p); return; }
     // in the military tab, clicking a province with your forces selected keeps them selected
     if (!shift) { this.view.selectedArmies.clear(); this.view.selectedFleets.clear(); this.view.selectedWings.clear(); this.view.highlight = null; }
     this.selectProvince(p);
@@ -606,6 +609,7 @@ export class Client {
   renderUi() {
     this.renderTop();
     if (this.mode === 'pick') this.renderPick();
+    else if (this.mode === 'edit') renderEditor(this);
     else {
       mount(this.tabsEl, TABS.map((t) => h('button' + (this.tab === t.id ? '.on' : ''), { tip: `${t.tip}\nShortcut: ${t.key.toUpperCase()}`, on: { click: () => this.setTab(t.id) } }, icon(t.id), h('span', t.name))));
       renderPanel(this, this.panelEl);
@@ -632,7 +636,7 @@ export class Client {
     ].filter(Boolean).join('\n') : '';
     mount(this.topbar,
       me ? h('div.nation', { on: { click: () => { this.setTab('country'); this.focusCountry(me.idx); } }, tip: 'Your country. Click to centre on the capital (key C).' }, flagCanvas(me), me.name)
-        : h('div.nation', h('span.muted', this.mode === 'pick' ? 'Choose a country' : 'Observer')),
+        : h('div.nation', h('span.muted', { pick: 'Choose a country', edit: 'Scenario editor' }[this.mode] || 'Observer')),
       me && s.prestige?.rank?.[me.idx] && h('button.rank-btn', { tip: 'Your world rank by prestige. Click for the leaderboard.', on: { click: () => leaderboardDialog(this) } }, starBadge(s.prestige.rank[me.idx], true)),
       h('div.row', h('button.play', { tip: 'Pause / resume (Space)', 'aria-label': this.speed ? 'Pause' : 'Play', on: { click: () => this.togglePause() }, disabled: this.mode !== 'play' }, icon(this.speed ? 'pause' : 'play')),
         h('div.date', formatDate(s.day), this.speed ? '' : h('div.paused-flag', 'PAUSED')), h('div.speed', speedBtns)),

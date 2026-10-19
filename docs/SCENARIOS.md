@@ -139,6 +139,38 @@ To add a scenario:
    `data/scenarios/index.json`.
 3. Optionally write `data/events/history_<id>.json` and add it to `data/events/index.json`.
 
+## Scenario editor
+
+Main menu → **Scenario Editor**. Pick any scenario (built in or custom) and press **New scenario
+from this** to edit a copy, or **Edit** a custom one. The map works as in the game; the side
+panel has the tools:
+
+- **Select** shows the clicked province and its owner. **Paint** gives each clicked province to
+  the brush country (or leaves it unclaimed); **Fill** gives it every land-connected province of
+  the clicked province's owner, for example a whole country at once.
+- **Add country** creates a new country with a three-letter tag from its name, then paints with
+  it. A selected country's name, colour, government, stability, treasury, AI aggression and
+  technology lag can be changed; treaties (alliance, defensive pact, non-aggression, military
+  access, guarantee, trade, arms control, subject) and wars at the start are added or removed in
+  the same place. **Delete country** leaves its land unclaimed and removes its forces, treaties
+  and wars.
+- A selected province's population, development and fort level can be changed, it can be made
+  its owner's capital, and armies there can be added (any land unit, by count) or removed.
+- **Scenario** holds the name, the start date, the technology year and the description.
+
+**Save scenario** first tidies the scenario (`tidyScenario` in `src/core/scenario_edit.js`):
+capitals move into their country, armies abroad go home unless their country is at war with the
+owner, fleets move to one of their own ports, air wings to the capital, and forces of countries
+with no land are removed; it lists what it changed. The scenario is then checked like a built-in
+one and must start. Saved scenarios are kept with the saves (browser storage, or the apps' data
+folder) and appear in the New Game list; saves made in them need the scenario to load.
+**Export file** downloads the JSON (see MODDING.md), and the editor's first screen imports such
+a file.
+
+Limits: deposits and starting buildings stay with their provinces (painting a province keeps
+them), blocs and rivalries are kept but not edited, fleets and air wings cannot be added, and
+new countries get a simple pattern flag.
+
 ## Historical events
 
 Events use the Milestone 4 engine (`src/core/events.js`). Milestone 5 adds the fields and the

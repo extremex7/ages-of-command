@@ -63,13 +63,16 @@ function think(state, map, rules, c) {
 function manageBudget(state, rules, c) {
   const L = c.ledger;
   if (!L) return;
-  const E = rules.balance.economy;
+  const E = rules.balance.economy, A = rules.balance.ai;
   if (L.net < 0 && c.treasury < L.revenue * 3) {
     if (c.tax < 0.34) c.tax = Math.min(E.maxTax, c.tax + 0.01);
     else if (c.civilShare > 0.6) c.civilShare -= 0.02;
     else if (c.treasury < -L.revenue * 2 && !isAtWar(state, c.idx)) demobilise(state, rules, c);
   } else if (c.treasury > L.revenue * 14 && c.tax > 0.12) {
     c.tax -= 0.01;
+  } else if (L.net < L.revenue * (A.investSurplus ?? 0) && c.treasury < L.revenue * 6 && c.tax < (A.investTaxCap ?? 0)) {
+    // keep a small surplus to pay for new power plants, mines and factories
+    c.tax = Math.min(E.maxTax, c.tax + 0.01);
   } else if (L.net > L.revenue * 0.1 && c.civilShare < 0.85 && !isAtWar(state, c.idx)) {
     c.civilShare += 0.01;
   }
@@ -168,7 +171,9 @@ function manageRecruitment(state, map, rules, c) {
   const cost = recruitCost(state, rules, c.idx, type);
   const upkeep = rules.units[type].upkeep * c.cache.priceLevel;
   if (L.military + upkeep > budget * share) return;
-  if (c.treasury < cost.money * (war ? 1 : 1.5)) return;
+  // in peacetime new units leave a month of revenue in the bank for construction
+  const keep = war ? 0 : L.revenue * (rules.balance.ai.peaceRecruitReserveMonths ?? 0);
+  if (c.treasury < cost.money * (war ? 1 : 1.5) + keep) return;
   let site = c.capital;
   if (site < 0 || state.prov.controller[site] !== c.idx || (domain === 'sea' && !portZonesOf(map, site).length)) {
     site = -1;
@@ -181,7 +186,7 @@ function manageRecruitment(state, map, rules, c) {
     for (const a of state.armies) {
       if (a.owner !== c.idx || a.battle) continue;
       const mc = modernizeCost(state, rules, a);
-      if (mc.units && c.treasury > mc.money * 3 && c.manpower > mc.men * 2) {
+      if (mc.units && c.treasury > mc.money * 3 + keep && c.manpower > mc.men * 2) {
         if (!modernizeArmy(state, rules, a.id)) aiLog(state, c.idx, `Re-equipped ${a.name} with newer units (${mc.money.toFixed(2)}B).`);
         break;
       }
@@ -495,53 +500,102 @@ function countryProvinces(state, map, k) {
   return c.lists[k];
 }
 
+// World need minus world production per good, and unused deposit levels per resource (world
+// total and per country), computed once a day.
+const worldCache = new WeakMap();
+function worldGaps(state, X) {
+  const w = worldCache.get(state);
+  if (w && w.day === state.day) return w;
+  const gap = new Float64Array(X.G), C = state.countries.length;
+  for (const c of state.countries) if (c.alive && c.econ) for (let g = 0; g < X.G; g++) gap[g] += c.econ.need[g] - c.econ.prod[g];
+  const free = new Float64Array(C * X.R), freeAll = new Float64Array(X.R), ec = state.econ, own = state.prov.owner;
+  for (const b of X.buildings) {
+    if (b.dep < 0) continue;
+    for (let i = 0; i < own.length; i++) {
+      const o = own[i], d = ec.dep[i * X.R + b.dep];
+      if (o < 0 || !d) continue;
+      const f = Math.max(0, d - ec.bld[i * X.B + b.i]);
+      free[o * X.R + b.dep] += f; freeAll[b.dep] += f;
+    }
+  }
+  const out = { day: state.day, gap, free, freeAll };
+  worldCache.set(state, out);
+  return out;
+}
+
 function aiBuild(state, map, rules, c) {
   const X = rules.econ, L = c.ledger, e = c.econ, prices = state.econ.prices;
   const active = state.construction.reduce((n, p) => n + (p.owner === c.idx), 0);
-  if (active >= constructionSlots(state, rules, c.idx)) return;
-  const reserve = Math.max(L.revenue * 2, L.military * 4);
-  if (c.treasury <= reserve || L.net < -0.05 * L.revenue) return;
+  const slots = constructionSlots(state, rules, c.idx);
+  if (active >= slots) return;
+  const A = rules.balance.ai;
+  const reserve = Math.max(L.revenue * (A.buildReserveRevenueMonths ?? 2), L.military * (A.buildReserveMilitaryMonths ?? 4));
+  // mines pay for themselves quickly (exports), so they may dig deeper into the reserve
+  const mineReserve = Math.min(reserve, L.revenue * (A.mineReserveRevenueMonths ?? 2));
+  if (c.treasury <= mineReserve || L.net < -0.05 * L.revenue) return;
+  // output already under construction counts towards a gap, and need is padded a little so
+  // the country builds ahead of growing demand instead of after the shortage arrives
+  const coming = new Float64Array(X.G);
+  for (const p of state.construction) if (p.owner === c.idx && p.kind === 'building') for (const [g, a] of X.buildings[p.b].out) coming[g] += a;
   const gaps = [];
   for (const g of X.goods) {
-    const gap = e.need[g.i] - e.prod[g.i];
-    if (gap > 0 && X.producers[g.i].length) gaps.push({ g: g.i, value: gap * prices[g.i] });
+    const gap = e.need[g.i] * (A.buildHeadroom ?? 1) - e.prod[g.i] - coming[g.i];
+    if (gap > 0 && X.producers[g.i].length) gaps.push({ g: g.i, units: gap, value: gap * prices[g.i] });
   }
-  // raw materials the world is short of (price well above base): countries with unused deposits
-  // mine them for export, since importers without deposits cannot build mines themselves
+  // raw materials the world is short of (price above base): countries with unused deposits take
+  // their share of the world gap (by their share of the world's unused deposits) and mine it for
+  // export, since importers without deposits cannot build mines themselves
+  const W = worldGaps(state, X);
   for (const g of X.goods) {
-    const r = prices[g.i] / g.price;
-    if (r < 1.15) continue;
+    if (prices[g.i] < g.price * (A.worldShortagePrice ?? 1.05) || W.gap[g.i] <= 0) continue;
     const mine = X.producers[g.i].find((b) => X.buildings[b].dep >= 0);
-    if (mine == null || bestSite(state, map, rules, c, mine) < 0) continue;
-    const v = (r - 1) * prices[g.i] * 10, x = gaps.find((y) => y.g === g.i);
-    if (x) x.value += v; else gaps.push({ g: g.i, value: v, world: true });
+    if (mine == null) continue;
+    const r = X.buildings[mine].dep, mineFree = W.free[c.idx * X.R + r];
+    if (!mineFree || bestSite(state, map, rules, c, mine) < 0) continue;
+    const u = W.gap[g.i] * mineFree / W.freeAll[r], v = u * prices[g.i], x = gaps.find((y) => y.g === g.i);
+    if (x) { x.value += v; x.units += u; } else gaps.push({ g: g.i, units: u, value: v, world: true });
   }
+  // energy shortages cut GDP and idle every factory, so they outrank a consumer-goods gap
+  if ('energy' in X.gi) for (const x of gaps) if (x.g === X.gi.energy) x.value *= A.energyPriority ?? 1;
   // armies short of munitions come first: it is a military emergency, not a market signal
   if (e.supplyMun < 0.9 && 'munitions' in X.gi) for (const x of gaps) if (x.g === X.gi.munitions) x.value *= 20;
   gaps.sort((a, b) => b.value - a.value);
+  // big economies start more at once (a third of their free slots), and a large gap can take
+  // several levels in one round
+  const maxStarts = Math.min(slots - active, Math.max(2, Math.ceil((slots - active) / 3)));
   let started = 0;
-  for (const { g, value, world } of gaps.slice(0, 4)) {
-    if (started >= 2) break;
+  for (const { g, value, world, units } of gaps.slice(0, 4)) {
+    let left = units;
+    while (left > 0 && started < maxStarts) {
+    let done = false;
     for (const b of X.producers[g]) {
       const B = X.buildings[b];
-      const inp = inputAvailability(e, B);
-      let bb = b, why = '';
-      if (e.prod[g] > 0 && inp.f < 0.7 && inp.worst >= 0 && X.producers[inp.worst].length) {
-        bb = X.producers[inp.worst][0]; // fix the bottleneck input first
-        why = ` (input for ${B.name.toLowerCase()})`;
+      // fix the bottleneck input first, following the chain (factory -> steel mill -> iron mine)
+      // so a mill is not built where it would stand idle for want of ore
+      let bb = b, why = '', site = -1;
+      for (let depth = 0; depth < 3; depth++) {
+        const inp = inputAvailability(e, X.buildings[bb]);
+        if (!(e.prod[g] > 0 || depth) || inp.f >= (A.bottleneckBelow ?? 0.7) || inp.worst < 0 || !X.producers[inp.worst].length) break;
+        why = ` (input for ${X.buildings[bb].name.toLowerCase()})`;
+        bb = X.producers[inp.worst][0];
       }
-      const site = bestSite(state, map, rules, c, bb);
+      site = bestSite(state, map, rules, c, bb);
       if (site < 0) continue;
       const cost = projectCost(state, map, rules, c.idx, site, 'building', bb);
-      if (c.treasury - cost.total < reserve) return;
+      if (c.treasury - cost.total < (X.buildings[bb].dep >= 0 ? mineReserve : reserve)) continue;
       if (canBuild(state, map, rules, c.idx, site, 'building', bb)) continue;
       startProject(state, map, rules, c.idx, site, 'building', bb);
       aiLog(state, c.idx, `Building ${X.buildings[bb].name} in ${map.name[site]}${why}: ${X.goods[g].name.toLowerCase()} ${world ? 'world shortage, to export' : 'shortfall'} worth ${value.toFixed(1)}B/month, cost ${cost.total.toFixed(1)}B.`);
       started++;
+      // a bottleneck fix counts as one step towards the gap; the producer itself covers its output
+      left -= bb === b ? (X.buildings[b].out.find(([o]) => o === g)?.[1] || left) : left;
+      done = true;
       break;
     }
+    if (!done) break;
+    }
   }
-  if (started) return;
+  if (started || c.treasury <= reserve) return;
   // nothing missing: improve infrastructure where most industry is
   let best = -1, bv = 0;
   for (const i of countryProvinces(state, map, c.idx)) {

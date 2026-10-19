@@ -63,7 +63,7 @@ See [ECONOMY.md](ECONOMY.md) for every formula.
 | Embargoes; war closes trade | ✅ | Player embargo button; AI embargoes since Milestone 4 |
 | Inflation / CPI and price level | ✅ | CPI raises unit, upkeep and construction costs |
 | Army supply (munitions, fuel) | ✅ | Shortages weaken combat and slow armour; shown in battle reports |
-| AI investment | ✅ | Builds against its largest shortfalls; logs reasons |
+| AI investment | ✅ | Builds against its largest shortfalls (energy first, following input chains), mines spare deposits for world shortages, keeps a small surplus to invest; logs reasons |
 | Economic reports and calculation tooltips | ✅ | Indicators, budget, stability drivers, 24-month charts, per-good breakdown |
 | Trade agreements, tariffs per partner, AI sanctions | ✅ | Added in Milestone 4: trade treaties and economic blocs waive tariffs; AI embargoes |
 | Gas/hydro/renewable power, transport costs, regional markets | ⬜ | Folded into simpler rules (see ECONOMY.md) |

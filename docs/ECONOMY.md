@@ -184,14 +184,27 @@ Construction is paid up front from the treasury when a project starts.
 
 Every other month each AI country:
 
-1. Keeps a reserve: at least 2 months of revenue or 4 months of military upkeep, whichever is larger.
-2. Ranks goods by the value of the gap between need and production. Munitions come first when its
-   armies are short of them.
+1. Keeps a reserve: at least 0.75 months of revenue or 4 months of military upkeep, whichever is
+   larger (`ai.buildReserveRevenueMonths`, `ai.buildReserveMilitaryMonths`). Mines may go down to
+   0.25 months (`ai.mineReserveRevenueMonths`), since their exports pay them back quickly.
+2. Ranks goods by the value of the gap between need (padded 5% to build ahead of growing demand,
+   `ai.buildHeadroom`) and production plus what is already being built. Energy gaps count triple
+   (`ai.energyPriority`): a shortage cuts GDP and idles every factory. Munitions come first when
+   its armies are short of them.
 3. Builds the producer of the top good in the province where a new level would be most efficient.
-   If the producer's own input is the bottleneck, it builds the input's producer instead.
-   A country with unused deposits also mines raw materials the world is short of (world price
-   at least 15% above base) for export, since importers without deposits cannot.
+   If one of the producer's inputs is below 90% supplied (`ai.bottleneckBelow`), it builds that
+   input's producer instead, following the chain (consumer factory → steel mill → iron mine) so it
+   does not build a mill that would stand idle for want of ore. A country with unused deposits
+   also takes its share of any world shortage of a raw material (world price at least 5% above
+   base, `ai.worldShortagePrice`; share = its part of the world's unused deposits) and mines it
+   for export, since importers without deposits cannot. Large economies start up to a third of
+   their free construction slots at once, and a large gap can take several levels.
 4. With nothing missing, improves infrastructure where most of its industry is.
+
+In peacetime an AI country keeps a small surplus for construction: below 4% of revenue (with
+under 6 months of revenue banked) it raises taxes a point at a time, up to 27% (`ai.investSurplus`,
+`ai.investTaxCap`), and it recruits or re-equips units only while a month of revenue stays in the
+bank (`ai.peaceRecruitReserveMonths`).
 
 When its budget runs a deficit with little money left, an AI country first raises taxes (to 34%),
 then trims civil spending (to 60%). If it is still in deficit at peace with debt above two months

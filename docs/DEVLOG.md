@@ -496,3 +496,21 @@ short, power fell further. Fixes (`src/core/industry.js`, `src/core/ai.js`):
 Same run after the fix, 2058: iron 715, oil 958, steel 717 (was 195). Energy and coal demand
 still outgrow supply by about 20% by the 2050s; that is AI construction balance, left for later.
 New unit test: scarce inputs are shared and mines run on this month's power.
+
+### AI construction tuning
+
+The fix above left the world about 20% short of energy and coal by the 2050s. Tracing AI money
+over 16 years showed why: the build reserve was 2 months of gross revenue while budgets ran a
+surplus of 1–3%, so most countries never had money above it; peacetime recruitment and
+re-equipping spent what there was; big economies were limited to 2 projects every other month
+(China sat on 2,400 B); and AI money went mostly into consumer factories and electronics, which
+add energy demand. Changes (`src/core/ai.js`, new `ai.*` constants in `balance.json`, see
+docs/ECONOMY.md): smaller build reserve, a small peacetime investment surplus, recruitment keeps
+a month of revenue, energy gaps weigh triple, bottleneck fixes follow the input chain, big
+economies start more projects per round, already-queued output counts, and countries with
+spare deposits take their share of world raw-material shortages.
+
+Nine 32-year Modern World runs, 2058, share of world need produced (before → after, mean):
+energy 75% → 89%, oil 81% → 88%, coal 85% → 84%, iron 89% → 85%, steel 84% → 83%, consumer goods
+82% → 83%; world GDP 159 T → 176 T. One run of the nine came out worse (coal 71%). Monthly tick
+p50 12.7 → 15.8 ms. New unit test: an AI with unused deposits mines for a world shortage.

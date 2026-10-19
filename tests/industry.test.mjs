@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { game, data, tagIdx, provOf } from './helpers.mjs';
 import { runDays } from '../src/core/sim.js';
+import { aiEconomy } from '../src/core/ai.js';
 import { computeLedgers, monthlyEconomy } from '../src/core/economy.js';
 import { provinceGdp } from '../src/core/state.js';
 import { stepDays } from '../src/core/pathfind.js';
@@ -256,4 +257,19 @@ test('AI invests: over two years AI countries start projects and industry grows'
     const r = g.state.econ.prices[gd.i] / gd.price;
     assert.ok(r > 0.5 && r < 2.5, `${gd.id} price ratio ${r.toFixed(2)}`);
   }
+});
+
+test('AI with unused deposits mines raw materials the world is short of', () => {
+  const g = game({ seed: 'mine' }), s = g.state, X = g.rules.econ;
+  runDays(g, 1);
+  const k = tagIdx(g, 'CHN'), c = s.countries[k];
+  // the world is short of coal: prices up and a big unmet need elsewhere
+  s.econ.prices[X.gi.coal] = X.goods[X.gi.coal].price * 1.4;
+  s.countries[tagIdx(g, 'JPN')].econ.need[X.gi.coal] += 500;
+  c.treasury = c.ledger.revenue * 10;
+  for (const x of s.construction.filter((p) => p.owner === k)) cancelProject(s, g.rules, x.id);
+  const before = s.construction.filter((p) => p.owner === k && p.kind === 'building' && p.b === X.bi.coal_mine).length;
+  for (let d = 0; d < 2; d++) { aiEconomy(s, g.map, g.rules); s.day += 31; }
+  const after = s.construction.filter((p) => p.owner === k && p.kind === 'building' && p.b === X.bi.coal_mine).length;
+  assert.ok(after > before, `China started coal mines for export (${before} -> ${after})`);
 });

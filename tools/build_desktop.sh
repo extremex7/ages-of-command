@@ -4,8 +4,10 @@
 #   AgesOfCommand-<v>-windows-portable.zip  unzip and run; saves stay in its userdata folder
 #   AgesOfCommand-<v>-linux-x64.tar.gz
 #   AgesOfCommand-<v>-macos.tar.gz          Apple silicon and Intel launchers, start.command picks
-# Needs Go 1.22+, zip and (for the installer) NSIS's makensis. go-winres, when installed
-# (go install github.com/tc-hib/go-winres@v0.3.3), gives the Windows launcher its icon.
+#   AgesOfCommand-<v>-android.apk           through tools/build_android.sh, when its tools are installed
+# Needs Go 1.22+, a C compiler (the Linux build's native window uses cgo), zip and (for the
+# installer) NSIS's makensis. go-winres, when installed (go install
+# github.com/tc-hib/go-winres@v0.3.3), gives the Windows program its icon and version details.
 # Usage: tools/build_desktop.sh [version]   (default: package.json's version)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -27,18 +29,16 @@ game() {
 }
 
 LDFLAGS="-s -w -X main.version=$V"
-build() { # goos goarch output [extra ldflags]
-  (cd launcher && CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build -trimpath -ldflags "$LDFLAGS ${4:-}" -o "$3" .)
+build() { # goos goarch output [extra ldflags] [cgo 0/1]
+  (cd launcher && CGO_ENABLED=${5:-0} GOOS=$1 GOARCH=$2 go build -trimpath -ldflags "$LDFLAGS ${4:-}" -o "$3" .)
 }
 
 # --- Windows
 W=$STAGE/windows; mkdir -p "$W"
 if command -v go-winres >/dev/null; then
-  (cd launcher && go-winres simply --arch amd64 --icon icon/icon.ico --manifest gui \
-    --product-name "Ages of Command" --file-description "Ages of Command" \
-    --product-version "$V.0" --file-version "$V.0" --original-filename AgesOfCommand.exe)
+  (cd launcher && go-winres make --in winres/winres.json --arch amd64 --product-version "$V.0" --file-version "$V.0")
 else
-  echo "go-winres not found: the Windows launcher will have no icon"
+  echo "go-winres not found: the Windows program will have no icon"
 fi
 build windows amd64 "$W/AgesOfCommand.exe" "-H windowsgui"
 rm -f launcher/rsrc_windows_*.syso
@@ -55,7 +55,9 @@ cp -r "$W/." "$P/"
 
 # --- Linux
 L=$STAGE/linux/AgesOfCommand; mkdir -p "$L"
-build linux amd64 "$L/AgesOfCommand"
+# cgo for the native GTK window (GTK and WebKitGTK are loaded at run time; without them the
+# program falls back to a browser window)
+build linux amd64 "$L/AgesOfCommand" "" 1
 game "$L"; cp launcher/README.txt "$L/"
 tar -C "$STAGE/linux" -czf "$OUT/AgesOfCommand-$V-linux-x64.tar.gz" AgesOfCommand
 
@@ -73,4 +75,9 @@ game "$M"; cp launcher/README.txt "$M/"
 tar -C "$STAGE/macos" -czf "$OUT/AgesOfCommand-$V-macos.tar.gz" AgesOfCommand
 
 rm -rf "$STAGE"
+if command -v aapt >/dev/null && command -v apksigner >/dev/null; then
+  tools/build_android.sh "$V"
+else
+  echo "Android build tools not found: skipping the Android app (see tools/build_android.sh)"
+fi
 ls -la "$OUT"

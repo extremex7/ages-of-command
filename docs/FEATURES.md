@@ -172,7 +172,9 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Rivers, real terrain/elevation data | ⬜ Terrain is estimated from coarse regions |
 | Map projections other than Miller | ⬜ |
 | Multiplayer | ⬜ Deterministic core is the foundation |
-| Desktop app and installer | ✅ Go launcher with its own window and on-disk saves; Windows installer and portable zip, Linux and macOS packages (launcher/README.md). Not code-signed; not yet tried on real Windows or macOS hardware |
+| Desktop app and installer | ✅ Native window (WebView2 on Windows, WebKitGTK on Linux) with on-disk saves; Windows installer and portable zip, Linux and macOS packages (launcher/README.md). Not code-signed; the WebView2 window is not yet tried on a real Windows PC; macOS opens a browser window |
+| Android app | 🟨 APK with touch controls (pan, pinch, tap, long-press orders) and saves on the phone (android/README.md). Tested in an emulated touch screen only, not on a phone; the interface is the desktop one made denser |
+| iOS app | ⬜ Postponed; needs a Mac to build |
 | Audio, onboarding tutorial, accessibility pass | ⬜ |
 
 ## Known limitations

@@ -1,5 +1,6 @@
 """Draws the Ages of Command icon (a gold globe with a star on a navy shield) and writes
-launcher/icon/icon.png (256 px), icon.ico (16-256 px) and styles/icon.png (the page favicon).
+launcher/icon/icon.png (256 px), icon.ico (16-256 px), styles/icon.png (the page favicon) and
+the Android launcher icons in android/res/mipmap-*.
 Usage: python3 tools/make_icon.py   (needs Pillow; only for rebuilding the icon)"""
 import math, os
 from PIL import Image, ImageDraw
@@ -34,3 +35,10 @@ big.save(os.path.join(out, 'icon.png'))
 big.save(os.path.join(out, 'icon.ico'), sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
 img.resize((64, 64), Image.LANCZOS).save(os.path.join(root, 'styles', 'icon.png'))
 print('icons written')
+
+# Android launcher icons (mipmap densities)
+for d, px in (('mdpi', 48), ('hdpi', 72), ('xhdpi', 96), ('xxhdpi', 144), ('xxxhdpi', 192)):
+    od = os.path.join(root, 'android', 'res', 'mipmap-' + d)
+    os.makedirs(od, exist_ok=True)
+    img.resize((px, px), Image.LANCZOS).save(os.path.join(od, 'ic_launcher.png'))
+print('android icons written')

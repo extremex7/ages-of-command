@@ -4,9 +4,10 @@ AGES OF COMMAND
 Start the game with AgesOfCommand (AgesOfCommand.exe on Windows, the "Ages of Command"
 shortcut after installing, start.command on macOS, ./AgesOfCommand on Linux).
 
-The launcher opens the game in its own window using Microsoft Edge, Google Chrome, Brave or
-Chromium, whichever is installed (every Windows 10 and 11 PC has Edge). If none is found it
-opens your default web browser instead. Closing the game window also stops the launcher.
+The game opens in its own window. On Windows it uses WebView2, the web engine built into
+Windows 10 and 11; on Linux it uses WebKitGTK (installed with most desktops; on a minimal system
+install libwebkit2gtk-4.1). Without them, and on macOS, it opens in Edge, Chrome, Brave or
+Chromium as an app window, or in your default web browser. Closing the window stops the game.
 
 Where your saves are kept
   Installed or Linux/macOS copies: your user settings folder
@@ -19,6 +20,7 @@ Where your saves are kept
 
 Command line options
   -no-window   only serve the game; open http://127.0.0.1:47110/ in any browser yourself
+  -browser     use a browser window instead of the built-in one
   -port N      use another local port (default 47110; the next nine are tried if it is busy)
   -data DIR    keep saves, settings and the log in DIR
 

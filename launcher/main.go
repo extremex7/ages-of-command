@@ -1,7 +1,8 @@
 // Ages of Command desktop launcher: a small native program (no runtime to install) that serves
 // the game's files from the folder next to it, keeps settings and saves as files in the player's
-// data folder, and opens the game in its own window (Edge, Chrome, Chromium or Brave in app
-// mode, else the default browser). It exits when the game window is closed.
+// data folder, and opens the game in a window of its own: a native window with the system's web
+// engine (WebView2 on Windows, WebKitGTK on Linux), else Edge, Chrome, Chromium or Brave in app
+// mode, else the default browser. It exits when the game window is closed.
 //
 // Build: see launcher/README.md (tools/build_desktop.sh builds every platform and the installer).
 package main
@@ -27,6 +28,9 @@ import (
 
 var version = "dev" // set at build time with -ldflags "-X main.version=..."
 
+// The native window toolkits must run on the process's main thread.
+func init() { runtime.LockOSThread() }
+
 const appID = "ages-of-command"
 const basePort = 47110 // fixed, so the game's address (and anything the browser keeps for it) stays the same
 
@@ -41,6 +45,7 @@ type server struct {
 func main() {
 	port := flag.Int("port", basePort, "port to serve on (127.0.0.1 only)")
 	noWindow := flag.Bool("no-window", false, "only serve; open http://127.0.0.1:<port>/ yourself")
+	browserFlag := flag.Bool("browser", false, "use a browser window instead of the native one")
 	dataFlag := flag.String("data", "", "folder for settings, saves and logs (default: the user's config folder)")
 	flag.Parse()
 
@@ -83,11 +88,12 @@ func main() {
 	log.Printf("game files: %s; data: %s; browser profile: %s", gameDir, dataDir, browserDir)
 
 	s := &server{gameDir: gameDir, storeDir: storeDir}
+	icon := filepath.Join(gameDir, "styles", "icon.png")
 	ln, url, running := listen(*port)
 	if running != "" {
 		// already running: just open another window onto it
 		log.Printf("already running at %s", running)
-		if !*noWindow {
+		if !*noWindow && (*browserFlag || !nativeWindow(running, browserDir, icon)) {
 			openWindow(running, browserDir)
 		}
 		return
@@ -104,6 +110,10 @@ func main() {
 	if *noWindow {
 		fmt.Printf("Ages of Command running at %s (Ctrl+C to stop)\n", url)
 		select {}
+	}
+	if !*browserFlag && nativeWindow(url, browserDir, icon) {
+		log.Printf("exiting: window closed")
+		return
 	}
 	done := make(chan string, 2)
 	go func() {

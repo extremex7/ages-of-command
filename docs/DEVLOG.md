@@ -337,3 +337,21 @@ because a browser profile can be wiped and its storage is capped. Details in lau
   windowed mode on Linux with Chromium (the launcher stops when the window closes).
 - Not checked: real Windows or macOS hardware. Nothing is code-signed, so SmartScreen and
   Gatekeeper warn on first run.
+
+**Native windows and Android (same session).** Aayush asked for the game to run as a program on
+the PC rather than in a browser, and on Android, with iOS later.
+- Tauri 2 was the first idea (one project for desktop and mobile), but its Android build needs
+  Google's NDK, and dl.google.com (the Android SDK, NDK and emulator images) is blocked here.
+  So the desktop stays on the Go launcher, which now opens a native window: WebView2 on Windows
+  (pure Go, no DLL), WebKitGTK on Linux (loaded at run time with dlopen, so it still starts
+  without it). The browser window is the fallback.
+- The Android app is one Java activity around the system WebView, built without Gradle from
+  Ubuntu's Android SDK packages (API 23 platform jar, dx, aapt, apksigner). Game files are served
+  from the APK's assets; saves go through a small JavaScript bridge to the app's private files.
+- Touch controls in the game itself: one-finger pan, pinch zoom, tap to select, long press to
+  order. The game pauses when hidden. Short screens get a denser interface. `<select>` boxes are
+  now drawn by the page, because GTK and Android drew them as light boxes.
+- Checked: the Linux native window under Xvfb (a game started, played and saved to disk), the
+  Windows program and installer under Wine (no WebView2 there, so the browser fallback),
+  `tests/browser/mobile.mjs` for touch and the bridge, and the APK's contents and signature.
+- Not checked: WebView2 on real Windows, and the APK on a phone or emulator.

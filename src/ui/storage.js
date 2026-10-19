@@ -1,37 +1,54 @@
 // Save slots and settings. In a browser they live in localStorage; every access is guarded:
 // storage can be full, disabled or unavailable (private windows), and the game must keep working
-// without it. In the desktop app (launcher/, which answers /api/info) they are files in the
-// player's data folder instead, with no size limit: initStorage() reads them all at start, and
-// writes go to memory at once and to disk in the background.
+// without it. In the apps they are files in the player's data folder instead, with no size limit:
+// initStorage() reads them all at start, and writes go to memory at once and to disk as well.
+// - Desktop app (launcher/, which answers /api/info): files written through its HTTP store API.
+// - Android app (android/): files written through the AOCNative bridge the app adds to the page.
 const PREFIX = 'aoc3.';
-let disk = null; // desktop app: { files: Map(key -> text) }
+let disk = null; // apps: { files: Map(key -> text), put(k, v) -> Promise<boolean>, remove(k) }
 
 function get(k) {
   if (disk) return disk.files.get(k) ?? null;
   try { return localStorage.getItem(PREFIX + k); } catch { return null; }
 }
 function set(k, v) {
-  if (disk) {
-    disk.files.set(k, v);
-    fetch('/api/store/' + encodeURIComponent(k), { method: 'PUT', body: v }).catch(() => {});
-    return true;
-  }
+  if (disk) { disk.files.set(k, v); disk.put(k, v); return true; }
   try { localStorage.setItem(PREFIX + k, v); return true; } catch { return false; }
 }
 function del(k) {
-  if (disk) { disk.files.delete(k); fetch('/api/store/' + encodeURIComponent(k), { method: 'DELETE' }).catch(() => {}); return; }
+  if (disk) { disk.files.delete(k); disk.remove(k); return; }
   try { localStorage.removeItem(PREFIX + k); } catch { /* ignore */ }
 }
 
-// Detects the desktop app and loads its stored files. Returns its info ({ app, version, dataDir }) or null.
+// Detects the desktop or Android app and loads its stored files. Returns the app's info
+// ({ app, version, dataDir, platform }) or null in a plain browser.
 export async function initStorage() {
+  const bridge = typeof window !== 'undefined' ? window.AOCNative : null;
+  if (bridge) {
+    try {
+      const info = JSON.parse(bridge.info());
+      disk = {
+        files: new Map(Object.entries(JSON.parse(bridge.all()))),
+        put: async (k, v) => bridge.put(k, v),
+        remove: (k) => bridge.remove(k),
+      };
+      return info;
+    } catch {
+      disk = null;
+    }
+  }
   try {
     const r = await fetch('/api/info', { cache: 'no-store' });
     if (!r.ok) return null;
     const info = await r.json();
     if (info.app !== 'ages-of-command') return null;
     const all = await (await fetch('/api/store', { cache: 'no-store' })).json();
-    disk = { files: new Map(Object.entries(all)) };
+    const url = (k) => '/api/store/' + encodeURIComponent(k);
+    disk = {
+      files: new Map(Object.entries(all)),
+      put: (k, v) => fetch(url(k), { method: 'PUT', body: v }).then((r) => r.ok, () => false),
+      remove: (k) => { fetch(url(k), { method: 'DELETE' }).catch(() => {}); },
+    };
     // keep the launcher alive while the window is open (it exits when the game is closed)
     setInterval(() => { fetch('/api/ping', { method: 'POST' }).catch(() => {}); }, 5000);
     return info;
@@ -75,8 +92,7 @@ export async function writeSave(name, text, info) {
     try { data = await gzip(text); } catch { data = text; }
   }
   if (disk) { // wait for the file to reach the disk before reporting success
-    const r = await fetch('/api/store/' + encodeURIComponent('save.' + name), { method: 'PUT', body: data }).catch(() => null);
-    if (!r?.ok) return 'Could not write the save file to disk.';
+    if (!(await disk.put('save.' + name, data))) return 'Could not write the save file to disk.';
     disk.files.set('save.' + name, data);
   } else if (!set('save.' + name, data)) return 'Browser storage is full or unavailable. Use "Export file" instead.';
   const list = listSlots().filter((s) => s.name !== name);

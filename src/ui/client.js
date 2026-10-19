@@ -56,6 +56,7 @@ export class Client {
     cancelAnimationFrame(this.frameReq);
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('keydown', this.onKey);
+    document.removeEventListener('visibilitychange', this.onHide);
     this.root.innerHTML = '';
   }
 
@@ -100,38 +101,85 @@ export class Client {
   // ------------------------------------------------------------------ input
   bind() {
     const cv = this.canvas;
+    // Mouse: drag pans, left click selects, right click orders. Touch: one finger drags or taps
+    // (a tap selects), two fingers pan and pinch-zoom, and a long press orders like a right click.
     let down = null;
+    const touches = new Map(); // pointerId -> { x, y } for touch pointers
+    let pinch = null; // { d, x, y } distance and midpoint of the two touches
+    const local = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    const pinchState = () => {
+      const [a, b] = [...touches.values()];
+      return { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    };
     cv.addEventListener('contextmenu', (e) => e.preventDefault());
     cv.addEventListener('pointerdown', (e) => {
       cv.setPointerCapture(e.pointerId);
-      down = { x: e.clientX, y: e.clientY, button: e.button, drag: false, shift: e.shiftKey };
+      if (e.pointerType === 'touch') {
+        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (touches.size === 2) { // second finger: no tap or long press, start pinching
+          if (down) { clearTimeout(down.timer); down.drag = true; }
+          pinch = pinchState();
+          return;
+        }
+        if (touches.size > 2) return;
+      }
+      down = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, button: e.button, drag: false, shift: e.shiftKey, id: e.pointerId };
+      if (e.pointerType === 'touch') {
+        down.timer = setTimeout(() => {
+          if (!down || down.drag) return;
+          const [sx, sy] = local(e);
+          down.done = true;
+          if (navigator.vibrate) navigator.vibrate(15);
+          this.rightClick(sx, sy);
+          this.requestFrame();
+        }, 500);
+      }
     });
     cv.addEventListener('pointermove', (e) => {
-      const r = cv.getBoundingClientRect();
-      const sx = e.clientX - r.left, sy = e.clientY - r.top;
-      if (down) {
+      const [sx, sy] = local(e);
+      if (e.pointerType === 'touch' && touches.has(e.pointerId)) {
+        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pinch && touches.size === 2) {
+          const p = pinchState(), r = cv.getBoundingClientRect();
+          this.renderer.pan(p.x - pinch.x, p.y - pinch.y);
+          this.renderer.zoomAt(p.x - r.left, p.y - r.top, p.d / pinch.d);
+          pinch = p;
+          this.requestFrame();
+          return;
+        }
+      }
+      if (down && down.id === e.pointerId) {
         const dx = e.clientX - down.x, dy = e.clientY - down.y;
-        if (!down.drag && Math.hypot(dx, dy) > 4) down.drag = true;
+        if (!down.drag && Math.hypot(dx, dy) > (e.pointerType === 'touch' ? 10 : 4)) { down.drag = true; clearTimeout(down.timer); }
         if (down.drag) {
-          this.renderer.pan(e.movementX, e.movementY);
+          this.renderer.pan(e.clientX - down.lx, e.clientY - down.ly);
+          down.lx = e.clientX; down.ly = e.clientY;
           cv.style.cursor = 'grabbing';
           this.requestFrame();
           return;
         }
       }
-      this.hoverAt(sx, sy);
+      if (e.pointerType !== 'touch') this.hoverAt(sx, sy);
     });
-    cv.addEventListener('pointerup', (e) => {
-      const r = cv.getBoundingClientRect();
-      const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const up = (e) => {
+      const [sx, sy] = local(e);
       cv.style.cursor = 'default';
-      if (down && !down.drag) {
-        if (down.button === 0) this.click(sx, sy, e.shiftKey);
-        else if (down.button === 2) this.rightClick(sx, sy);
+      if (e.pointerType === 'touch') {
+        touches.delete(e.pointerId);
+        if (touches.size < 2) pinch = null;
       }
-      down = null;
+      if (down && down.id === e.pointerId) {
+        clearTimeout(down.timer);
+        if (!down.drag && !down.done && e.type === 'pointerup') {
+          if (down.button === 0) this.click(sx, sy, e.shiftKey);
+          else if (down.button === 2) this.rightClick(sx, sy);
+        }
+        down = null;
+      }
       this.requestFrame();
-    });
+    };
+    cv.addEventListener('pointerup', up);
+    cv.addEventListener('pointercancel', up);
     cv.addEventListener('pointerleave', () => { this.view.hover = -1; this.hoverEl.style.display = 'none'; this.requestFrame(); });
     cv.addEventListener('wheel', (e) => {
       e.preventDefault();
@@ -143,6 +191,9 @@ export class Client {
     window.addEventListener('resize', this.onResize);
     this.onKey = (e) => this.key(e);
     window.addEventListener('keydown', this.onKey);
+    // pause when the window is hidden (minimised, or the Android app sent to the background)
+    this.onHide = () => { if (document.hidden && this.speed) this.togglePause(); };
+    document.addEventListener('visibilitychange', this.onHide);
     // tooltips for any element with data-tip
     this.el.addEventListener('mouseover', (e) => {
       const t = e.target.closest('[data-tip]');

@@ -29,10 +29,15 @@ modes. What is still missing is listed in [docs/FEATURES.md](docs/FEATURES.md).
 
 **Easiest (Windows):** run `AgesOfCommand-<version>-windows-setup.exe`. It installs for your user
 only (no administrator rights), adds Start menu and desktop shortcuts, and the game opens in its
-own window. Saves are kept in `%APPDATA%\AgesOfCommand`. Prefer no install? Unzip
-`AgesOfCommand-<version>-windows-portable.zip` and run `AgesOfCommand.exe`. Linux and macOS
-packages work the same way. Build them all with `tools/build_desktop.sh`; see
-[launcher/README.md](launcher/README.md).
+own window (Windows' built-in WebView2 engine; no browser needed). Saves are kept in
+`%APPDATA%\AgesOfCommand`. Prefer no install? Unzip `AgesOfCommand-<version>-windows-portable.zip`
+and run `AgesOfCommand.exe`. Linux (native window too) and macOS packages work the same way.
+
+**Android:** install `AgesOfCommand-<version>-android.apk` on the phone (allow installing from
+your file manager when asked). Drag to move the map, pinch to zoom, tap to select, press and hold
+to give an order. See [android/README.md](android/README.md).
+
+Build them all with `tools/build_desktop.sh`; see [launcher/README.md](launcher/README.md).
 
 From source: any modern browser and **Node.js 18+** (only used as a tiny static file server).
 No `npm install` is needed — the game has zero runtime dependencies. On Windows, `start.bat`
@@ -112,7 +117,8 @@ src/core/                  simulation (pure JS, no DOM): calendar, rng, mapdata,
                            government, events, technology, ai, ai_diplomacy, sim (clock), save, rules
 src/map/                   Canvas 2D renderer, map modes, spatial index / picking
 src/ui/                    menus, HUD, panels, dialogs, save slots (browser storage, or disk in the desktop app)
-launcher/                  desktop launcher (Go), Windows installer script, icon
+launcher/                  desktop launcher (Go; native window), Windows installer script, icon
+android/                   Android app (one Java activity around the system WebView)
 data/map/                  generated world map (2,358 provinces), sea zones (seas.json) + stable id registry
 data/rules/                units.json, balance.json, goods.json, buildings.json, governments.json, technologies.json — editable game rules
 data/events/               domestic, world, historical, strategic and future-scenario events + index.json
@@ -139,6 +145,7 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — measured numbers and how to reproduce them
 - [docs/MODDING.md](docs/MODDING.md) — data formats for units, balance, goods, buildings, governments, events, sea zones, forces and scenarios
 - [launcher/README.md](launcher/README.md) — the desktop launcher, installer and packages
+- [android/README.md](android/README.md) — the Android app
 - [docs/DEVLOG.md](docs/DEVLOG.md) — development log
 
 ## Data sources and honesty notes

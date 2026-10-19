@@ -16,6 +16,11 @@ button.good-btn { border-color: var(--good); }
 li.warn { color: var(--warn); }
 input, select { font: inherit; color: var(--text); background: #171a1f; border: 1px solid var(--line); border-radius: 4px; padding: 0.3em 0.5em; }
 input[type=range] { padding: 0; }
+/* drawn by the page, not the system theme (GTK and Android web views otherwise show light boxes) */
+select { -webkit-appearance: none; appearance: none; padding-right: 1.8em; color-scheme: dark;
+  background: #171a1f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23a3a9b2'/%3E%3C/svg%3E") no-repeat right 0.6em center; }
+select option { background: #171a1f; color: var(--text); }
+:root { color-scheme: dark; }
 h1, h2, h3, h4 { margin: 0 0 0.5em; font-weight: 600; }
 h3 { font-size: 1.1em; } h4 { font-size: 1em; color: var(--muted); margin-top: 0.8em; }
 .muted { color: var(--muted); } .good { color: var(--good); } .bad { color: var(--bad); } .warn { color: var(--warn); }
@@ -41,7 +46,7 @@ h3 { font-size: 1.1em; } h4 { font-size: 1em; color: var(--muted); margin-top: 0
 
 /* game layout */
 .game { position: absolute; inset: 0; }
-.map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: default; }
+.map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: default; touch-action: none; }
 .topbar { position: absolute; top: 0; left: 0; right: 0; height: 2.9em; display: flex; align-items: center; gap: 1.1em; padding: 0 0.7em; background: rgba(24,28,33,0.94); border-bottom: 1px solid var(--line); z-index: 5; white-space: nowrap; }
 .topbar .stat { display: flex; flex-direction: column; line-height: 1.1; cursor: default; }
 .topbar .stat b { font-size: 1.05em; } .topbar .stat span { font-size: 0.78em; color: var(--muted); }
@@ -113,3 +118,10 @@ canvas.spark { display: block; margin: 0.25em 0 0.4em; background: #171a1f; bord
 .tree .tech.current, .tree .tech.queued { background: #2c3e55; border-color: var(--blue); }
 .tree .tech.locked { color: var(--muted); cursor: pointer; }
 .tree .tech.fict { font-style: italic; }
+
+/* phones held sideways and other short screens: a denser interface leaves room for the map
+   (a first step; the phone layout is part of the interface work still to do) */
+@media (max-height: 520px) {
+  :root { font-size: calc(10px * var(--ui-scale)); }
+  .sidebar { width: calc(250px * var(--ui-scale)); }
+}

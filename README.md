@@ -74,7 +74,12 @@ programmes, cyber operations, satellites and space.
 | `P T O V G X K F R Y J Q S W` | Map modes: political, terrain, population, development, economy, resources, industry, infrastructure, military, diplomacy (opinion), government, technology (era), naval (sea control), supply |
 | `N B E U A M Z D L I` | Tabs: nation, government, economy, industry, research, military, strategic, diplomacy, events, AI/performance |
 | `C` · `H` | Centre on your capital · show whole world |
-| `Ctrl+S` | Quick save · `Esc` clears selection / closes dialogs |
+| `Ctrl+S` | Quick save · `Esc` clears selection / closes dialogs · `F11` full screen |
+| Touch | Drag to pan, pinch to zoom, tap to select, press and hold to order |
+
+**Settings** (main menu, or Menu → Settings in a game) apply at once: window mode (windowed,
+maximised, full screen) and window size in the desktop app, interface scale (Auto fits the
+window), graphics quality, map resolution, a frame rate limit, tooltips and autosaves.
 
 ## Test
 

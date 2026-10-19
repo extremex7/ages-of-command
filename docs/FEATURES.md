@@ -173,6 +173,7 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Map projections other than Miller | ⬜ |
 | Multiplayer | ⬜ Deterministic core is the foundation |
 | Desktop app and installer | ✅ Native window (WebView2 on Windows, WebKitGTK on Linux) with on-disk saves; Windows installer and portable zip, Linux and macOS packages (launcher/README.md). Not code-signed; the WebView2 window is not yet tried on a real Windows PC; macOS opens a browser window |
+| Display settings | ✅ Window mode and size (desktop app; full screen only in a browser), interface scale with an automatic fit, graphics quality, map resolution, frame rate limit (src/ui/settings.js). Window control is checked on Linux; on Windows it is untested |
 | Android app | 🟨 APK with touch controls (pan, pinch, tap, long-press orders) and saves on the phone (android/README.md). Tested in an emulated touch screen only, not on a phone; the interface is the desktop one made denser |
 | iOS app | ⬜ Postponed; needs a Mac to build |
 | Audio, onboarding tutorial, accessibility pass | ⬜ |

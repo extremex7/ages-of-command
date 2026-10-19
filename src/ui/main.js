@@ -3,8 +3,9 @@ import { h, mount } from './dom.js';
 import { decodeMap, makeRules, newGame, loadGame } from '../core/game.js';
 import { validateScenario } from '../core/rules.js';
 import { formatDate, parseDate } from '../core/calendar.js';
-import { loadSettings, saveSettings, listSlots, readSave, deleteSave, initStorage, isDesktop } from './storage.js';
+import { loadSettings, listSlots, readSave, deleteSave, initStorage, isDesktop } from './storage.js';
 import { Client } from './client.js';
+import { settingsForm, applyUiScale, applyWindow, setAppInfo, watchAutoScale, toggleFullscreen, platform } from './settings.js';
 
 const app = document.getElementById('app');
 const data = { map: null, rules: null, scenarios: [], scenarioCache: new Map(), settings: loadSettings(), timings: {} };
@@ -21,7 +22,12 @@ async function boot() {
   // the desktop app keeps settings and saves on disk; reload the settings from there
   data.desktop = await initStorage();
   if (data.desktop) data.settings = loadSettings();
-  applyUiScale();
+  setAppInfo(data.desktop);
+  applyUiScale(data.settings);
+  watchAutoScale(() => data.settings);
+  // the desktop app's window opens in the saved mode and size (a browser needs a click first)
+  if (platform() === 'native' && (data.settings.windowMode !== 'windowed' || data.settings.windowSize)) applyWindow(data.settings);
+  window.addEventListener('keydown', (e) => { if (e.key === 'F11') { e.preventDefault(); toggleFullscreen(data.settings); } });
   try {
     const [world, seas, units, balance, goods, buildings, governments, technologies, evIndex, index] = await Promise.all([
       json('data/map/world.json'), json('data/map/seas.json'), json('data/rules/units.json'), json('data/rules/balance.json'),
@@ -42,10 +48,6 @@ async function boot() {
     throw e;
   }
   mainMenu();
-}
-
-function applyUiScale() {
-  document.documentElement.style.setProperty('--ui-scale', String(data.settings.uiScale || 1));
 }
 
 async function getScenario(id) {
@@ -157,21 +159,9 @@ function alertMsg(msg) {
 }
 
 function settingsScreen() {
-  const s = data.settings;
-  const prof = h('select', { on: { change: (e) => (s.profile = e.target.value) } },
-    [['low', 'Low-end (fewer details, lower render scale)'], ['balanced', 'Balanced'], ['high', 'High-end (full resolution, more labels)']]
-      .map(([v, n]) => h('option', { value: v, selected: s.profile === v }, n)));
-  const scale = h('select', { on: { change: (e) => { s.uiScale = +e.target.value; applyUiScale(); } } },
-    ['0.85', '1', '1.15', '1.3'].map((v) => h('option', { value: v, selected: String(s.uiScale) === v }, Math.round(+v * 100) + '%')));
-  const autoM = h('select', { on: { change: (e) => (s.autosaveMonths = +e.target.value) } },
-    [['0', 'Off'], ['1', 'Monthly'], ['3', 'Every 3 months'], ['6', 'Every 6 months'], ['12', 'Yearly']].map(([v, n]) => h('option', { value: v, selected: String(s.autosaveMonths) === v }, n)));
-  const keep = h('input', { type: 'number', min: 1, max: 10, value: s.autosaveKeep, on: { change: (e) => (s.autosaveKeep = Math.max(1, Math.min(10, +e.target.value || 3))) } });
-  mount(app, h('div.screen', h('div.menu-card', h('h2', 'Settings'),
-    h('div.field', h('label', 'Performance profile (same gameplay in every profile)'), prof),
-    h('div.field', h('label', 'Interface scale'), scale),
-    h('div.field', h('label', 'Autosave'), autoM),
-    h('div.field', h('label', 'Autosaves to keep'), keep),
-    h('div.row', h('button.primary', { on: { click: () => { saveSettings(s); mainMenu(); } } }, 'Save & back')))));
+  mount(app, h('div.screen', h('div.menu-card.settings-card', h('h2', 'Settings'),
+    settingsForm(data.settings),
+    h('div.row', { style: { marginTop: '1em' } }, h('button.primary', { on: { click: mainMenu } }, 'Back')))));
 }
 
 let client = null;

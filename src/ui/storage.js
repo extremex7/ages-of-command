@@ -59,7 +59,8 @@ export async function initStorage() {
 export function isDesktop() { return !!disk; }
 
 export function loadSettings() {
-  const def = { profile: 'balanced', uiScale: 1, autosaveMonths: 6, autosaveKeep: 3, tooltips: true };
+  const def = { profile: 'balanced', uiScale: 'auto', resolution: 'auto', fpsCap: 0, windowMode: 'windowed', windowSize: null,
+    autosaveMonths: 6, autosaveKeep: 3, tooltips: true };
   try { return { ...def, ...JSON.parse(get('settings') || '{}') }; } catch { return def; }
 }
 export function saveSettings(s) { set('settings', JSON.stringify(s)); }

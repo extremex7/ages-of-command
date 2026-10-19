@@ -2,13 +2,14 @@
 import { h, mount } from './dom.js';
 import { formatDate } from '../core/calendar.js';
 import { saveGame } from '../core/game.js';
-import { listSlots, writeSave, saveSettings } from './storage.js';
+import { listSlots, writeSave, isDesktop } from './storage.js';
 import { warScore, evaluatePeace, makePeace, declareWar, demandCost, provinceValue, warJoiners, warConsequences,
   evaluateSeparatePeace, makeSeparatePeace, separateScore } from '../core/war.js';
 import { overlordOf } from '../core/diplomacy.js';
 import { resolveEvent, describeEffects } from '../core/events.js';
 import { people } from './format.js';
 import { kvbox } from './panels.js';
+import { settingsForm } from './settings.js';
 
 export function openDialog(cl, ...content) { return open(cl, ...content); }
 
@@ -26,7 +27,7 @@ export function menuDialog(cl) {
     h('div.menu-buttons',
       h('button.primary', { on: { click: () => { w.remove(); if (wasSpeed) cl.setSpeed(wasSpeed); } } }, 'Resume'),
       h('button', { disabled: cl.mode !== 'play', on: { click: () => saveDialog(cl) } }, 'Save game'),
-      h('button', { on: { click: () => perfDialog(cl) } }, 'Performance profile'),
+      h('button', { on: { click: () => settingsDialog(cl) } }, 'Settings'),
       h('button', { on: { click: () => helpDialog(cl) } }, 'Controls'),
       h('button.danger', { on: { click: () => { w.remove(); cl.opts.onExit(); } } }, 'Exit to main menu')));
 }
@@ -51,21 +52,19 @@ export function saveDialog(cl) {
   const slots = listSlots();
   open(cl, h('h2', 'Save game'),
     h('div.field', h('label', 'Save name'), name),
-    h('div.row', h('button.primary', { on: { click: doSave } }, 'Save in browser'), h('button', { on: { click: exportFile } }, 'Export file')),
+    h('div.row', h('button.primary', { on: { click: doSave } }, isDesktop() ? 'Save' : 'Save in browser'), h('button', { on: { click: exportFile } }, 'Export file')),
     msg,
     slots.length > 0 && h('div', h('h4', 'Existing saves'), h('div.list', slots.map((sl) => h('div.item', { on: { click: () => (name.value = sl.name) } }, h('b', sl.name), h('span.muted', ` · ${sl.country} · ${sl.date}`))))));
 }
 
-function perfDialog(cl) {
-  open(cl, h('h2', 'Performance profile'), h('p.muted', 'All profiles use identical gameplay rules.'),
-    h('div.menu-buttons', ['low', 'balanced', 'high'].map((p) => h('button' + (cl.data.settings.profile === p ? '.on' : ''), { on: { click: () => {
-      cl.data.settings.profile = p; saveSettings(cl.data.settings); cl.renderer.setProfile(p); cl.requestFrame(); document.querySelector('.dialog-wrap')?.remove();
-    } } }, { low: 'Low-end: 0.75× render scale, coarse borders, fewer labels', balanced: 'Balanced', high: 'High-end: full display resolution, more labels' }[p]))));
+export function settingsDialog(cl) {
+  open(cl, h('h2', 'Settings'), settingsForm(cl.data.settings, (key) => cl.applySetting(key)));
 }
 
 function helpDialog(cl) {
   const rows = [['Left click', 'Select province / army (Shift adds armies)'], ['Right click', 'Move selected armies'], ['Drag / arrows', 'Pan map'], ['Wheel / + −', 'Zoom'],
-    ['Space', 'Pause / resume'], ['1–5', 'Game speed'], ['P T O V G X K F R Y J Q', 'Map modes'], ['N B E U A M D L I', 'Sidebar tabs'], ['C / H', 'Centre on capital / whole world'], ['Ctrl+S', 'Quick save'], ['Esc', 'Clear selection / close dialog']];
+    ['Space', 'Pause / resume'], ['1–5', 'Game speed'], ['P T O V G X K F R Y J Q', 'Map modes'], ['N B E U A M D L I', 'Sidebar tabs'], ['C / H', 'Centre on capital / whole world'], ['Ctrl+S', 'Quick save'], ['F11', 'Full screen on / off'], ['Esc', 'Clear selection / close dialog'],
+    ['Touch', 'Drag to pan, pinch to zoom, tap to select, press and hold to order']];
   open(cl, h('h2', 'Controls'), h('table.t', rows.map(([k, v]) => h('tr', h('td', h('b', k)), h('td', v)))));
 }
 

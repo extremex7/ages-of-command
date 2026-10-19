@@ -38,7 +38,7 @@ export class Client {
     this.build();
     this.renderer = new MapRenderer(this.canvas, game.map);
     this.renderer.rules = game.rules;
-    this.renderer.setProfile(data.settings.profile);
+    this.renderer.setProfile(data.settings.profile, data.settings.resolution);
     this.renderer.fit();
     if (game.state.player >= 0) this.focusCountry(game.state.player, false);
     this.bind();
@@ -56,6 +56,8 @@ export class Client {
     cancelAnimationFrame(this.frameReq);
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('keydown', this.onKey);
+    window.removeEventListener('pointerup', this.onRelease, true);
+    window.removeEventListener('pointercancel', this.onRelease, true);
     document.removeEventListener('visibilitychange', this.onHide);
     this.root.innerHTML = '';
   }
@@ -77,6 +79,24 @@ export class Client {
     this.el = h('div.game', this.canvas, this.topbar, this.sidebar, this.modesEl, this.legendEl, this.provEl, this.hoverEl, this.bannerEl, this.toastsEl, this.tooltip);
     mount(this.root, this.el);
     this.renderModes();
+    // The interface is rebuilt several times a second while time runs. A rebuild between pointer
+    // down and up replaces the button under the pointer, and the browser then delivers the click
+    // to nothing, so presses failed at random. Rebuilds wait while a button is held (released
+    // after 1.5 s in case the pointer-up is lost) and while a list or text box has the focus.
+    this.holdAt = 0;
+    this.el.addEventListener('pointerdown', (e) => { if (e.target !== this.canvas) this.holdAt = performance.now(); }, true);
+    // after a press, show its result on the next frame instead of waiting for the redraw slot
+    this.onRelease = () => { if (this.holdAt) { this.holdAt = 0; this.lastUi = 0; this.requestFrame(); } };
+    window.addEventListener('pointerup', this.onRelease, true);
+    window.addEventListener('pointercancel', this.onRelease, true);
+    // a chosen list entry should not keep the list focused (and the panel frozen)
+    this.el.addEventListener('change', (e) => { if (e.target.tagName === 'SELECT') e.target.blur(); });
+  }
+
+  uiHeld() {
+    if (this.holdAt && performance.now() - this.holdAt < 1500) return true;
+    const a = document.activeElement;
+    return !!a && this.el.contains(a) && (a.tagName === 'SELECT' || (a.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button'].includes(a.type)));
   }
 
   renderModes() {
@@ -374,11 +394,25 @@ export class Client {
     this.toast(countryIdx >= 0 ? `You lead ${s.countries[countryIdx].name}. Press Space to start time.` : 'Observer mode: the AI runs every country. Press Space to start time.');
   }
 
+  // a setting changed in the settings dialog
+  applySetting(key) {
+    const s = this.data.settings;
+    if (key === 'profile' || key === 'resolution') this.renderer.setProfile(s.profile, s.resolution);
+    if (key === 'tooltips' && !s.tooltips) this.tooltip.style.display = 'none';
+    if (key === 'uiScale') this.renderer.resize();
+    this.renderer.invalidate();
+    this.uiDirty = true;
+    this.requestFrame();
+  }
+
   requestFrame() {
     if (!this.frameReq) this.frameReq = requestAnimationFrame((t) => { this.frameReq = 0; this.frame(t); });
   }
 
   frame(now) {
+    // frame rate limit: skip this display frame if the last drawn one was too recent
+    const cap = this.data.settings.fpsCap;
+    if (cap && this.lastFrame && now - this.lastFrame < 1000 / cap - 2) { this.requestFrame(); return; }
     const dt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0;
     this.lastFrame = now;
     let ticked = 0;
@@ -412,7 +446,7 @@ export class Client {
     this.perf.frames++;
     this.perf.frameTimes.push(performance.now() - tr);
     if (this.perf.frameTimes.length > 120) this.perf.frameTimes.shift();
-    if (this.uiDirty && performance.now() - this.lastUi > (ticked ? this.renderer.profile.uiMs : 0)) {
+    if (this.uiDirty && !this.uiHeld() && performance.now() - this.lastUi > (ticked ? this.renderer.profile.uiMs : 0)) {
       this.renderUi(); this.uiDirty = false; this.lastUi = performance.now();
     }
     // keep animating while time runs, the camera is settling, or UI waits for its slot

@@ -19,7 +19,10 @@ four things:
    `/api/info` answers `{"app":"ages-of-command"}`:
    - `GET /api/store` returns every key and value (read once at start-up);
    - `PUT`, `GET` and `DELETE /api/store/<key>` write, read and remove one key;
-   - `POST /api/ping` is the page's heartbeat, sent every 5 s.
+   - `POST /api/ping` is the page's heartbeat, sent every 5 s;
+   - `POST /api/window` with `{"mode": "windowed" | "maximized" | "fullscreen", "width", "height"}`
+     changes the native window (the Settings screen's window mode and size; 501 when the game is
+     in a browser window). `/api/info` says `"window": "native"` or `"browser"`.
    Each key is a file `store/<key>.dat` (characters outside `A-Z a-z 0-9 . _ -` are escaped as
    `~xx`), written to a temporary file and renamed so a crash never leaves half a save. Writes are
    limited to 256 MB. In a browser (dev server or any static host) the API is missing and the

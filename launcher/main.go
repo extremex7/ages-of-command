@@ -34,6 +34,20 @@ func init() { runtime.LockOSThread() }
 const appID = "ages-of-command"
 const basePort = 47110 // fixed, so the game's address (and anything the browser keeps for it) stays the same
 
+// windowControl changes the native window (mode "windowed", "maximized" or "fullscreen";
+// width and height in pixels for windowed mode, 0 to keep the size). It is set while a native
+// window is open and nil otherwise; the page reaches it through POST /api/window.
+var (
+	windowMu      sync.Mutex
+	windowControl func(mode string, width, height int)
+)
+
+func setWindowControl(f func(mode string, width, height int)) {
+	windowMu.Lock()
+	windowControl = f
+	windowMu.Unlock()
+}
+
 type server struct {
 	gameDir  string
 	storeDir string
@@ -190,7 +204,44 @@ func (s *server) routes(port int) http.Handler {
 	mux := http.NewServeMux()
 	files := http.FileServer(http.Dir(s.gameDir))
 	mux.HandleFunc("/api/info", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, map[string]string{"app": appID, "version": version, "dataDir": filepath.Dir(s.storeDir)})
+		windowMu.Lock()
+		kind := "browser"
+		if windowControl != nil {
+			kind = "native"
+		}
+		windowMu.Unlock()
+		writeJSON(w, map[string]string{"app": appID, "version": version, "dataDir": filepath.Dir(s.storeDir), "window": kind})
+	})
+	mux.HandleFunc("/api/window", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method", http.StatusMethodNotAllowed)
+			return
+		}
+		var req struct {
+			Mode          string
+			Width, Height int
+		}
+		if err := json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&req); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		if req.Mode != "windowed" && req.Mode != "maximized" && req.Mode != "fullscreen" {
+			http.Error(w, "unknown mode", http.StatusBadRequest)
+			return
+		}
+		if req.Width < 0 || req.Height < 0 || req.Width > 16384 || req.Height > 16384 {
+			http.Error(w, "bad size", http.StatusBadRequest)
+			return
+		}
+		windowMu.Lock()
+		f := windowControl
+		windowMu.Unlock()
+		if f == nil {
+			http.Error(w, "no native window", http.StatusNotImplemented)
+			return
+		}
+		f(req.Mode, req.Width, req.Height)
+		w.WriteHeader(http.StatusNoContent)
 	})
 	mux.HandleFunc("/api/ping", func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()

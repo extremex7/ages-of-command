@@ -355,3 +355,25 @@ the PC rather than in a browser, and on Android, with iOS later.
   Windows program and installer under Wine (no WebView2 there, so the browser fallback),
   `tests/browser/mobile.mjs` for touch and the bridge, and the APK's contents and signature.
 - Not checked: WebView2 on real Windows, and the APK on a phone or emulator.
+
+## 2026-10-19 — Session 7: buttons that ignored presses, display settings
+
+**Buttons failing while time runs.** Aayush found that tabs and build buttons often ignored
+presses unless the game was paused. Cause: the sidebar, top bar and province panel are rebuilt
+up to eight times a second while time runs, and a rebuild between pointer down and pointer up
+replaces the button under the pointer, so the browser delivers no click (confirmed with an event
+log: down and up arrived, click never did). Fix in `src/ui/client.js`: rebuilds wait while a
+button is held (at most 1.5 s) or a list or text box has the focus, and the result of a press
+shows on the next frame instead of in the next redraw slot. `tests/browser/clicks.mjs` presses 24
+tabs and 6 build buttons at full speed with a human-length press: 6 of 24 tab presses worked
+before, 24 of 24 after.
+
+**Display settings** (`src/ui/settings.js`, one form on the main menu and in the in-game menu,
+applied at once and saved): window mode (windowed, maximised, full screen; F11 toggles) and
+window size in the desktop app through a new `POST /api/window` in the launcher (Win32 calls on
+Windows, GTK on Linux); in a browser, full screen only. Interface scale gains Auto (fits the
+1366×768 design to the window, 75–200%; replaces the phone-only CSS rule) and 75–200% steps.
+Graphics quality (the existing profiles), map resolution (auto, or 50/75/100% of the screen's
+pixels) and a frame rate limit (30, 60 or none) are new. Checked with `tests/browser/settings.mjs`,
+and window modes in the Linux app under Xvfb with a window manager. Not checked: the Windows
+window code (Wine has no WebView2).

@@ -67,14 +67,18 @@ export class MapRenderer {
     return p;
   }
 
-  setProfile(name) {
+  // resolution: 'auto' (the profile's), or a fraction of the screen's device pixels
+  setProfile(name, resolution = 'auto') {
     this.profile = PROFILES[name] || PROFILES.balanced;
+    this.resolution = resolution;
     this.resize();
   }
 
   resize() {
     const r = this.canvas.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, this.profile.maxDpr) * this.profile.renderScale;
+    const dpr = this.resolution && this.resolution !== 'auto'
+      ? Math.max(0.25, (window.devicePixelRatio || 1) * this.resolution)
+      : Math.min(window.devicePixelRatio || 1, this.profile.maxDpr) * this.profile.renderScale;
     this.dpr = dpr;
     this.vw = Math.max(1, r.width); this.vh = Math.max(1, r.height);
     this.canvas.width = Math.round(this.vw * dpr);

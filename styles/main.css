@@ -119,9 +119,10 @@ canvas.spark { display: block; margin: 0.25em 0 0.4em; background: #171a1f; bord
 .tree .tech.locked { color: var(--muted); cursor: pointer; }
 .tree .tech.fict { font-style: italic; }
 
-/* phones held sideways and other short screens: a denser interface leaves room for the map
-   (a first step; the phone layout is part of the interface work still to do) */
-@media (max-height: 520px) {
-  :root { font-size: calc(10px * var(--ui-scale)); }
-  .sidebar { width: calc(250px * var(--ui-scale)); }
-}
+
+/* settings form */
+.settings h4 { margin: 1em 0 0.3em; color: var(--accent); }
+.settings h4:first-child { margin-top: 0; }
+.settings .field select { width: 100%; }
+.settings .small { font-size: 0.85em; margin-top: 0.2em; }
+.settings-card { max-height: 94vh; overflow: auto; }

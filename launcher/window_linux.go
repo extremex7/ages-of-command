@@ -13,6 +13,31 @@ package main
 typedef void *(*fn_ptr)();
 static void *sym(const char *name) { return dlsym(RTLD_DEFAULT, name); }
 
+// Window mode changes come from the HTTP server's goroutines; g_idle_add runs them on the GTK
+// thread. Modes: 0 windowed, 1 maximised, 2 full screen.
+static void *aoc_win;
+static int aoc_mode, aoc_w, aoc_h;
+static int aoc_apply(void *unused) {
+	void (*fs)(void *) = (void (*)(void *))sym("gtk_window_fullscreen");
+	void (*unfs)(void *) = (void (*)(void *))sym("gtk_window_unfullscreen");
+	void (*max)(void *) = (void (*)(void *))sym("gtk_window_maximize");
+	void (*unmax)(void *) = (void (*)(void *))sym("gtk_window_unmaximize");
+	void (*resize)(void *, int, int) = (void (*)(void *, int, int))sym("gtk_window_resize");
+	if (!aoc_win) return 0;
+	if (aoc_mode == 2) { fs(aoc_win); return 0; }
+	unfs(aoc_win);
+	if (aoc_mode == 1) { max(aoc_win); return 0; }
+	unmax(aoc_win);
+	if (aoc_w > 0 && aoc_h > 0) resize(aoc_win, aoc_w, aoc_h);
+	return 0;
+}
+static void aoc_set_window(int mode, int w, int h) {
+	unsigned (*idle_add)(int (*)(void *), void *) = (unsigned (*)(int (*)(void *), void *))sym("g_idle_add");
+	if (!aoc_win || !idle_add) return;
+	aoc_mode = mode; aoc_w = w; aoc_h = h;
+	idle_add(aoc_apply, NULL);
+}
+
 static int aoc_window(const char *url, const char *title, const char *icon) {
 	if (!dlopen("libgtk-3.so.0", RTLD_NOW | RTLD_GLOBAL)) return 0;
 	if (!dlopen("libwebkit2gtk-4.1.so.0", RTLD_NOW | RTLD_GLOBAL) &&
@@ -43,7 +68,9 @@ static int aoc_window(const char *url, const char *title, const char *icon) {
 	load_uri(view, url);
 	show_all(win);
 	grab_focus(view);
+	aoc_win = win;
 	gtk_main();
+	aoc_win = NULL;
 	return 1;
 }
 */
@@ -61,8 +88,14 @@ func nativeWindow(url, profile, iconPath string) bool {
 	defer C.free(unsafe.Pointer(cu))
 	defer C.free(unsafe.Pointer(ct))
 	defer C.free(unsafe.Pointer(ci))
+	setWindowControl(func(mode string, width, height int) {
+		m := map[string]C.int{"windowed": 0, "maximized": 1, "fullscreen": 2}[mode]
+		C.aoc_set_window(m, C.int(width), C.int(height))
+	})
+	defer setWindowControl(nil)
 	log.Printf("opening a WebKitGTK window")
 	if C.aoc_window(cu, ct, ci) == 0 {
+		setWindowControl(nil)
 		log.Printf("GTK or WebKitGTK is not available")
 		return false
 	}

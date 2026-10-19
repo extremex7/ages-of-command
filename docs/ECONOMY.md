@@ -37,7 +37,8 @@ Energy comes from six kinds of plant (`buildings.json`):
 
 Wind and sunshine (about 0.3 to 1.4) come from each province's terrain, latitude and coast
 (`siteMap` in `src/core/industry.js`): deserts and the tropics are sunniest, coasts, plains and
-the far north windiest. Gas fields need a gas deposit. Gas and hydro deposits were added to every
+the far north windiest. Gas fields need a gas deposit and make 1.5 gas per level, enough for one
+and a half gas plants. Gas and hydro deposits were added to every
 scenario by `tools/add_energy_deposits.mjs` (gas from approximate national production shares,
 hydro from terrain plus countries with large hydro resources); the starting buildings are
 unchanged, so the starting energy mix is still all thermal and nuclear, and new plants change it
@@ -149,6 +150,8 @@ Every province panel shows this calculation in its tooltips.
   ```
 
   The price is then clamped to 0.3–4× base, and moves 35% of the way toward its target each month.
+  A good nobody needs falls to the floor if some is still made, and stays at its base price while
+  none is made either (natural gas before the first gas field).
 - **Embargoes.** You can embargo any country from its Nation tab. AI countries do not declare
   embargoes yet.
 
@@ -217,7 +220,9 @@ Every other month each AI country:
 3. Builds the producer of the top good in the province where a new level would be most efficient.
    If one of the producer's inputs is below 90% supplied (`ai.bottleneckBelow`), it builds that
    input's producer instead, following the chain (consumer factory → steel mill → iron mine) so it
-   does not build a mill that would stand idle for want of ore. A country with unused deposits
+   does not build a mill that would stand idle for want of ore. Output already under construction
+   counts as supply here. A new input nobody supplies yet (gas before the first gas field) counts
+   as missing unless the world market has a surplus to import. A country with unused deposits
    also takes its share of any world shortage of a raw material (world price at least 5% above
    base, `ai.worldShortagePrice`; share = its part of the world's unused deposits) and mines it
    for export, since importers without deposits cannot. Large economies start up to a third of
@@ -258,7 +263,6 @@ indicators at the start and after N years of AI play. It is used to check the ca
 
 ## Known simplifications
 
-- Electricity from gas, hydro and renewables is folded into the "thermal power plant" (coal input).
 - Goods are national pools. There is no transport inside a country and no shipping distance in
   trade.
 - Trade is automatic. There are no trade agreements, and the AI does not embargo.

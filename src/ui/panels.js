@@ -19,6 +19,8 @@ import { govType } from '../core/government.js';
 import { portZonesOf } from '../core/mapdata.js';
 import { fleetsSection, wingsSection, provinceForces, supplyLine } from './forces_ui.js';
 import { strategicTab, nuclearButton } from './strategic_ui.js';
+import { commandSection, generalLine } from './command_ui.js';
+import { leavePlans } from '../core/plans.js';
 
 export const TABS = [
   { id: 'country', name: 'Nation', key: 'n', tip: 'Overview of the selected country, or yours, and your relations with it.' },
@@ -135,9 +137,10 @@ function militaryTab(cl) {
     selected.length > 0 && h('div.row', { style: { marginBottom: '0.5em' } },
       h('button', { disabled: selected.length < 2, on: { click: () => { const e = mergeArmies(s, selected.map((a) => a.id)); if (e) cl.toast(e, true); cl.view.selectedArmies = new Set([selected[0].id]); cl.uiDirty = true; } } }, 'Merge'),
       h('button', { disabled: selected.length !== 1, on: { click: () => { const e = splitArmy(s, selected[0].id); if (e) cl.toast(e, true); cl.uiDirty = true; } } }, 'Split'),
-      h('button', { on: { click: () => { for (const a of selected) { a.path = []; a.prog = 0; } cl.uiDirty = true; } } }, 'Stop'),
+      h('button', { on: { click: () => { leavePlans(s, selected.map((a) => a.id)); for (const a of selected) { a.path = []; a.prog = 0; } cl.uiDirty = true; } } }, 'Stop'),
       modernizeButton(cl, selected),
       h('span.muted', 'Right-click the map to move; overseas targets are reached by sea')),
+    commandSection(cl, selected),
     armies.length ? armies.map((a) => armyCard(cl, a)) : h('p.muted', 'No armies.'),
     fleetsSection(cl),
     wingsSection(cl),
@@ -180,6 +183,7 @@ function armyCard(cl, a) {
     h('div.muted', `${Object.entries(u).map(([t, n]) => `${n} ${R.units[t].short}`).join(' · ')} · ${people(armyMen(a, R))} men`),
     h('div.row', { style: { gap: '0.4em' } }, h('span.muted', 'Str'), h('div', { style: { flex: 1 }, tip: `Strength ${pct(a.str)}: share of full manpower. Reinforced monthly in friendly territory.` }, bar(a.str)),
       h('span.muted', 'Org'), h('div', { style: { flex: 1 }, tip: `Organisation ${pct(a.org)}: combat readiness. Lost in battle, recovers daily.` }, bar(a.org, 'var(--blue)'))),
+    generalLine(cl, a),
     supplyLine(cl, a),
     h('div', { className: a.battle ? 'bad' : 'muted' }, status));
 }

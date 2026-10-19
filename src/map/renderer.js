@@ -6,6 +6,7 @@
 import { provinceColors, zoneColors } from './modes.js';
 import { projectLonLat } from '../core/mapdata.js';
 import { hex } from './modes.js';
+import { friendly } from '../core/relations.js';
 
 const OCEAN = '#9fb7c6', OCEAN_DARK = '#1d2833';
 
@@ -306,6 +307,7 @@ export class MapRenderer {
     // screen-space overlays
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.drawLabels(state, view);
+    if (state.plans?.length) this.drawPlans(state, view);
     this.drawArmies(state, view);
     this.stats.frameMs = performance.now() - t0;
     return needBase;
@@ -370,6 +372,45 @@ export class MapRenderer {
         if (ctx.measureText(name).width + pad > bw) continue;
         ctx.fillText(name, sx, sy + 12);
       }
+    }
+  }
+
+  // The player's battle plans: front lines as ticks along the border, attacks as arrows.
+  drawPlans(state, view) {
+    const ctx = this.ctx, map = this.map;
+    this.frontCache ||= new WeakMap();
+    for (const p of state.plans) {
+      if (p.owner !== state.player) continue;
+      if (p.kind === 'front') {
+        let f = this.frontCache.get(p);
+        if (!f || f.day !== state.day) { f = { day: state.day, segs: frontSegments(state, map, p) }; this.frontCache.set(p, f); }
+        ctx.strokeStyle = 'rgba(220,40,40,0.95)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+        ctx.beginPath();
+        for (const [i, j] of f.segs) {
+          const [ax, ay] = this.worldToScreen(map.x[i], map.y[i]), [bx, by] = this.worldToScreen(map.x[j], map.y[j]);
+          const mx = (ax + bx) / 2, my = (ay + by) / 2, dx = by - ay, dy = ax - bx, l = Math.hypot(dx, dy) || 1;
+          ctx.moveTo(mx - (dx / l) * 6, my - (dy / l) * 6); ctx.lineTo(mx + (dx / l) * 6, my + (dy / l) * 6);
+        }
+        ctx.stroke(); ctx.lineCap = 'butt';
+        continue;
+      }
+      const lead = state.armies.find((a) => p.armies.includes(a.id));
+      const pts = [lead ? lead.loc : p.from, ...p.path.slice(p.step)].map((n) => this.worldToScreen(...this.nodeXY(n)));
+      if (pts.length < 2) continue;
+      ctx.strokeStyle = p.status === 'prep' ? 'rgba(255,170,40,0.9)' : 'rgba(230,60,30,0.95)';
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = 5; ctx.lineJoin = 'round';
+      if (p.status === 'prep') ctx.setLineDash([10, 6]);
+      ctx.beginPath(); ctx.moveTo(...pts[0]);
+      for (const q of pts.slice(1, -1)) ctx.lineTo(...q);
+      const [ex, ey] = pts[pts.length - 1], [px, py] = pts[pts.length - 2];
+      const a = Math.atan2(ey - py, ex - px);
+      ctx.lineTo(ex - Math.cos(a) * 10, ey - Math.sin(a) * 10);
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - Math.cos(a - 0.5) * 16, ey - Math.sin(a - 0.5) * 16);
+      ctx.lineTo(ex - Math.cos(a + 0.5) * 16, ey - Math.sin(a + 0.5) * 16);
+      ctx.closePath(); ctx.fill();
     }
   }
 
@@ -588,4 +629,14 @@ export function computeCountryLabels(state, map) {
   }
   // size in world units: grows with the square root of area (km² -> map units ≈ 9.8 km)
   return [...best.values()].map((L) => ({ ...L, size: Math.sqrt(L.area) / 9.8 / 5.5 }));
+}
+
+// Border pieces of a front plan: [own province, enemy province] pairs across land edges.
+function frontSegments(state, map, p) {
+  const P = state.prov, out = [];
+  for (const i of map.ids) {
+    if (!friendly(state, p.owner, P.controller[i])) continue;
+    for (let e = map.adjStart[i]; e < map.adjStart[i + 1]; e++) if (map.adjKind[e] !== 2 && P.controller[map.adj[e]] === p.enemy) out.push([i, map.adj[e]]);
+  }
+  return out;
 }

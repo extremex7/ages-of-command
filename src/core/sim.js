@@ -19,6 +19,8 @@ import { dailySupply, monthlyDepots } from './supply.js';
 import { dailyStrategic, monthlyStrategic } from './strategic.js';
 import { monthlyPrestige } from './prestige.js';
 import { monthlyCivilWar } from './civilwar.js';
+import { monthlyCommanders } from './commanders.js';
+import { dailyPlans } from './plans.js';
 
 export function tick(game) {
   const { state, map, rules } = game;
@@ -26,6 +28,7 @@ export function tick(game) {
   state.day++;
   const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
   processRecruitment(state, map, rules);
+  dailyPlans(state, map, rules);
   processMovement(state, map, rules);
   processFleets(state, map, rules);
   processWings(state, map, rules);
@@ -52,6 +55,7 @@ export function tick(game) {
     monthlyDepots(state, map, rules);
     if (state.tech) monthlyResearch(state, map, rules);
     monthlyMilitary(state, map, rules);
+    monthlyCommanders(state, map, rules);
     const warScores = currentWarScores(state, map, rules);
     monthlyGovernment(state, map, rules, warScores);
     monthlyCivilWar(state, map, rules, warScores);

@@ -12,6 +12,7 @@ import { tick } from '../core/sim.js';
 import { formatDate, civilFromDays, dateString } from '../core/calendar.js';
 import { saveGame } from '../core/game.js';
 import { orderMove } from '../core/military.js';
+import { makeAttack, leavePlans } from '../core/plans.js';
 import { orderFleet, canDockAt, zoneController } from '../core/naval.js';
 import { rebaseWing } from '../core/air.js';
 import { zoneAt, portZonesOf } from '../core/mapdata.js';
@@ -345,6 +346,16 @@ export class Client {
     const [wx, wy] = this.renderer.screenToWorld(sx, sy);
     const p = pickProvince(map, this.index, wx, wy);
     const errs = [];
+    // drawing an attack arrow: the selected armies get a plan instead of a move order
+    if (v.planMode && v.selectedArmies.size && p >= 0) {
+      v.planMode = false;
+      const r = makeAttack(s, map, R, s.player, [...v.selectedArmies], p);
+      if (typeof r === 'string') this.toast(r, true);
+      else this.toast(`Attack on ${map.name[p]} planned: the armies prepare until you press Execute (Military tab).`);
+      this.uiDirty = true;
+      return;
+    }
+    if (v.selectedArmies.size) leavePlans(s, [...v.selectedArmies].filter((id) => s.armies.find((a) => a.id === id)?.owner === s.player));
     for (const id of v.selectedArmies) {
       const a = s.armies.find((x) => x.id === id);
       if (!a || a.owner !== s.player || p < 0) continue;

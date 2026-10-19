@@ -9,6 +9,8 @@ import { randRange } from './rng.js';
 import { armyMen } from './military.js';
 import { battleSupport, airCombatDay } from './air.js';
 import { satCover } from './strategic.js';
+import { generalFx, battleExperience } from './commanders.js';
+import { planBonus } from './plans.js';
 
 function sideOf(battle, owner, state) {
   if (battle.att.some((id) => { const a = armyById(state, id); return a && friendly(state, a.owner, owner); })) return 'att';
@@ -82,8 +84,11 @@ export function sideStats(state, ids, role, terrain, rules, p) {
     const mun = e ? 0.6 + 0.4 * e.supplyMun : 1, fuel = e ? 0.5 + 0.5 * e.supplyFuel : 1;
     const co = state.countries[a.owner];
     // technology, reconnaissance satellites, and supply (see docs/LOGISTICS.md)
+    // the general: skill, attack/defence and terrain traits, a logistician's supply; a prepared plan
+    const gx = generalFx(rules, a), sup = 1 - (1 - (a.supply ?? 1)) * (1 - gx.supply);
     const tech = (co.tfx?.mult.combat ?? 1) * (co.strat ? 1 + 0.04 * satCover(co, 'recon', rules) : 1)
-      * (1 - B.supplyWeight + B.supplyWeight * (a.supply ?? 1));
+      * (1 - B.supplyWeight + B.supplyWeight * sup)
+      * (role === 'att' ? gx.attack * (1 + planBonus(state, rules, a)) : gx.defense) * (gx.terrain?.[terrain] ?? 1);
     let usesMun = 0;
     for (const t in a.units) {
       const k = a.units[t];
@@ -145,7 +150,7 @@ function applyDamage(armies, strLoss, orgLoss, rules, b, sideIdx) {
   for (const a of armies) {
     const menBefore = armyMen(a, rules);
     a.str = Math.max(0, a.str - strLoss * (0.7 + 0.3 * (1 - a.org)));
-    a.org = Math.max(0, a.org - orgLoss);
+    a.org = Math.max(0, a.org - orgLoss * generalFx(rules, a).orgLoss);
     b.cas[sideIdx] += menBefore - armyMen(a, rules);
   }
 }
@@ -158,10 +163,12 @@ function endBattle(state, map, rules, b, winner) {
   const C = state.countries;
   let surrendered = 0;
   for (const a of winners) { a.battle = 0; a.exp = Math.min(1, a.exp + 0.05); }
+  if (rules.balance.commanders) battleExperience(state, rules, winners, losers, TERRAINS[map.terrain[b.prov]], (a) => (b.att.includes(a.id) ? 'att' : 'def'));
   for (const a of losers) {
     a.battle = 0; a.path = []; a.prog = 0;
     const to = retreatTarget(state, map, a);
     if (to < 0 || a.str < 0.04) {
+      if (a.gen && a.owner === state.player) log(state, 'military', `General ${a.gen.name} was captured with the ${a.name}.`, { important: true });
       surrendered += Math.round(armyMen(a, rules));
       b.cas[winner === 'att' ? 1 : 0] += armyMen(a, rules);
       state.armies.splice(state.armies.indexOf(a), 1);

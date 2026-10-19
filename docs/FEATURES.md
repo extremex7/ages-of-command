@@ -41,7 +41,7 @@ Nothing is marked ✅ if it is only a placeholder.
 | War declarations, occupation, peace | ✅ | Alliances join defensively; truces |
 | Basic country AI, military interface | ✅ | |
 | Separate peace for non-leaders | ✅ | Co-belligerents leave a war with their own terms; the AI does it too (DIPLOMACY.md) |
-| Fronts, battle plans, commanders | ⬜ | |
+| Fronts, battle plans, commanders | ✅ | Generals with skill and traits; front lines and attack arrows for the player (MILITARY.md). The AI moves its armies without plans |
 
 ## Milestone 3 — economy
 

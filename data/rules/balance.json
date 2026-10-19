@@ -368,5 +368,36 @@
       "near_future": 1100,
       "future": 1800
     }
+  },
+  "commanders": {
+    "_doc": "Generals and battle plans (docs/MILITARY.md). skillBonus: damage per skill level. A general rises a level after xpPerSkill × skill experience; xpWin / xpLoss per battle; fallChance: a beaten army's general falls. Hiring costs hireCostRevenueShare of monthly revenue (at least hireCostMin); a country keeps at most one general per army plus `spare`. Attack plans gain up to planMaxBonus attack over planPrepDays of preparation, losing planDecayDay per day once under way. Trait multipliers: attack, defense, speed, orgRecovery, orgLoss (organisation lost in battle), siege; terrain multiplies damage on that terrain; supply is the share of a supply shortage ignored.",
+    "skillBonus": 0.05,
+    "maxSkill": 5,
+    "maxTraits": 3,
+    "xpPerSkill": 1,
+    "xpWin": 0.35,
+    "xpLoss": 0.15,
+    "traitChance": 0.4,
+    "fallChance": 0.04,
+    "hireCostRevenueShare": 0.05,
+    "hireCostMin": 0.002,
+    "spare": 2,
+    "aiReserveMonths": 1,
+    "planPrepDays": 30,
+    "planMaxBonus": 0.15,
+    "planDecayDay": 0.01,
+    "traits": {
+      "offensive": {"name": "Offensive doctrine", "text": "+12% damage when attacking", "attack": 1.12, "role": "att"},
+      "defensive": {"name": "Defensive doctrine", "text": "+12% damage when defending", "defense": 1.12, "role": "def"},
+      "mountaineer": {"name": "Mountaineer", "text": "+20% damage in hills and mountains", "terrain": {"hills": 1.2, "mountains": 1.2}},
+      "desert_fox": {"name": "Desert fox", "text": "+20% damage in deserts", "terrain": {"desert": 1.2}},
+      "woodsman": {"name": "Woodsman", "text": "+20% damage in forests", "terrain": {"forest": 1.2}},
+      "winter_expert": {"name": "Winter expert", "text": "+20% damage in tundra", "terrain": {"tundra": 1.2}},
+      "swift": {"name": "Swift", "text": "Moves 12% faster", "speed": 1.12},
+      "organiser": {"name": "Organiser", "text": "Organisation recovers 30% faster", "orgRecovery": 1.3},
+      "inspiring": {"name": "Inspiring", "text": "Loses 15% less organisation in battle", "orgLoss": 0.85},
+      "logistician": {"name": "Logistician", "text": "Ignores 40% of any supply shortage", "supply": 0.4},
+      "engineer": {"name": "Engineer", "text": "Sieges 30% faster", "siege": 1.3}
+    }
   }
 }

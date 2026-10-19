@@ -7,6 +7,7 @@ import { portZonesOf } from './mapdata.js';
 import { commissionShip, laneOpen, hostileSea, linkOpen } from './naval.js';
 import { commissionWing, canBase } from './air.js';
 import { satCover } from './strategic.js';
+import { generalFx } from './commanders.js';
 
 // Slowest unit's speed, times the country's movement technology; armies with fuel-using units
 // (armour) slow down when the country is short of fuel.
@@ -18,6 +19,7 @@ export function armySpeed(a, rules, state = null) {
   if (c?.econ && fuel) s *= 0.7 + 0.3 * c.econ.supplyFuel;
   if (c?.tfx) s *= c.tfx.mult.movement;
   if (c?.strat) s *= 1 + 0.05 * satCover(c, 'nav', rules);
+  if (a.gen) s *= generalFx(rules, a).speed;
   return s;
 }
 
@@ -282,7 +284,7 @@ export function processSieges(state, map, rules) {
       // siege engines and artillery count more ("siege" in units.json), times siege technology
       let w = 0;
       for (const t in a.units) w += a.units[t] * (rules.units[t].siege ?? 1);
-      power += w * a.str * (state.countries[a.owner].tfx?.mult.siege ?? 1);
+      power += w * a.str * (state.countries[a.owner].tfx?.mult.siege ?? 1) * generalFx(rules, a).siege;
     }
     if (besieger < 0) continue;
     // hostile armies still present -> combat handles it
@@ -352,7 +354,7 @@ export function dailyRecovery(state, rules) {
     const home = friendly(state, a.owner, state.prov.controller[a.loc]);
     const c = state.countries[a.owner];
     const comms = c.strat ? 1 + 0.2 * satCover(c, 'comms', rules) : 1;
-    a.org = Math.min(1, a.org + R.orgRecoveryDay * (home ? 1 : 0.5) * (a.supply ?? 1) * comms);
+    a.org = Math.min(1, a.org + R.orgRecoveryDay * (home ? 1 : 0.5) * (a.supply ?? 1) * comms * generalFx(rules, a).orgRecovery);
   }
 }
 
@@ -368,6 +370,11 @@ export function mergeArmies(state, ids) {
     base.org = (base.org * n0 + a.org * n1) / (n0 + n1);
     for (const t in a.units) base.units[t] = (base.units[t] || 0) + a.units[t];
     n0 += n1;
+    // the best general leads the merged army; the others wait for a command
+    if (a.gen) {
+      const pool = (state.countries[a.owner].generals ||= []);
+      if (!base.gen || a.gen.skill > base.gen.skill) { if (base.gen) pool.push(base.gen); base.gen = a.gen; } else pool.push(a.gen);
+    }
     state.armies.splice(state.armies.indexOf(a), 1);
   }
   base.path = []; base.prog = 0;

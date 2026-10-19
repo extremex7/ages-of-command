@@ -460,10 +460,13 @@ export function aiEconomy(state, map, rules) {
   }
 }
 
-function inputAvailability(e, b) {
+// A new input (need 0) counts as covered when the country has some or the world market has a
+// surplus to import; nobody supplying it at all (gas before the first gas field) is missing.
+function inputAvailability(e, b, coming, W) {
   let f = 1, worst = -1;
   for (const [g] of b.inp) {
-    const a = e.need[g] > 0 ? Math.min(1, (e.prod[g] + e.imp[g]) / e.need[g]) : 1;
+    const have = e.prod[g] + e.imp[g] + (coming ? coming[g] : 0);
+    const a = e.need[g] > 0 ? Math.min(1, have / e.need[g]) : have + e.stock[g] > 1e-6 || (W && W.gap[g] < 0) ? 1 : 0;
     if (a < f) { f = a; worst = g; }
   }
   return { f, worst };
@@ -521,7 +524,7 @@ function rankProducers(state, map, rules, c, g) {
     let none = false;
     for (const [i, a] of B.inp) {
       // no supply at all (gas before any gas field): only worth it if the country can dig its own
-      if (e.prod[i] + e.imp[i] + e.stock[i] <= 1e-6 && !X.producers[i].some((pb) => bestSite(state, map, rules, c, pb) >= 0)) none = true;
+      if (e.prod[i] + e.imp[i] + e.stock[i] <= 1e-6 && worldGaps(state, X).prod[i] < 1 && !X.producers[i].some((pb) => bestSite(state, map, rules, c, pb) >= 0)) none = true;
       v -= a * eff * prices[i] * (e.need[i] > 0 && (e.prod[i] + e.imp[i]) / e.need[i] < 0.9 ? 2 : 1);
     }
     if (none) continue;
@@ -530,14 +533,14 @@ function rankProducers(state, map, rules, c, g) {
   return scored.sort((x, y) => y[1] - x[1]).map((x) => x[0]);
 }
 
-// World need minus world production per good, and unused deposit levels per resource (world
+// World need minus world production per good, world production, and unused deposit levels per resource (world
 // total and per country), computed once a day.
 const worldCache = new WeakMap();
 function worldGaps(state, X) {
   const w = worldCache.get(state);
   if (w && w.day === state.day) return w;
-  const gap = new Float64Array(X.G), C = state.countries.length;
-  for (const c of state.countries) if (c.alive && c.econ) for (let g = 0; g < X.G; g++) gap[g] += c.econ.need[g] - c.econ.prod[g];
+  const gap = new Float64Array(X.G), prod = new Float64Array(X.G), C = state.countries.length;
+  for (const c of state.countries) if (c.alive && c.econ) for (let g = 0; g < X.G; g++) { gap[g] += c.econ.need[g] - c.econ.prod[g]; prod[g] += c.econ.prod[g]; }
   const free = new Float64Array(C * X.R), freeAll = new Float64Array(X.R), ec = state.econ, own = state.prov.owner;
   for (const b of X.buildings) {
     if (b.dep < 0) continue;
@@ -548,7 +551,7 @@ function worldGaps(state, X) {
       free[o * X.R + b.dep] += f; freeAll[b.dep] += f;
     }
   }
-  const out = { day: state.day, gap, free, freeAll };
+  const out = { day: state.day, gap, prod, free, freeAll };
   worldCache.set(state, out);
   return out;
 }
@@ -603,7 +606,7 @@ function aiBuild(state, map, rules, c) {
       // so a mill is not built where it would stand idle for want of ore
       let bb = b, why = '', site = -1;
       for (let depth = 0; depth < 3; depth++) {
-        const inp = inputAvailability(e, X.buildings[bb]);
+        const inp = inputAvailability(e, X.buildings[bb], coming, W);
         if (!(e.prod[g] > 0 || depth) || inp.f >= (A.bottleneckBelow ?? 0.7) || inp.worst < 0 || !X.producers[inp.worst].length) break;
         why = ` (input for ${X.buildings[bb].name.toLowerCase()})`;
         bb = X.producers[inp.worst][0];

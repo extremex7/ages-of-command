@@ -541,7 +541,8 @@ export function industryMonth(state, map, rules, opts = {}) {
     const r = need > 0 ? need / Math.max(1e-6, prod + 0.1 * stock) : 0;
     if (opts.calibrate || !ec.ratio0[g]) { ec.ratio0[g] = r || 1; continue; }
     const base0 = X.goods[g].price;
-    const target = r > 0 ? base0 * Math.pow(r / ec.ratio0[g], I.priceElasticity) : base0 * I.priceMin;
+    // no need at all: the floor price if some is made, the base price for a good not traded yet
+    const target = r > 0 ? base0 * Math.pow(r / ec.ratio0[g], I.priceElasticity) : base0 * (prod + stock > 0 ? I.priceMin : 1);
     const clamped = Math.max(base0 * I.priceMin, Math.min(base0 * I.priceMax, target));
     prices[g] += (clamped - prices[g]) * I.priceSmoothing;
   }

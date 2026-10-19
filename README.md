@@ -87,7 +87,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 127 unit/integration tests of the simulation (node:test)
+npm test                            # 129 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -154,6 +154,7 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 - [docs/TECHNOLOGY.md](docs/TECHNOLOGY.md) — technology tree, research formulas, eras, unit and building gating
 - [docs/SCENARIOS.md](docs/SCENARIOS.md) — the historical scenarios, how they are built, historical events
 - [docs/NAVY_AIR.md](docs/NAVY_AIR.md) — sea zones, fleets, naval combat, blockades, amphibious movement, air wings, bombing
+- [docs/MILITARY.md](docs/MILITARY.md) — generals and battle plans (fronts, attack arrows)
 - [docs/LOGISTICS.md](docs/LOGISTICS.md) — supply network, attrition, depots
 - [docs/STRATEGIC.md](docs/STRATEGIC.md) — nuclear weapons and deterrence, cyber, satellites, space
 - [docs/FEATURES.md](docs/FEATURES.md) — implemented / partial / planned checklist and the continuation plan

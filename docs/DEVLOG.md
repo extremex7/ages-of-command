@@ -540,3 +540,15 @@ the government retakes every rebel province, or in independence after a 60 war s
 A player whose country splits chooses which side to lead. A 32-year Modern World test run saw
 2 civil wars.
 
+## Session 14: generals and battle plans
+
+Generals (skill, eleven traits, experience, hiring) and battle plans (fronts and attack arrows
+with a preparation bonus), described in MILITARY.md. The monthly tick is unchanged (p50 ~19 ms).
+
+While testing, two-year runs showed a natural gas glut and then a shortage: each country built
+its own gas field for its first gas plant, though the world market had gas to sell, and a field
+made three times what a plant burns. The AI now counts output under construction as supply when
+it checks a plant's inputs, and treats a new input as available when the world has a surplus.
+Gas fields now make 1.5 gas per level (cost 3.5), and a good nobody makes or needs keeps its base
+price. Four 32-year Modern World runs, 2058: energy 96–101% of need, gas 69–86%, world GDP 181–188 T.
+

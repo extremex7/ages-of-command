@@ -11,7 +11,7 @@
 // step, status: 'prep' | 'go', prep }]. An army belongs to one plan at most; giving it any
 // other order takes it out of its plan. See docs/MILITARY.md (Battle plans).
 import { log } from './state.js';
-import { atWar, friendly } from './relations.js';
+import { atWar, friendly, canEnter } from './relations.js';
 import { findPath } from './pathfind.js';
 import { orderMove, armySpeed } from './military.js';
 
@@ -63,10 +63,12 @@ export function makeAttack(state, map, rules, k, ids, target) {
   const list = ownArmies(state, k, ids);
   if (!list.length) return 'Select your armies first';
   if (!map.exists[target]) return 'Pick a province to attack';
+  if (!canEnter(state, k, target)) return `You can only plan an attack on a country you are at war with (or have military access to)`;
   const lead = list.reduce((m, a) => (unitsOf(a) > unitsOf(m) ? a : m), list[0]);
   const path = findPath(map, state, k, lead.loc, target, armySpeed(lead, rules, state), 6000, rules);
   if (!path || !path.length || path.some((n) => n >= map.count)) return 'No land route to that province';
   leavePlans(state, list.map((a) => a.id));
+  for (const a of list) if (!a.battle) { a.path = []; a.prog = 0; } // they wait where they are while the plan is prepared
   const p = { id: state.nextId++, owner: k, kind: 'attack', armies: list.map((a) => a.id), target, path, step: 0, status: 'prep', prep: 0, from: lead.loc };
   plansOf(state).push(p);
   return p;

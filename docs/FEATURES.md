@@ -191,7 +191,8 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Cheats | ✅ Settings → Enable cheats; console with ` or a top-bar button; only in games started while cheats were on (stored in the save). Commands: money, manpower, influence, stability, research, tech, build, annex, war, peace, play |
 | Exit button on the main menu | ✅ Desktop and Android apps (a browser tab cannot close itself, so it is hidden there) |
 | iOS app | ⬜ Postponed; needs a Mac to build |
-| Accessibility pass (screen readers, colour-blind map modes) | ⬜ |
+| Colour-blind map colours, larger text, keyboard-only play | ✅ |
+| Screen reader support | ⬜ The map is a canvas; clickable rows are labelled as buttons |
 
 ## Known limitations
 

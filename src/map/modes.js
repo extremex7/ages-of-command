@@ -24,6 +24,37 @@ export const MAP_MODES = [
   { id: 'government', name: 'Government', key: 'j', tip: 'Form of government: democracies, autocracies, theocracies and military rule; darker = lower stability.' },
 ];
 
+// Colours with a meaning (own side, enemy, good to bad), with substitutes for colour-blind
+// players (Settings → Accessibility): orange against blue for red-green colour blindness
+// (protanopia, deuteranopia), red against teal for blue-yellow (tritanopia).
+const NORMAL = {
+  own: '#5f8fc4', ally: '#8fb4d8', enemy: '#c4544a', siege: '#e0a040', neutral: '#d6d1c6',
+  selected: '#3f8f5a', allied: '#4f7fc4', subject: '#8a5ab8', war: '#8e2a22', truce: '#d8b84a',
+  opBad: '#c4544a', opMid: '#e3ddd0', opGood: '#5a9a4a', dipWar: '#c4443a',
+  supLow: '#b8443a', supHalf: '#e0c050', supFull: '#4f9a4a',
+  devLow: '#7a3b3b', devMid: '#d8c46a', devHigh: '#3b7a5a',
+  seaOwn: '#3f78c4', seaAlly: '#7fa8d8', seaEnemy: '#c4443a', contested: '#d9a441', atWar: '#c97a6a',
+};
+export const PALETTES = {
+  normal: NORMAL,
+  redgreen: { ...NORMAL,
+    own: '#0072b2', ally: '#56b4e9', enemy: '#d55e00', siege: '#f0e442',
+    selected: '#003f66', allied: '#56b4e9', subject: '#cc79a7', war: '#8a3b00', truce: '#f0e442',
+    opBad: '#b35806', opMid: '#ece6d8', opGood: '#2166ac', dipWar: '#d55e00',
+    supLow: '#d55e00', supHalf: '#f0e442', supFull: '#0072b2',
+    devLow: '#b35806', devMid: '#ece6d8', devHigh: '#2166ac',
+    seaOwn: '#0072b2', seaAlly: '#56b4e9', seaEnemy: '#d55e00', contested: '#f0e442', atWar: '#e69f00' },
+  blueyellow: { ...NORMAL,
+    own: '#127a7a', ally: '#8fd0d0', enemy: '#d62728', siege: '#f4f4f4',
+    selected: '#0b4f4f', allied: '#7fc8c8', subject: '#c27ba0', war: '#7f1010', truce: '#a8a8a8',
+    opBad: '#c51b2b', opMid: '#eeeeee', opGood: '#127a7a', dipWar: '#d62728',
+    supLow: '#c51b2b', supHalf: '#f0c8c8', supFull: '#127a7a',
+    devLow: '#c51b2b', devMid: '#eeeeee', devHigh: '#127a7a',
+    seaOwn: '#127a7a', seaAlly: '#8fd0d0', seaEnemy: '#d62728', contested: '#f4f4f4', atWar: '#e07070' },
+};
+let PAL = NORMAL;
+export function setPalette(name) { PAL = PALETTES[name] || NORMAL; }
+
 const RES_COLORS = { oil: '#1f1f1f', coal: '#6b5640', iron: '#b5582a', uranium: '#6fbf2f', rare_earths: '#9b45b8', timber: '#3f7a3a', gas: '#e0a030', hydro: '#3a8fd0' };
 const RES_WEIGHT = { oil: 3, uranium: 4, rare_earths: 4, iron: 1.5, coal: 1.4, gas: 2.5, hydro: 0.5, timber: 0.12 }; // minerals show over rivers and forests
 const GOV_COLORS = { democracy: '#4f86c4', autocracy: '#c4704f', theocracy: '#9a7ac4', military: '#6a7a3a' };
@@ -60,12 +91,12 @@ export function provinceColors(mode, state, map, focus, rules) {
         return ramp(0.35 + 0.65 * Math.min(1, c.stability / 70), '#3a3a3a', GOV_COLORS[fam] || '#888');
       }
       const k = c.idx;
-      if (k === focus) return '#3f8f5a';
-      if (atWar(state, focus, k)) return '#8e2a22';
-      if (overlordOf(state, k) === focus || overlordOf(state, focus) === k) return '#8a5ab8';
-      if (allied(state, focus, k)) return '#4f7fc4';
-      if ((C[focus].truces[k] ?? -1) > state.day) return '#d8b84a';
-      return ramp3((opinion(state, map, rules, k, focus) + 100) / 200, '#c4544a', '#e3ddd0', '#5a9a4a');
+      if (k === focus) return PAL.selected;
+      if (atWar(state, focus, k)) return PAL.war;
+      if (overlordOf(state, k) === focus || overlordOf(state, focus) === k) return PAL.subject;
+      if (allied(state, focus, k)) return PAL.allied;
+      if ((C[focus].truces[k] ?? -1) > state.day) return PAL.truce;
+      return ramp3((opinion(state, map, rules, k, focus) + 100) / 200, PAL.opBad, PAL.opMid, PAL.opGood);
     });
   }
   const sup = mode === 'supply' && focus >= 0 && rules ? supplyView(state, map, rules, focus) : null;
@@ -77,7 +108,7 @@ export function provinceColors(mode, state, map, focus, rules) {
       case 'supply': {
         if (!sup) { out[i] = '#cfcac0'; break; }
         const v = SUPPLY_LEVEL[sup[i]];
-        out[i] = v <= 0 ? '#6a6a6a' : ramp3(v, '#b8443a', '#e0c050', '#4f9a4a');
+        out[i] = v <= 0 ? '#6a6a6a' : ramp3(v, PAL.supLow, PAL.supHalf, PAL.supFull);
         break;
       }
       case 'terrain': out[i] = TERRAIN_COLORS[TERRAINS[map.terrain[i]]]; break;
@@ -85,7 +116,7 @@ export function provinceColors(mode, state, map, focus, rules) {
         const d = P.pop[i] / Math.max(1, map.area[i]);
         out[i] = ramp3(Math.log10(d + 1) / 3, '#f4efe3', '#d9a05b', '#7a2e2e'); break;
       }
-      case 'development': out[i] = ramp3(P.dev[i] / 100, '#7a3b3b', '#d8c46a', '#3b7a5a'); break;
+      case 'development': out[i] = ramp3(P.dev[i] / 100, PAL.devLow, PAL.devMid, PAL.devHigh); break;
       case 'economy': {
         const g = provinceGdp(state, i, rules.balance.economy);
         out[i] = ramp3((Math.log10(g + 0.01) + 1) / 4.3, '#efeae0', '#7fb0c8', '#1f4e79'); break;
@@ -108,12 +139,12 @@ export function provinceColors(mode, state, map, focus, rules) {
       case 'military': {
         const me = focus >= 0 ? focus : -1;
         const ctl = P.controller[i];
-        if (me < 0) out[i] = atWarAny(state, ctl) ? '#c97a6a' : '#cfcac0';
-        else if (ctl === me) out[i] = '#5f8fc4';
-        else if (friendly(state, me, ctl)) out[i] = '#8fb4d8';
-        else if (atWar(state, me, ctl)) out[i] = '#c4544a';
-        else out[i] = '#d6d1c6';
-        if (P.siege[i] > 0) out[i] = '#e0a040';
+        if (me < 0) out[i] = atWarAny(state, ctl) ? PAL.atWar : '#cfcac0';
+        else if (ctl === me) out[i] = PAL.own;
+        else if (friendly(state, me, ctl)) out[i] = PAL.ally;
+        else if (atWar(state, me, ctl)) out[i] = PAL.enemy;
+        else out[i] = PAL.neutral;
+        if (P.siege[i] > 0) out[i] = PAL.siege;
         break;
       }
       case 'government': case 'technology': out[i] = cc ? cc[o] : C[o].color; break;
@@ -121,10 +152,10 @@ export function provinceColors(mode, state, map, focus, rules) {
         const me = focus;
         if (me < 0) { out[i] = C[o].color; break; }
         if (cc) { out[i] = cc[o]; break; }
-        if (o === me) out[i] = '#3f8f5a';
-        else if (atWar(state, me, o)) out[i] = '#c4443a';
-        else if (allied(state, me, o)) out[i] = '#4f7fc4';
-        else if ((C[me].truces[o] ?? -1) > state.day) out[i] = '#d8b84a';
+        if (o === me) out[i] = PAL.selected;
+        else if (atWar(state, me, o)) out[i] = PAL.dipWar;
+        else if (allied(state, me, o)) out[i] = PAL.allied;
+        else if ((C[me].truces[o] ?? -1) > state.day) out[i] = PAL.truce;
         else out[i] = '#cfcac0';
         break;
       }
@@ -140,11 +171,11 @@ export function zoneColors(state, map, rules, focus) {
   return map.sea.zones.map((z, i) => {
     if (!pres[i]?.some((e) => e[1] > 0)) return null; // empty, or only submarines (they cannot hold a zone)
     const k = zoneController(state, map, rules, i);
-    if (k < 0) return '#d9a441';
+    if (k < 0) return PAL.contested;
     if (focus >= 0) {
-      if (k === focus) return '#3f78c4';
-      if (friendly(state, focus, k)) return '#7fa8d8';
-      if (atWar(state, focus, k)) return '#c4443a';
+      if (k === focus) return PAL.seaOwn;
+      if (friendly(state, focus, k)) return PAL.seaAlly;
+      if (atWar(state, focus, k)) return PAL.seaEnemy;
     }
     return C[k].color;
   });
@@ -154,18 +185,22 @@ function atWarAny(state, c) {
   return state.wars.some((w) => w.attackers.includes(c) || w.defenders.includes(c));
 }
 
-export const MODE_LEGENDS = {
-  terrain: Object.entries(TERRAIN_COLORS),
-  military: [['Your side', '#5f8fc4'], ['Allies / co-belligerents', '#8fb4d8'], ['Enemy', '#c4544a'], ['Under siege', '#e0a040'], ['Neutral', '#d6d1c6']],
-  diplomacy: [['Selected', '#3f8f5a'], ['Allied', '#4f7fc4'], ['Subject / overlord', '#8a5ab8'], ['At war', '#8e2a22'], ['Truce', '#d8b84a'], ['Hostile', '#c4544a'], ['Neutral', '#e3ddd0'], ['Friendly', '#5a9a4a']],
-  government: [['Democracy', '#4f86c4'], ['Autocracy', '#c4704f'], ['Theocracy', '#9a7ac4'], ['Military rule', '#6a7a3a'], ['Darker: low stability', '#3a3a3a']],
-  population: [['< 1 /km²', '#f4efe3'], ['~30 /km²', '#d9a05b'], ['1000+ /km²', '#7a2e2e']],
-  development: [['Low', '#7a3b3b'], ['Medium', '#d8c46a'], ['High', '#3b7a5a']],
-  economy: [['Small', '#efeae0'], ['Medium', '#7fb0c8'], ['Large', '#1f4e79']],
-  resources: [['Oil', '#1f1f1f'], ['Coal', '#6b5640'], ['Iron ore', '#b5582a'], ['Uranium', '#6fbf2f'], ['Rare earths', '#9b45b8'], ['Timber', '#3f7a3a'], ['None', '#d6d1c6']],
-  industry: [['None', '#e9e5dc'], ['~1B/yr', '#efe3c4'], ['~30B/yr', '#d08a4a'], ['1T+/yr', '#6a2a1a']],
-  infrastructure: [['0', '#d9cbb0'], ['5', '#9ab07a'], ['10', '#2f6f5a']],
-  naval: [['Your sea control', '#3f78c4'], ['Allied', '#7fa8d8'], ['Enemy', '#c4443a'], ['Contested', '#d9a441'], ['Other country', '#9a9a9a'], ['Open water', '#9fb7c6']],
-  supply: [['Full', '#4f9a4a'], ['Half', '#e0c050'], ['Low (attrition)', '#b8443a'], ['None', '#6a6a6a']],
-  technology: [['Ancient', '#6a4a3a'], ['Industrial', '#c8b86a'], ['Future', '#4a8ab8']],
-};
+// The legend of a map mode, in the colours in use.
+export function modeLegend(mode) {
+  const L = {
+    terrain: Object.entries(TERRAIN_COLORS),
+    military: [['Your side', PAL.own], ['Allies / co-belligerents', PAL.ally], ['Enemy', PAL.enemy], ['Under siege', PAL.siege], ['Neutral', PAL.neutral]],
+    diplomacy: [['Selected', PAL.selected], ['Allied', PAL.allied], ['Subject / overlord', PAL.subject], ['At war', PAL.war], ['Truce', PAL.truce], ['Hostile', PAL.opBad], ['Neutral', PAL.opMid], ['Friendly', PAL.opGood]],
+    government: [['Democracy', '#4f86c4'], ['Autocracy', '#c4704f'], ['Theocracy', '#9a7ac4'], ['Military rule', '#6a7a3a'], ['Darker: low stability', '#3a3a3a']],
+    population: [['< 1 /km²', '#f4efe3'], ['~30 /km²', '#d9a05b'], ['1000+ /km²', '#7a2e2e']],
+    development: [['Low', PAL.devLow], ['Medium', PAL.devMid], ['High', PAL.devHigh]],
+    economy: [['Small', '#efeae0'], ['Medium', '#7fb0c8'], ['Large', '#1f4e79']],
+    resources: [['Oil', '#1f1f1f'], ['Coal', '#6b5640'], ['Iron ore', '#b5582a'], ['Uranium', '#6fbf2f'], ['Rare earths', '#9b45b8'], ['Timber', '#3f7a3a'], ['None', '#d6d1c6']],
+    industry: [['None', '#e9e5dc'], ['~1B/yr', '#efe3c4'], ['~30B/yr', '#d08a4a'], ['1T+/yr', '#6a2a1a']],
+    infrastructure: [['0', '#d9cbb0'], ['5', '#9ab07a'], ['10', '#2f6f5a']],
+    naval: [['Your sea control', PAL.seaOwn], ['Allied', PAL.seaAlly], ['Enemy', PAL.seaEnemy], ['Contested', PAL.contested], ['Other country', '#9a9a9a'], ['Open water', '#9fb7c6']],
+    supply: [['Full', PAL.supFull], ['Half', PAL.supHalf], ['Low (attrition)', PAL.supLow], ['None', '#6a6a6a']],
+    technology: [['Ancient', '#6a4a3a'], ['Industrial', '#c8b86a'], ['Future', '#4a8ab8']],
+  };
+  return L[mode];
+}

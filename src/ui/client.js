@@ -3,7 +3,7 @@
 import { h, mount } from './dom.js';
 import { MapRenderer } from '../map/renderer.js';
 import { buildIndex, pickProvince } from '../map/picking.js';
-import { MAP_MODES, MODE_LEGENDS } from '../map/modes.js';
+import { MAP_MODES, modeLegend } from '../map/modes.js';
 import { eraOf, researchPoints, techCost } from '../core/technology.js';
 import { TREATIES } from '../core/diplomacy.js';
 
@@ -61,6 +61,7 @@ export class Client {
     this.renderer = new MapRenderer(this.canvas, game.map);
     this.renderer.rules = game.rules;
     this.renderer.setProfile(data.settings.profile, data.settings.resolution);
+    this.renderer.textScale = +data.settings.textSize || 1;
     this.renderer.fit();
     if (game.state.player >= 0) this.focusCountry(game.state.player, false);
     this.bind();
@@ -100,7 +101,8 @@ export class Client {
     this.hoverEl = h('div.hover-info', { style: { display: 'none' } });
     this.bannerEl = h('div.pick-banner', { style: { display: 'none' } });
     this.tooltip = h('div.tooltip', { style: { display: 'none' } });
-    this.el = h('div.game', this.canvas, this.topbar, this.sidebar, this.sideToggle, this.modesEl, this.legendEl, this.provEl, this.hoverEl, this.bannerEl, this.toastsEl, this.tooltip);
+    this.crosshair = h('div.crosshair', { 'aria-hidden': 'true' });
+    this.el = h('div.game', this.canvas, this.crosshair, this.topbar, this.sidebar, this.sideToggle, this.modesEl, this.legendEl, this.provEl, this.hoverEl, this.bannerEl, this.toastsEl, this.tooltip);
     mount(this.root, this.el);
     this.renderModes();
     // The interface is rebuilt several times a second while time runs. A rebuild between pointer
@@ -120,7 +122,7 @@ export class Client {
   uiHeld() {
     if (this.holdAt && performance.now() - this.holdAt < 1500) return true;
     const a = document.activeElement;
-    return !!a && this.el.contains(a) && (a.tagName === 'SELECT' || (a.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button'].includes(a.type)));
+    return !!a && this.el.contains(a) && (a.tagName === 'SELECT' || a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button'].includes(a.type)));
   }
 
   renderModes() {
@@ -129,7 +131,7 @@ export class Client {
     mount(this.modesEl, MAP_MODES.map((m) => h('button' + (cur === m.id ? '.on' : ''),
       { tip: `${m.name} map\n${m.tip}\nShortcut: ${m.key.toUpperCase()}`, 'aria-label': m.name, on: { click: () => this.setMapMode(m.id) } }, icon(m.id))),
     h('span.mode-name', MAP_MODES.find((m) => m.id === cur)?.name || ''));
-    const L = MODE_LEGENDS[this.renderer?.mode];
+    const L = modeLegend(this.renderer?.mode);
     if (L) {
       this.legendEl.style.display = '';
       mount(this.legendEl, L.map(([n, c]) => h('div', h('i', { style: { background: c } }), n)));
@@ -258,14 +260,21 @@ export class Client {
   }
 
   key(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || document.querySelector('.dialog-wrap')) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' || document.querySelector('.dialog-wrap')) {
       if (e.key === 'Escape') document.querySelector('.dialog-wrap')?.remove();
       return;
     }
+    // a focused button (keyboard-only play) takes Enter and Space itself
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.closest?.('button, a, [tabindex]')) return;
     const k = e.key.toLowerCase();
+    const kbd = this.data.settings.keyboardMode;
     if (e.key === ' ') { e.preventDefault(); this.togglePause(); }
+    else if (e.key === 'Enter') { if (e.shiftKey) this.rightClick(this.renderer.vw / 2, this.renderer.vh / 2); else this.click(this.renderer.vw / 2, this.renderer.vh / 2, false); }
+    else if (e.key === '[' || e.key === ']') this.cycleForces(e.key === ']' ? 1 : -1);
+    else if (e.key === '\\') this.toggleSidebar();
+    else if (e.key === 'Tab' && kbd) return; // moves the focus between buttons
     else if (/^[1-5]$/.test(e.key)) this.setSpeed(+e.key);
-    else if (e.key === 'Escape') { this.clearSelection(); }
+    else if (e.key === 'Escape') { if (this.el.contains(document.activeElement)) document.activeElement.blur(); this.clearSelection(); }
     else if (e.key === '+' || e.key === '=') { this.renderer.zoomAt(this.renderer.vw / 2, this.renderer.vh / 2, 1.25); }
     else if (e.key === '-') { this.renderer.zoomAt(this.renderer.vw / 2, this.renderer.vh / 2, 0.8); }
     else if (e.key.startsWith('Arrow')) {
@@ -283,6 +292,26 @@ export class Client {
       if (t && !e.ctrlKey && !e.metaKey && this.mode === 'play') this.setTab(t.id);
     }
     this.requestFrame();
+  }
+
+  // Keyboard: selects the player's next (or previous) army, fleet or air wing and centres on it.
+  cycleForces(dir) {
+    const s = this.state, me = s.player, map = this.game.map;
+    if (this.mode !== 'play' || me < 0) return;
+    const list = [
+      ...s.armies.filter((a) => a.owner === me && !(a.sea >= 0)).map((a) => ['army', a.id, a.loc]),
+      ...s.fleets.filter((f) => f.owner === me).map((f) => ['fleet', f.id, f.port]),
+      ...s.wings.filter((w) => w.owner === me).map((w) => ['wing', w.id, w.base]),
+    ];
+    if (!list.length) return this.toast('You have no forces.');
+    const v = this.view;
+    const cur = list.findIndex(([kind, id]) => (kind === 'army' ? v.selectedArmies : kind === 'fleet' ? v.selectedFleets : v.selectedWings).has(id));
+    const [kind, id, at] = list[((cur < 0 ? (dir > 0 ? -1 : 0) : cur) + dir + list.length) % list.length];
+    v.selectedArmies.clear(); v.selectedFleets.clear(); v.selectedWings.clear();
+    (kind === 'army' ? v.selectedArmies : kind === 'fleet' ? v.selectedFleets : v.selectedWings).add(id);
+    if (at >= 0) { this.renderer.centerOn(map.x[at], map.y[at], Math.max(this.renderer.cam.z, 1.6)); v.selected = at; }
+    else if (kind === 'fleet') { const z = map.sea.zones[s.fleets.find((f) => f.id === id).zone]; if (z) this.renderer.centerOn(z.x, z.y, Math.max(this.renderer.cam.z, 1.2)); }
+    this.setTab('military');
   }
 
   hoverAt(sx, sy) {
@@ -470,6 +499,8 @@ export class Client {
     if (key === 'profile' || key === 'resolution') this.renderer.setProfile(s.profile, s.resolution);
     if (key === 'tooltips' && !s.tooltips) this.tooltip.style.display = 'none';
     if (key === 'uiScale') this.renderer.resize();
+    if (key === 'textSize') this.renderer.textScale = +s.textSize || 1;
+    if (key === 'colorVision') this.renderModes();
     this.renderer.invalidate();
     this.uiDirty = true;
     this.requestFrame();
@@ -607,6 +638,18 @@ export class Client {
 
   // ------------------------------------------------------------------ UI
   renderUi() {
+    // the rebuilt interface keeps the keyboard focus on the same control (keyboard-only play)
+    const a = document.activeElement, FOC = 'button, a[href], input, select, textarea, [tabindex]';
+    const box = a && a !== document.body && [this.topbar, this.tabsEl, this.panelEl, this.provEl, this.bannerEl].find((b) => b.contains(a));
+    const at = box ? [...box.querySelectorAll(FOC)].indexOf(a) : -1;
+    this.renderUiParts();
+    if (box && at >= 0 && !box.contains(a)) {
+      const list = box.querySelectorAll(FOC);
+      list[Math.min(at, list.length - 1)]?.focus({ preventScroll: true });
+    }
+  }
+
+  renderUiParts() {
     this.renderTop();
     if (this.mode === 'pick') this.renderPick();
     else if (this.mode === 'edit') renderEditor(this);

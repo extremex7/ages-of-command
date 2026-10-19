@@ -75,13 +75,19 @@ programmes, cyber operations, satellites and space.
 | `N B E U A M Z D L I` | Tabs: nation, government, economy, industry, research, military, strategic, diplomacy, events, AI/performance |
 | `C` · `H` | Centre on your capital · show whole world |
 | `Ctrl+S` | Quick save · `Esc` clears selection / closes dialogs · `F11` full screen |
-| `Tab` · `` ` `` | Hide or show the side panel · cheat console (only when cheats are enabled) |
+| `Tab` or `\` · `` ` `` | Hide or show the side panel · cheat console (only when cheats are enabled) |
+| `Enter` · `Shift+Enter` | Select the province in the middle of the map · send the selected forces there |
+| `[` · `]` | Previous · next of your armies, fleets and air wings |
 | Touch | Drag to pan, pinch to zoom, tap to select, press and hold to order |
 
 **Settings** (main menu, or Menu → Settings in a game) apply at once: window mode (windowed,
 maximised, full screen) and window size in the desktop app, interface scale (Auto fits the
 window), graphics quality, map resolution, a frame rate limit, whether the game resumes after an
-event decision (it does by default), music and sound effect volumes, the tutorial (ask, always or off), cheats, tooltips and autosaves. **Exit** on the main menu closes
+event decision (it does by default), music and sound effect volumes, the tutorial (ask, always or off), cheats, tooltips and autosaves.
+**Accessibility** settings: colour vision (map modes and interface colours for red-green or
+blue-yellow colour blindness), text size (up to 150%, with panels kept the same width), and
+keyboard-only play (Tab moves between buttons and lists, any clickable row can be pressed with
+Enter, a cross marks the middle of the map for `Enter` and `Shift+Enter`). **Exit** on the main menu closes
 the desktop and Android apps.
 
 ## Test
@@ -102,6 +108,7 @@ node tests/browser/techtree.mjs     # top-bar points, technology tree (pan, zoom
 node tests/browser/session10.mjs    # side panel toggle, leaderboard, tutorial, cheats
 node tests/browser/features2.mjs    # generals, battle plans, the civil-war choice, intelligence, the world council
 node tests/browser/editor.mjs       # scenario editor: paint a new country, save, play, reload
+node tests/browser/access.mjs       # colour-blind colours, text size, keyboard-only play
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```

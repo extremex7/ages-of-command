@@ -10,7 +10,7 @@ import { Client } from './client.js';
 import { icon } from './icons.js';
 import { loadFlagIndex } from './flags.js';
 import { setupAudio, setMood } from './audio.js';
-import { settingsForm, applyUiScale, applyWindow, setAppInfo, watchAutoScale, toggleFullscreen, platform, canExit, exitGame } from './settings.js';
+import { settingsForm, applyAccessibility, applyUiScale, applyWindow, setAppInfo, watchAutoScale, toggleFullscreen, platform, canExit, exitGame } from './settings.js';
 
 const app = document.getElementById('app');
 const data = { map: null, rules: null, scenarios: [], scenarioCache: new Map(), settings: loadSettings(), timings: {} };
@@ -29,6 +29,7 @@ async function boot() {
   if (data.desktop) data.settings = loadSettings();
   setAppInfo(data.desktop);
   applyUiScale(data.settings);
+  applyAccessibility(data.settings);
   setupAudio(data.settings);
   watchAutoScale(() => data.settings);
   // the desktop app's window opens in the saved mode and size (a browser needs a click first)

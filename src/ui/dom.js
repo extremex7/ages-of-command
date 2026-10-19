@@ -14,6 +14,15 @@ export function h(sel, props, ...kids) {
     else if (k in el && k !== 'list') el[k] = v;
     else el.setAttribute(k, v === true ? '' : v);
   }
+  // anything clickable that is not a control can be reached with Tab and pressed with Enter or
+  // Space (keyboard-only play)
+  if (props.on?.click && !/^(BUTTON|A|INPUT|SELECT|TEXTAREA|LABEL|SUMMARY|OPTION|CANVAS)$/.test(el.tagName)) {
+    el.tabIndex = 0;
+    if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+    el.addEventListener('keydown', (e) => {
+      if (e.target === el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); el.click(); }
+    });
+  }
   append(el, kids);
   return el;
 }

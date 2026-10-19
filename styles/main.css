@@ -1,9 +1,19 @@
 :root {
-  --ui-scale: 1;
+  --ui-scale: 1; --text-scale: 1;
+  --bar-h: calc(2.9 * 13px * var(--ui-scale) * min(var(--text-scale), 1.15)); /* top bar height */
   --bg: #1b1f24; --panel: #22272e; --panel-2: #2b313a; --line: #3a424d; --text: #e6e2d8; --muted: #a3a9b2;
   --accent: #d8b860; --good: #7fc47a; --bad: #e0705f; --warn: #e0b050; --blue: #79a7d9;
-  font-size: calc(13px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale) * var(--text-scale));
 }
+/* Accessibility: colour-blind safe good/bad colours, and a visible keyboard focus */
+:root.cv-redgreen { --good: #56b4e9; --bad: #e69f00; --warn: #f0e442; }
+:root.cv-blueyellow { --good: #4fc3c3; --bad: #ff6b6b; --warn: #f2a0c8; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.crosshair { position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; margin: -14px 0 0 -14px; pointer-events: none; z-index: 3; display: none; }
+.kbd-mode .crosshair { display: block; }
+.crosshair::before, .crosshair::after { content: ''; position: absolute; background: #fff8d0; box-shadow: 0 0 0 1px rgba(0,0,0,0.7); }
+.crosshair::before { left: 13px; top: 0; width: 2px; height: 28px; }
+.crosshair::after { top: 13px; left: 0; height: 2px; width: 28px; }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
 button { font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 0.35em 0.8em; cursor: pointer; }
@@ -47,7 +57,7 @@ h3 { font-size: 1.1em; } h4 { font-size: 1em; color: var(--muted); margin-top: 0
 /* game layout */
 .game { position: absolute; inset: 0; }
 .map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: default; touch-action: none; }
-.topbar { position: absolute; top: 0; left: 0; right: 0; height: 2.9em; display: flex; align-items: center; gap: 0.8em; padding: 0 0.7em; background: rgba(24,28,33,0.94); border-bottom: 1px solid var(--line); z-index: 5; white-space: nowrap; }
+.topbar { position: absolute; top: 0; left: 0; right: 0; height: var(--bar-h); display: flex; align-items: center; gap: 0.8em; padding: 0 0.7em; background: rgba(24,28,33,0.94); border-bottom: 1px solid var(--line); z-index: 5; white-space: nowrap; }
 .topbar .stat { display: flex; flex-direction: column; line-height: 1.1; cursor: default; }
 .topbar .stat b { font-size: 1.05em; } .topbar .stat span { font-size: 0.78em; color: var(--muted); }
 .topbar .spacer { flex: 1; }
@@ -56,7 +66,7 @@ h3 { font-size: 1.1em; } h4 { font-size: 1em; color: var(--muted); margin-top: 0
 .date { font-weight: 600; min-width: 8.5em; text-align: center; }
 .flag { width: 27px; height: 20px; vertical-align: middle; border: 1px solid rgba(0,0,0,0.6); border-radius: 2px; flex: none; }
 .flag.big { width: 48px; height: 36px; }
-.sidebar { position: absolute; top: 2.9em; left: 0; bottom: 0; width: calc(330px * var(--ui-scale)); display: flex; flex-direction: column; background: rgba(30,34,40,0.96); border-right: 1px solid var(--line); z-index: 4; }
+.sidebar { position: absolute; top: var(--bar-h); left: 0; bottom: 0; width: calc(330px * var(--ui-scale)); display: flex; flex-direction: column; background: rgba(30,34,40,0.96); border-right: 1px solid var(--line); z-index: 4; }
 .sidebar.hidden { display: none; }
 .tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
 .tabs button { flex: 1 0 25%; border: 0; border-radius: 0; background: transparent; padding: 0.55em 0.2em; font-size: 0.9em; color: var(--muted); }
@@ -234,3 +244,7 @@ table.lb th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
 .tut-foot { margin-top: 0.8em; gap: 0.5em; } .tut-foot .row { gap: 0.4em; }
 .tut-foot .icon { width: 1em; height: 1em; vertical-align: -0.15em; }
 .tut-table td { vertical-align: top; } .tut-table td .icon { width: 1em; height: 1em; vertical-align: -0.15em; }
+/* larger text: the top bar keeps its size up to 115% and drops its optional figures so the menu
+   buttons stay on screen */
+.topbar { font-size: calc(13px * var(--ui-scale) * min(var(--text-scale), 1.15)); }
+:root.text-large .topbar .opt, :root.text-large .topbar .wide-only { display: none; }

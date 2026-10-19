@@ -5,6 +5,7 @@
 import { h } from './dom.js';
 import { saveSettings } from './storage.js';
 import { setVolumes, sfx } from './audio.js';
+import { setPalette } from '../map/modes.js';
 
 export const UI_SCALES = ['auto', 0.75, 0.85, 1, 1.15, 1.3, 1.5, 1.75, 2];
 export const WINDOW_SIZES = [[1280, 720], [1366, 768], [1600, 900], [1920, 1080], [2560, 1440]];
@@ -41,6 +42,18 @@ export function effectiveUiScale(s) {
 export function applyUiScale(s) {
   document.documentElement.style.setProperty('--ui-scale', String(effectiveUiScale(s)));
 }
+// Accessibility: colour vision (map and interface colours), text size, keyboard-only play.
+export const TEXT_SIZES = [1, 1.15, 1.3, 1.5];
+export function applyAccessibility(s) {
+  const root = document.documentElement;
+  root.style.setProperty('--text-scale', String(+s.textSize || 1));
+  root.classList.remove('cv-redgreen', 'cv-blueyellow');
+  if (s.colorVision && s.colorVision !== 'normal') root.classList.add('cv-' + s.colorVision);
+  root.classList.toggle('kbd-mode', !!s.keyboardMode);
+  root.classList.toggle('text-large', (+s.textSize || 1) > 1.1);
+  setPalette(s.colorVision || 'normal');
+}
+
 let resizeHooked = false;
 export function watchAutoScale(getSettings) {
   if (resizeHooked) return;
@@ -114,6 +127,14 @@ export function settingsForm(s, onApply = () => {}) {
   field('Interface scale', select(s.uiScale, UI_SCALES.map((v) => [v, v === 'auto' ? `Auto (fits the window, now ${pct(effectiveUiScale({ uiScale: 'auto' }))})` : pct(v)]), (v) => {
     change('uiScale', v === 'auto' ? 'auto' : +v); applyUiScale(s);
   }), 'Size of text, buttons and panels.');
+
+  rows.push(h('h4', 'Accessibility'));
+  field('Colour vision', select(s.colorVision || 'normal', [['normal', 'Normal colours'], ['redgreen', 'Red-green colour blindness (protanopia, deuteranopia)'], ['blueyellow', 'Blue-yellow colour blindness (tritanopia)']],
+    (v) => { change('colorVision', v); applyAccessibility(s); }), 'Map modes that show sides or good and bad (Military, Diplomacy, Supply, Development, Naval) and the interface\'s good and bad colours use colours you can tell apart.');
+  field('Text size', select(s.textSize || 1, TEXT_SIZES.map((v) => [v, pct(v)]), (v) => { change('textSize', +v); applyAccessibility(s); }),
+    'Larger text in the panels and on the map, with the panels kept the same width (Interface scale makes everything larger).');
+  field('Keyboard-only play', select(s.keyboardMode ? '1' : '0', [['0', 'Off'], ['1', 'On']], (v) => { change('keyboardMode', v === '1'); applyAccessibility(s); }),
+    'Tab moves between buttons (\\ hides the side panel), a cross marks the middle of the map: Enter selects the province under it, Shift+Enter sends the selected forces there, [ and ] step through your forces. See Menu → Controls.');
 
   rows.push(h('h4', 'Graphics'));
   field('Graphics quality', select(s.profile, [['low', 'Low (for old or slow computers and phones)'], ['balanced', 'Balanced'], ['high', 'High (sharpest map, most labels)']],

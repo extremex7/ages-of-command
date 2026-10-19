@@ -47,6 +47,7 @@ export class MapRenderer {
     this.cacheCtx = this.cache.getContext('2d', { alpha: false });
     this.cacheCam = null;
     this.colorsDirty = true;
+    this.textScale = 1; // Settings → Accessibility → Text size (map labels)
     this.lastMove = 0;
     this.mode = 'political';
     this.focus = -1;
@@ -338,7 +339,7 @@ export class MapRenderer {
     if (c.z < 2.6 && this.countryLabels && (this.mode === 'political' || this.mode === 'diplomacy')) {
       const min = density === 'few' ? 11 : density === 'many' ? 8 : 9.5;
       for (const L of this.countryLabels) {
-        const size = Math.min(26, L.size * c.z);
+        const size = Math.min(26, L.size * c.z) * this.textScale;
         if (size < min) continue;
         const [sx, sy] = this.worldToScreen(L.x, L.y);
         if (sx < -100 || sy < -30 || sx > this.vw + 100 || sy > this.vh + 30) continue;
@@ -351,7 +352,7 @@ export class MapRenderer {
       }
     }
     if (this.mode === 'naval' && c.z >= 0.9) {
-      ctx.font = 'italic 500 11px system-ui, sans-serif';
+      ctx.font = `italic 500 ${11 * this.textScale}px system-ui, sans-serif`;
       ctx.fillStyle = this.dark ? 'rgba(210,225,240,0.85)' : 'rgba(20,45,70,0.8)';
       for (const z of map.sea.zones) {
         const [sx, sy] = this.worldToScreen(z.x, z.y);
@@ -360,7 +361,7 @@ export class MapRenderer {
       }
     }
     if (c.z >= 2.2) {
-      ctx.font = '500 11px system-ui, sans-serif';
+      ctx.font = `500 ${11 * this.textScale}px system-ui, sans-serif`;
       ctx.fillStyle = 'rgba(20,20,25,0.8)';
       const pad = density === 'few' ? 30 : density === 'many' ? 6 : 14;
       for (const i of map.ids) {

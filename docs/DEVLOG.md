@@ -588,3 +588,15 @@ wars, then save, play or export. The edits work on the scenario JSON itself
 (`src/core/scenario_edit.js`), so an edited scenario is an ordinary scenario file; the shown map
 is rebuilt from it after larger changes (about 70 ms for the Modern World). Custom scenarios are
 stored next to the saves and listed under New Game.
+
+## Session 19: accessibility
+
+Settings → Accessibility. Colour vision: the map modes that show sides or good and bad
+(military, diplomacy, supply, development, naval) and the interface's good and bad colours switch
+to orange and blue for red-green colour blindness, or red and teal for blue-yellow. Text size
+enlarges text in the panels and the map labels without widening the panels; the top bar drops its
+optional figures so its buttons stay on screen. Keyboard-only play: Tab moves between controls,
+every clickable row is focusable and pressed with Enter, the focus survives the panel being
+rebuilt while time runs, dialogs take the focus, and a cross in the middle of the map works with
+Enter (select), Shift+Enter (order) and [ ] (step through your forces). Screen readers are not
+supported yet: the map is a canvas.

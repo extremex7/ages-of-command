@@ -22,6 +22,7 @@ import { monthlyCivilWar } from './civilwar.js';
 import { monthlyCommanders } from './commanders.js';
 import { dailyPlans } from './plans.js';
 import { monthlyEspionage } from './espionage.js';
+import { monthlyCouncil } from './council.js';
 
 export function tick(game) {
   const { state, map, rules } = game;
@@ -62,6 +63,7 @@ export function tick(game) {
     monthlyCivilWar(state, map, rules, warScores);
     monthlyDiplomacy(state, map, rules);
     monthlyEspionage(state, map, rules);
+    monthlyCouncil(state, map, rules);
     aiPeace(state, map, rules, warScores);
     aiEconomy(state, map, rules);
     refreshCountryCache(state, map, rules);

@@ -324,6 +324,7 @@ export function opinion(state, map, rules, a, b, parts = null) {
     if (ratio > 1.5) add('Military threat', -Math.min(D.threatOpinionMax, 8 * (ratio - 1.5)) * (0.5 + B.aggression));
   }
   if (A.econ && B.econ && (A.econ.embargo.includes(b) || B.econ.embargo.includes(a))) add('Embargo', D.embargoOpinion);
+  else if (A.econ && B.econ && (A.econ.sanctions?.[b] || B.econ.sanctions?.[a])) add('Sanctions', D.embargoOpinion / 2);
   if (cobelligerent(state, a, b)) add('Common enemy', D.commonEnemyOpinion);
   if (A.rival >= 0 && A.rival === B.rival) add('Common rival', D.commonRivalOpinion);
   let n = 0;

@@ -410,5 +410,12 @@
     "stealShare": 0.3, "sabotageLevels": 2, "destabiliseStability": 6, "destabiliseLegitimacy": 6,
     "coupStability": 40, "coupOpinion": 40, "puppetPopShare": 0.5, "caughtOpinion": 30, "caughtNetworkLoss": 0.5,
     "ai": { "reserveMonths": 1, "counterAt": 30, "opChance": 0.5, "coupStability": 25 }
+  },
+  "council": {
+    "_doc": "World council (docs/DIPLOMACY.md, World council): meets from fromYear (League of Nations; United Nations from unYear). A proposal costs proposeInfluence (player) and each country may propose once per proposeCooldownDays; votes close after voteDays. Sanctions last sanctionYears and cost sanctionOpinion with the target for each yes vote; a ceasefire lasts ceasefireDays; a DMZ dmzYears. sanctionGoods lists the goods arms and energy sanctions block. ai: at most one AI proposal per everyDays, with `chance` a month; ceasefires are proposed in wars older than ceasefireAfterDays; arms sanctions on countries with reputation below pariahReputation.",
+    "fromYear": 1920, "unYear": 1945, "proposeInfluence": 20, "proposeCooldownDays": 180, "voteDays": 30,
+    "sanctionYears": 5, "sanctionOpinion": 10, "ceasefireDays": 365, "dmzYears": 10,
+    "sanctionGoods": { "arms": ["munitions", "machinery", "electronics"], "energy": ["coal", "oil", "gas", "fuel", "uranium"] },
+    "ai": { "everyDays": 90, "chance": 0.5, "ceasefireAfterDays": 540, "pariahReputation": -60 }
   }
 }

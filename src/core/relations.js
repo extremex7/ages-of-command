@@ -1,5 +1,7 @@
 // Diplomatic relationship queries. Wars, blocs and treaties change rarely, so a C×C relation
 // matrix is cached per state and rebuilt only when state.relVersion changes.
+import { dmzBlock } from './council.js';
+
 const cache = new WeakMap();
 const HOSTILE = 1, ALLIED = 2, COBELLIGERENT = 4, ACCESS = 8;
 // treaty types that make two countries allies (mutual defence, shared access)
@@ -28,15 +30,16 @@ function matrix(state) {
     else if (t.type === 'trade') { addTrade(a, b); addTrade(b, a); }
   }
   for (const w of state.wars) {
+    const cease = w.ceasefire != null && w.ceasefire > state.day; // a council ceasefire: no fighting, still at war on paper
     for (const x of w.attackers) {
-      for (const y of w.defenders) { rel[x * C + y] |= HOSTILE; rel[y * C + x] |= HOSTILE; }
+      if (!cease) for (const y of w.defenders) { rel[x * C + y] |= HOSTILE; rel[y * C + x] |= HOSTILE; }
       for (const y of w.attackers) if (x !== y) rel[x * C + y] |= COBELLIGERENT;
     }
     for (const x of w.defenders) for (const y of w.defenders) if (x !== y) rel[x * C + y] |= COBELLIGERENT;
   }
   // enemies are never allies (a subject fighting for independence)
   for (const w of state.wars) for (const x of w.attackers) for (const y of w.defenders) { rel[x * C + y] &= ~ALLIED; rel[y * C + x] &= ~ALLIED; }
-  m = { ver, C, rel, trade };
+  m = { ver, C, rel, trade, dmz: dmzBlock(state) };
   cache.set(state, m);
   return m;
 }
@@ -113,6 +116,8 @@ export function enemiesOf(state, c) {
 export function canEnter(state, country, p) {
   const own = state.prov.owner[p], ctl = state.prov.controller[p];
   if (own < 0) return false;
+  const dmz = matrix(state).dmz;
+  if (dmz && dmz.get(p)?.includes(country)) return false; // a demilitarised zone it is party to
   if (ctl === country || own === country) return true;
   if (atWar(state, country, ctl) || atWar(state, country, own)) return true;
   return hasAccess(state, country, ctl) && hasAccess(state, country, own);

@@ -11,6 +11,7 @@
 //   4. effects: satisfaction feeds GDP (energy, fuel), stability, population growth,
 //      unemployment, consumer prices and army supply; world prices follow world demand/supply.
 // All per-province data are typed arrays in state.econ; per-country data live in c.econ.
+import { sanctionPairs, sanctionGoods } from './council.js';
 import { log } from './state.js';
 import { atWar, tradeLinks } from './relations.js';
 
@@ -363,7 +364,8 @@ export function industryMonth(state, map, rules, opts = {}) {
   // to each importer it can reach; an importer offered more than it needs scales all offers by
   // s[y]. Flows are q(x→y) = r[x]·def[y]·s[y] for open routes, so totals are computed in
   // O(exporters + importers + closed routes) instead of looping over every pair.
-  const closed = closedRoutes(state, C);
+  const closedAll = closedRoutes(state, C);
+  const closedByGood = sanctionRoutes(state, rules, closedAll, C);
   const flows = { day: state.day, C, G, passes: [] }; // kept (unsaved) for trade-partner reports
   const sur = new Float64Array(C), def = new Float64Array(C), cut = new Float64Array(C);
   const ex = new Int32Array(C), im = new Int32Array(C);
@@ -376,6 +378,7 @@ export function industryMonth(state, map, rules, opts = {}) {
   for (const c of alive) { tf[c.idx] = c.econ.tradeFactor ?? 1; effTariff[c.idx] = c.econ.tariff * (1 - (c.econ.partnerShare || 0)); cut[c.idx] = (1 - I.tariffImportCut * effTariff[c.idx]) * tf[c.idx]; }
   for (let g = 0; g < G; g++) {
     const sm = X.goods[g].stockMonths;
+    const closed = closedByGood?.[g] || closedAll;
     let ne = 0, ni = 0;
     for (const c of alive) {
       const e = c.econ, k = c.idx;
@@ -448,7 +451,7 @@ export function industryMonth(state, map, rules, opts = {}) {
       }
     }
   }
-  flows.closed = closed;
+  flows.closed = closedAll;
   flowCache.set(state, flows);
 
   // 3. consumption, 4. national effects
@@ -546,6 +549,24 @@ export function industryMonth(state, map, rules, opts = {}) {
     const clamped = Math.max(base0 * I.priceMin, Math.min(base0 * I.priceMax, target));
     prices[g] += (clamped - prices[g]) * I.priceSmoothing;
   }
+}
+
+// Per good, the closed routes plus arms and energy sanctions (council or unilateral; full council
+// sanctions close every good); null when there are no sanctions.
+function sanctionRoutes(state, rules, base, C) {
+  const pairs = sanctionPairs(state);
+  if (!pairs.length) return null;
+  const out = new Array(rules.econ.G).fill(null);
+  for (const [a, b, level] of pairs) {
+    if (a === b || a >= C || b >= C) continue;
+    const goods = level === 'full' ? rules.econ.goods.map((x) => x.i) : sanctionGoods(rules, level);
+    for (const g of goods) {
+      const cl = (out[g] ||= base.map((x) => (x ? x.slice() : null)));
+      (cl[a] ||= []).includes(b) || cl[a].push(b);
+      (cl[b] ||= []).includes(a) || cl[b].push(a);
+    }
+  }
+  return out;
 }
 
 // Closed trade routes (war or embargo) as sparse per-country lists; null when none.

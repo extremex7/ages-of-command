@@ -65,7 +65,22 @@ await page.evaluate(() => { const c = window.__client, s = c.state; c.view.selec
 await page.waitForTimeout(300);
 check(await page.locator('label:has-text("Counter-intelligence")').count() === 1, 'own Nation tab: counter-intelligence');
 
-// 3. civil war: the player is asked which side to lead
+// 3. world council and sanctions
+await page.evaluate(() => { const c = window.__client, s = c.state; c.view.selectedCountry = s.countries.findIndex((x) => x.tag === 'BGD'); c.setTab('country'); });
+await page.waitForSelector('text=Propose DMZ', { timeout: 3000 });
+await page.selectOption('select:has(option[value="energy"]) >> nth=0', 'energy');
+check(await page.evaluate(() => { const s = window.__client.state, k = s.countries.findIndex((x) => x.tag === 'BGD'); return s.countries[s.player].econ.sanctions?.[k] === 'energy'; }), 'own energy sanctions set from the Nation tab');
+await page.evaluate(() => { const s = window.__client.state; s.countries[s.player].influence = 50; window.__client.uiDirty = true; window.__client.requestFrame(); });
+await page.waitForTimeout(300);
+await page.click('button:has-text("Propose to council")');
+await page.evaluate(() => window.__client.setTab('diplomacy'));
+await page.waitForSelector('text=United Nations', { timeout: 3000 });
+check(await page.locator('text=Expected:').count() >= 1, 'the Diplomacy tab shows the vote with its expected result');
+await page.click('.item button:has-text("Yes")');
+check(await page.evaluate(() => { const s = window.__client.state; return s.council.pending.some((r) => r.votes[s.player] === 'yes'); }), 'the player votes');
+await page.screenshot({ path: '/tmp/claude-0/features2-council.png' });
+
+// 4. civil war: the player is asked which side to lead
 await page.evaluate(async () => {
   const c = window.__client, s = c.state, k = s.player;
   const { startCivilWar } = await import('/src/core/civilwar.js');

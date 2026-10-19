@@ -22,6 +22,7 @@ import { strategicTab, nuclearButton } from './strategic_ui.js';
 import { commandSection, generalLine } from './command_ui.js';
 import { leavePlans } from '../core/plans.js';
 import { intelSection } from './intel_ui.js';
+import { sanctionsRow } from './council_ui.js';
 
 export const TABS = [
   { id: 'country', name: 'Nation', key: 'n', tip: 'Overview of the selected country, or yours, and your relations with it.' },
@@ -87,6 +88,7 @@ function countryTab(cl) {
       h('button.danger', { disabled: !!why, tip: why || `Declare war on ${c.name}`, on: { click: () => declareDialog(cl, k) } }, 'Declare war…'),
       h('button', { on: { click: () => { cl.renderer.mode = 'diplomacy'; cl.renderer.focus = k; cl.renderer.invalidate(); cl.renderModes(); } } }, 'Show relations'),
       embargoButton(cl, k)),
+    !mine && c.alive && sanctionsRow(cl, k),
     c.alive && relationsSection(cl, k),
     c.alive && intelSection(cl, k),
     !mine && c.alive && h('div.row', { style: { marginTop: '0.5em' } },

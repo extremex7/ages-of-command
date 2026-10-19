@@ -87,7 +87,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 131 unit/integration tests of the simulation (node:test)
+npm test                            # 134 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -100,7 +100,7 @@ node tests/browser/settings.mjs     # display settings
 node tests/browser/flags.mjs        # every scenario's flags load; the game resumes after an event decision
 node tests/browser/techtree.mjs     # top-bar points, technology tree (pan, zoom, pinch, queue), music moods and sound settings
 node tests/browser/session10.mjs    # side panel toggle, leaderboard, tutorial, cheats
-node tests/browser/features2.mjs    # generals, battle plans, the civil-war choice, intelligence
+node tests/browser/features2.mjs    # generals, battle plans, the civil-war choice, intelligence, the world council
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -150,7 +150,7 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — stack decision and system design
 - [docs/ECONOMY.md](docs/ECONOMY.md) — every economic rule and formula
-- [docs/DIPLOMACY.md](docs/DIPLOMACY.md) — opinion, treaties, blocs, peace terms, AI diplomacy
+- [docs/DIPLOMACY.md](docs/DIPLOMACY.md) — opinion, treaties, blocs, peace terms, sanctions, the world council, AI diplomacy
 - [docs/GOVERNMENT.md](docs/GOVERNMENT.md) — government types, factions, elections, coups, policies, events
 - [docs/TECHNOLOGY.md](docs/TECHNOLOGY.md) — technology tree, research formulas, eras, unit and building gating
 - [docs/SCENARIOS.md](docs/SCENARIOS.md) — the historical scenarios, how they are built, historical events

@@ -72,7 +72,7 @@ export function declareWar(state, map, rules, a, b) {
   if (state.dip) for (const s of subjectsOf(state, a)) if (C[s].alive && !defenders.includes(s)) attackers.push(s);
   const war = {
     id: state.nextId++, name: indep ? `${C[a].name} War of Independence` : `${C[a].name}–${C[b].name} War`, attackers, defenders,
-    leaderA: a, leaderD: b, start: state.day, battleScore: 0, kind: indep ? 'independence' : 'war',
+    leaderA: a, leaderD: b, start: state.day, battleScore: 0, kind: indep ? 'independence' : 'war', justified,
   };
   state.wars.push(war);
   touchRelations(state);

@@ -41,10 +41,10 @@ elasticity and limits, shortage penalties, army consumption, infrastructure and 
 rules (all explained in [ECONOMY.md](ECONOMY.md)). `government` and `diplomacy` hold every number
 in [GOVERNMENT.md](GOVERNMENT.md) and [DIPLOMACY.md](DIPLOMACY.md) (approval curve, coup and
 revolution thresholds, policy costs, treaty opinions, breaking penalties, peace-term costs, AI
-cadence). The optional sections `civilWar`, `commanders` and `espionage` hold the civil-war rules
-([GOVERNMENT.md](GOVERNMENT.md)), the generals, their traits and battle plans
-([MILITARY.md](MILITARY.md)) and spy networks ([ESPIONAGE.md](ESPIONAGE.md)); without them
-those features are off. A trait is
+cadence). The optional sections `civilWar`, `commanders`, `espionage` and `council` hold the civil-war
+rules ([GOVERNMENT.md](GOVERNMENT.md)), the generals, their traits and battle plans
+([MILITARY.md](MILITARY.md)), spy networks ([ESPIONAGE.md](ESPIONAGE.md)) and the world council
+([DIPLOMACY.md](DIPLOMACY.md)); without them those features are off. A trait is
 `{ name, text, attack?, defense?, speed?, orgRecovery?, orgLoss?, siege?, supply?, terrain?, role? }`.
 
 ## Goods — `data/rules/goods.json`

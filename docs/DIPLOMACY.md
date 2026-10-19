@@ -82,6 +82,36 @@ overlord, independence (30). Provinces the taker has claims on are 40% cheaper. 
 become claims for 30 years. Co-belligerents can sign a **separate peace** with the enemy leader
 and leave the war.
 
+## Sanctions and the world council
+
+Besides a full **embargo**, a country can impose **arms sanctions** (munitions, machinery,
+electronics) or **energy sanctions** (coal, oil, natural gas, fuel, uranium) from the other
+country's Nation tab: only those goods stop flowing between the two (opinion −7.5).
+
+From 1920 the **League of Nations** (the **United Nations** from 1945) meets (`src/core/council.js`,
+numbers in `balance.json` → `council`). The five countries with the highest prestige when it is
+founded, and again when it becomes the UN, are its permanent members and can veto. Any country can
+propose (the player pays 20 influence; each country once every 6 months):
+
+| Resolution | Effect when passed |
+| --- | --- |
+| Arms, energy or full sanctions on a country | Every country that did not vote against stops trading those goods (full: all goods) with it for 5 years; each yes vote costs 10 opinion with the target |
+| Ceasefire in a war | No fighting for a year: battles stop, armies cannot enter enemy land and sieges halt. The war goes on on paper (trade stays closed, peace can be signed) and fighting may resume when it ends |
+| Demilitarised zone between two countries | Neither may enter the provinces on either side of their shared land border for 10 years; their armies there withdraw |
+
+Voting closes 30 days after a proposal. A resolution passes with more yes than no votes and no
+permanent member voting no. The Diplomacy tab shows open votes with the expected result, lets you
+vote, and lists what is in force. Countries vote by their interests: sanctions on a country they
+dislike, that started an unprovoked war, has a bad reputation or fights them are favoured, and
+sanctions on a big trading partner or an ally are not; outsiders want ceasefires unless they side
+with the winner, the side that is winning votes against; the weaker of two countries wants a DMZ.
+Only clear opposition votes no; doubts abstain.
+
+The AI proposes at most one resolution every 3 months: a ceasefire in a war older than 18 months,
+sanctions on the attacker in an unprovoked war of the last year (full if its reputation is below
+−50), arms sanctions on a pariah (reputation below −60), and a DMZ between two countries under a
+ceasefire. A resolution that failed is not proposed again by the AI for 2 years.
+
 ## AI diplomacy
 
 Every 3 months per country (spread across days), each AI:

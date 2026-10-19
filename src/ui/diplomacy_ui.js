@@ -1,5 +1,6 @@
 // Diplomacy tab and the relations section of a foreign country. Opinions and acceptance chances
 // are computed by the same functions the AI uses, and every tooltip lists their parts.
+import { councilSection } from './council_ui.js';
 import { h } from './dom.js';
 import { flagCanvas } from './flags.js';
 import { formatDate } from '../core/calendar.js';
@@ -65,6 +66,7 @@ export function diplomacyTab(cl) {
     out.push(offersSection(cl));
   }
   out.push(warsSection(cl));
+  out.push(councilSection(cl));
   if (me >= 0) {
     out.push(h('h3', { style: { marginTop: '1em' } }, 'Treaties'));
     const ts = treatiesOf(s, me);

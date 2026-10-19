@@ -562,3 +562,12 @@ table now also lists strategic upkeep, which was already charged but not shown. 
 Modern World run, 12 AI countries ran spy services (0.2% of world revenue), with 83 operations
 and no coups.
 
+## Session 16: sanctions and the world council
+
+Arms and energy sanctions next to the full embargo, and a world council (League of Nations from
+1920, United Nations from 1945) that votes on sanctions, ceasefires and demilitarised zones, with
+five permanent members holding a veto (DIPLOMACY.md). The market closes trade routes per good, so
+partial sanctions cost nothing when none are in force. Wars now record whether they were
+justified. In 10-year runs the AI proposed a few resolutions a decade; the great powers vetoed
+those aimed at themselves (Germany in 1938, China in 2037), as on the real Security Council.
+

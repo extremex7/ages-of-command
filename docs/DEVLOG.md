@@ -618,6 +618,13 @@ to be released in Latin America and the Balkans) and A House Divided (12 April 1
 107 countries). Scenario wars can now be civil wars (`"kind": "civil"`), used for the American
 Civil War and the Taiping Rebellion. In 10-year AI runs no war spread across the map and the
 scripted events fired roughly in historical order; AI peace sometimes comes before a scripted
-outcome (the end of the Hundred Years' War in 1444). Average stability falls from about 50 to 26
-in the first years of the 1444 start, as it does in Height of Rome; pre-modern stability needs a
-look.
+outcome (the end of the Hundred Years' War in 1444).
+
+Pre-modern stability. Average stability used to fall from about 50 to 26 in the first two years of
+the 1444 and Height of Rome starts. The starting economy rounded each country's planned building
+levels to whole levels, and a small country's whole need for timber or farms was often under half
+a level, so it rounded to nothing: world food started 11% short and there were no lumber camps at
+all, so factories stopped for want of timber. Treasuries were too small to build the missing
+farms. The builder now gives a country one level where the most was planned when a tenth of a
+level or more is left over, and every history scenario was rebuilt. After two years of AI play
+average stability is now 56 to 60 in every start (1444 58, Rome 58, 1815 57, 1861 58, 1914 57).

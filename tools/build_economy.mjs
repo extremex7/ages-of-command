@@ -272,6 +272,14 @@ C.forEach((c, k) => {
       levels[i * X.B + b] = lv;
       if (lv) { (out.buildings[i] ||= {})[B.id] = lv; totalLevels += lv; }
     }
+    // a small country's whole need can be under half a level, which would round to nothing and
+    // leave it short from the first day (pre-modern timber and farms): a leftover of a tenth of a
+    // level or more gets one level where the most was planned
+    if (carry >= 0.1) {
+      const B = X.buildings[b];
+      const i = ps.find((p) => levels[p * X.B + b] < B.maxLevel && (B.dep < 0 || levels[p * X.B + b] < deposits[p * X.R + B.dep]) && (!B.fertility || fert[p] >= 0.2) && P.dev[p] >= (B.minDev || 0));
+      if (i != null && canHave(k, b)) { const lv = ++levels[i * X.B + b]; (out.buildings[i] ||= {})[B.id] = lv; totalLevels++; }
+    }
   }
 });
 for (const i of map.ids) for (let r = 0; r < X.R; r++) if (deposits[i * X.R + r]) (out.deposits[i] ||= {})[X.resources[r]] = deposits[i * X.R + r];

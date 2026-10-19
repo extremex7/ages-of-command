@@ -257,6 +257,9 @@ start. It reuses the game's own demand and efficiency functions:
   each province's workforce, deposits and maximum levels.
 - **Value-added cap.** Industrial value added is capped at 70% of a country's GDP; farms are exempt.
 - **Iteration.** The builder iterates until world output reaches ~103% of need for every good.
+- **Rounding.** Levels are rounded to whole levels per country, carrying remainders between
+  provinces. If a tenth of a level or more is left over, the country gets one more level where the
+  most was planned, so small pre-modern countries are not left with no farms or lumber camps.
 
 `node tools/econ_report.mjs [years]` prints world supply and demand, prices and national
 indicators at the start and after N years of AI play. It is used to check the calibration.

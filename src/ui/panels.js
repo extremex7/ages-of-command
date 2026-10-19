@@ -21,6 +21,7 @@ import { fleetsSection, wingsSection, provinceForces, supplyLine } from './force
 import { strategicTab, nuclearButton } from './strategic_ui.js';
 import { commandSection, generalLine } from './command_ui.js';
 import { leavePlans } from '../core/plans.js';
+import { intelSection } from './intel_ui.js';
 
 export const TABS = [
   { id: 'country', name: 'Nation', key: 'n', tip: 'Overview of the selected country, or yours, and your relations with it.' },
@@ -87,6 +88,7 @@ function countryTab(cl) {
       h('button', { on: { click: () => { cl.renderer.mode = 'diplomacy'; cl.renderer.focus = k; cl.renderer.invalidate(); cl.renderModes(); } } }, 'Show relations'),
       embargoButton(cl, k)),
     c.alive && relationsSection(cl, k),
+    c.alive && intelSection(cl, k),
     !mine && c.alive && h('div.row', { style: { marginTop: '0.5em' } },
       h('button', { tip: 'Take control of this country from now on. The country you leave is run by the AI.', on: { click: () => { cl.setSpeed(0); cl.startPlaying(k); } } }, `Play as ${c.name}`)),
     mine && h('p.note', 'Tip: right-click a province with armies selected to move them. Space pauses, keys 1–5 set speed.'));

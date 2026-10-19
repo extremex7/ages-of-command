@@ -6,6 +6,7 @@ import { industryMonth, recordHistory } from './industry.js';
 import { govStabilityParts } from './government.js';
 import { transferShares } from './diplomacy.js';
 import { strategicUpkeep } from './strategic.js';
+import { intelUpkeep } from './espionage.js';
 
 export function militaryUpkeep(state, c, rules, all = null) {
   if (all) return all[c.idx] * c.cache.priceLevel;
@@ -73,13 +74,14 @@ export function computeLedgers(state, map, rules) {
     const research = Math.max(0, taxRevenue) * (c.research?.share ?? 0);
     const military = militaryUpkeep(state, c, rules, ups);
     const strategic = strategicUpkeep(c, rules);
+    const intel = intelUpkeep(state, rules, c);
     const interest = c.treasury < 0 ? (-c.treasury * E.debtInterestYear) / 12 : 0;
     const paid = Math.max(0, -transfer[k]);
     c.ledger = {
       gdpMonth: gdpOwned[k], gdpLost: gdpOwned[k] - gdpControlled[k], efficiency: eff,
-      taxRevenue, requisition: requisition[k], tariffs, transfersIn: Math.max(0, transfer[k]), transfersOut: paid, revenue, civil, research, military, strategic, interest,
+      taxRevenue, requisition: requisition[k], tariffs, transfersIn: Math.max(0, transfer[k]), transfersOut: paid, revenue, civil, research, military, strategic, intel, interest,
       construction: c.econ ? c.econ.spentConstruction || 0 : 0,
-      net: revenue - civil - research - military - strategic - interest - paid,
+      net: revenue - civil - research - military - strategic - intel - interest - paid,
     };
   }
 }
@@ -148,7 +150,7 @@ export function autoBalanceBudgets(state, map, rules) {
     if (!c.ledger) continue;
     const L = c.ledger;
     if (L.taxRevenue <= 0) continue;
-    const need = ((L.military + (L.strategic || 0)) * 1.08) / L.taxRevenue + (c.research?.share ?? 0);
+    const need = ((L.military + (L.strategic || 0) + (L.intel || 0)) * 1.08) / L.taxRevenue + (c.research?.share ?? 0);
     c.civilShare = Math.max(0.55, Math.min(0.9, 1 - need));
     c.treasury = L.taxRevenue * 3;
   }

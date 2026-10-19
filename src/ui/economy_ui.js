@@ -76,6 +76,8 @@ export function economyTab(cl) {
       L.requisition > 0 && h('tr', h('td', 'Requisitions (occupied land)'), h('td.n.good', money(L.requisition))),
       h('tr', h('td', { tip: 'Administration, services, education, welfare. Higher spending raises stability and development growth.' }, 'Civil spending'), h('td.n.bad', '−' + money(L.civil))),
       h('tr', h('td', { tip: 'Upkeep of every unit (half for units in training), scaled by your price level (development and CPI).' }, `Military upkeep (price level ${c.cache.priceLevel.toFixed(2)})`), h('td.n.bad', '−' + money(L.military))),
+      L.strategic > 0 && h('tr', h('td', { tip: 'Nuclear arsenal, satellites, space stations and colonies (Strategic tab).' }, 'Strategic upkeep'), h('td.n.bad', '−' + money(L.strategic))),
+      L.intel > 0 && h('tr', h('td', { tip: 'Spy networks being built and counter-intelligence (a country’s Nation tab, Intelligence).' }, 'Intelligence service'), h('td.n.bad', '−' + money(L.intel))),
       L.interest > 0 && h('tr', h('td', { tip: `${pct(E.debtInterestYear)} per year on negative treasury.` }, 'Debt interest'), h('td.n.bad', '−' + money(L.interest))),
       h('tr', h('th', 'Net'), h('th.n', { className: L.net < 0 ? 'bad' : 'good' }, signedMoney(L.net))),
       L.construction > 0 && h('tr', h('td.muted', { tip: 'Paid up front from the treasury when projects start; not part of the monthly net.' }, 'Construction started this month'), h('td.n.muted', money(L.construction)))) : h('p.muted', 'No budget yet.'),

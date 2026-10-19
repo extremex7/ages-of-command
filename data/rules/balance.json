@@ -399,5 +399,16 @@
       "logistician": {"name": "Logistician", "text": "Ignores 40% of any supply shortage", "supply": 0.4},
       "engineer": {"name": "Engineer", "text": "Sieges 30% faster", "siege": 1.3}
     }
+  },
+  "espionage": {
+    "_doc": "Spy networks (docs/ESPIONAGE.md). A network grows `growth` a month while it is being built (at most maxBuilding at once), less the target's counter-intelligence (counterEffect, plus autocracyCounter for autocracies), and fades `decay` a month otherwise. Each network being built costs networkCostShare of tax revenue a month (at least minCost); counter-intelligence costs as much as counterCostNetworks networks. Operations spend opCost network points; success and detect are base chances. A coup needs stability under coupStability and makes the target a subject when its population is at most puppetPopShare of ours.",
+    "growth": 6, "decay": 2, "maxBuilding": 3, "networkCostShare": 0.004, "minCost": 0.0005, "counterCostNetworks": 2,
+    "counterEffect": 0.4, "autocracyCounter": 0.15,
+    "opCost": { "steal": 30, "sabotage": 25, "destabilise": 20, "coup": 70 },
+    "success": { "steal": 0.7, "sabotage": 0.65, "destabilise": 0.75, "coup": 0.45 },
+    "detect": { "steal": 0.2, "sabotage": 0.3, "destabilise": 0.25, "coup": 0.4 },
+    "stealShare": 0.3, "sabotageLevels": 2, "destabiliseStability": 6, "destabiliseLegitimacy": 6,
+    "coupStability": 40, "coupOpinion": 40, "puppetPopShare": 0.5, "caughtOpinion": 30, "caughtNetworkLoss": 0.5,
+    "ai": { "reserveMonths": 1, "counterAt": 30, "opChance": 0.5, "coupStability": 25 }
   }
 }

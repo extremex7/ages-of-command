@@ -245,6 +245,38 @@ export function dailyStrategic(state, map, rules) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// shared by cyber operations and spies (espionage.js)
+
+// Research taken from `target`: progress on the technology k is researching if the target knows
+// it, else on the cheapest one the target knows that k can research. Returns what happened.
+export function stealResearch(state, map, rules, k, target, share) {
+  const R = rules.tech, c = state.countries[k];
+  let pick = null;
+  const cur = c.research.current != null ? R.idx[c.research.current] : null;
+  if (cur != null && knowsId(state, rules, target, c.research.current)) pick = cur;
+  if (pick == null) for (const x of R.list) if (knowsId(state, rules, target, x.id) && available(state, rules, k, x.i) && (pick == null || x.cost < R.list[pick].cost)) pick = x.i;
+  if (pick == null) return 'found nothing new';
+  const gain = techCost(state, map, rules, k, pick) * share;
+  if (cur === pick) { c.research.progress += gain; return `stole research on ${R.list[pick].name}`; }
+  if (gain >= techCost(state, map, rules, k, pick) * 0.99) { grantTech(state, map, rules, k, pick, 'espionage'); return `stole ${R.list[pick].name}`; }
+  c.research.bank += gain;
+  return `stole research worth ${Math.round(gain)} points`;
+}
+
+// Knocks out up to `levels` building levels in random provinces of the target.
+export function sabotageIndustry(state, map, rules, target, levels) {
+  let n = 0;
+  if (state.econ) {
+    const X = rules.econ, ps = map.ids.filter((i) => state.prov.owner[i] === target);
+    for (let h = 0; h < levels && ps.length; h++) {
+      const i = ps[Math.floor(rand(state) * ps.length)];
+      for (let b = 0; b < X.B; b++) if (state.econ.bld[i * X.B + b] > 0) { state.econ.bld[i * X.B + b]--; n++; break; }
+    }
+  }
+  return `sabotaged ${n} industrial site(s)`;
+}
+
+// ---------------------------------------------------------------------------------------------
 // cyber operations
 
 export function cyberTech(state, rules, k) {
@@ -287,31 +319,9 @@ export function cyberOperation(state, map, rules, k, target, op) {
   const ok = rand(state) < success, seen = rand(state) < detect;
   let what = 'failed';
   if (ok) {
-    if (op === 'espionage') {
-      // progress towards a technology the target knows and we do not
-      const R = rules.tech;
-      let pick = null;
-      const cur = c.research.current != null ? R.idx[c.research.current] : null;
-      if (cur != null && knowsId(state, rules, target, c.research.current)) pick = cur;
-      if (pick == null) for (const x of R.list) if (knowsId(state, rules, target, x.id) && available(state, rules, k, x.i) && (pick == null || x.cost < R.list[pick].cost)) pick = x.i;
-      if (pick == null) what = 'found nothing new';
-      else {
-        const gain = techCost(state, map, rules, k, pick) * S.stealShare;
-        if (cur === pick) { c.research.progress += gain; what = `stole research on ${R.list[pick].name}`; }
-        else if (gain >= techCost(state, map, rules, k, pick) * 0.99) { grantTech(state, map, rules, k, pick, 'espionage'); what = `stole ${R.list[pick].name}`; }
-        else { c.research.bank += gain; what = `stole research worth ${Math.round(gain)} points`; }
-      }
-    } else if (op === 'sabotage') {
-      let n = 0;
-      if (state.econ) {
-        const X = rules.econ, ps = map.ids.filter((i) => state.prov.owner[i] === target);
-        for (let h = 0; h < S.sabotageLevels && ps.length; h++) {
-          const i = ps[Math.floor(rand(state) * ps.length)];
-          for (let b = 0; b < X.B; b++) if (state.econ.bld[i * X.B + b] > 0) { state.econ.bld[i * X.B + b]--; n++; break; }
-        }
-      }
-      what = `sabotaged ${n} industrial site(s)`;
-    } else if (op === 'disruption') {
+    if (op === 'espionage') what = stealResearch(state, map, rules, k, target, S.stealShare);
+    else if (op === 'sabotage') what = sabotageIndustry(state, map, rules, target, S.sabotageLevels);
+    else if (op === 'disruption') {
       t.strat.disrupted = Math.max(t.strat.disrupted, S.disruptionMonths);
       t.stability = Math.max(0, t.stability - 2);
       what = `disrupted industry and research for ${S.disruptionMonths} months`;

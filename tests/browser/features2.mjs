@@ -55,7 +55,17 @@ await page.evaluate(() => { window.__client.uiDirty = true; window.__client.requ
 check(await page.locator('.command button:has-text("Execute")').count() === 1, 'the plan can be executed from the list');
 await page.screenshot({ path: '/tmp/claude-0/features2-plans.png' });
 
-// 2. civil war: the player is asked which side to lead
+// 2. intelligence: build a network in Pakistan from its Nation tab
+await page.evaluate(() => { const c = window.__client, s = c.state; c.view.selectedCountry = s.countries.findIndex((x) => x.tag === 'PAK'); c.setTab('country'); });
+await page.waitForSelector('text=Intelligence', { timeout: 3000 });
+await page.click('label:has-text("Build network") input');
+check(await page.evaluate(() => { const s = window.__client.state; return s.countries[s.player].spy.building.length === 1; }), 'a spy network is started from the Nation tab');
+check(await page.locator('button:has-text("Stage a coup")').isDisabled(), 'operations wait for the network');
+await page.evaluate(() => { const c = window.__client, s = c.state; c.view.selectedCountry = s.player; c.setTab('country'); });
+await page.waitForTimeout(300);
+check(await page.locator('label:has-text("Counter-intelligence")').count() === 1, 'own Nation tab: counter-intelligence');
+
+// 3. civil war: the player is asked which side to lead
 await page.evaluate(async () => {
   const c = window.__client, s = c.state, k = s.player;
   const { startCivilWar } = await import('/src/core/civilwar.js');

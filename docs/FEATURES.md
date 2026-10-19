@@ -94,7 +94,8 @@ See [DIPLOMACY.md](DIPLOMACY.md) and [GOVERNMENT.md](GOVERNMENT.md).
 | The player voting on bloc applicants | 🟡 | The player's vote is cast automatically by opinion, like the AI's |
 | Sanctions short of a full embargo, international votes (UN-style) | ⬜ | |
 | Civil wars (a country splitting) | ✅ | The most disgruntled faction takes a block of provinces as a new country; the player picks a side |
-| Espionage, demilitarised zones, ceasefires, puppet governments by coup | ⬜ | |
+| Espionage and puppet governments by coup | ✅ | Spy networks in every era: steal technology, sabotage, fund the opposition, coups (ESPIONAGE.md) |
+| Demilitarised zones, ceasefires | ⬜ | |
 | AI reforming its own government type | ⬜ | AI changes policies only |
 
 ## Milestone 5 — research, eras and historical scenarios
@@ -120,7 +121,8 @@ See [TECHNOLOGY.md](TECHNOLOGY.md) and [SCENARIOS.md](SCENARIOS.md).
 | Save v5 with migration; tech file remapping | ✅ | |
 | Scenario editor UI | ⬜ | Scenarios are JSON definitions plus the builder |
 | Colonisation of unowned land | ⬜ | Unowned land is impassable in Height of Rome |
-| Technology trading / espionage | ⬜ | Diffusion models spread instead |
+| Technology espionage | ✅ | Spies (any era) and cyber espionage (modern) steal research |
+| Technology trading | ⬜ | Diffusion models spread instead |
 | Navy, air and space technologies with their own systems | ✅ | Done in Milestone 6: they unlock ships, aircraft, warheads, satellites and space projects |
 | More scenarios (e.g. 1444, 1815, 1861) | ⬜ | The format supports any date; each needs a definition file and events |
 

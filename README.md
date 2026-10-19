@@ -87,7 +87,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 129 unit/integration tests of the simulation (node:test)
+npm test                            # 131 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -100,6 +100,7 @@ node tests/browser/settings.mjs     # display settings
 node tests/browser/flags.mjs        # every scenario's flags load; the game resumes after an event decision
 node tests/browser/techtree.mjs     # top-bar points, technology tree (pan, zoom, pinch, queue), music moods and sound settings
 node tests/browser/session10.mjs    # side panel toggle, leaderboard, tutorial, cheats
+node tests/browser/features2.mjs    # generals, battle plans, the civil-war choice, intelligence
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -156,6 +157,7 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 - [docs/NAVY_AIR.md](docs/NAVY_AIR.md) — sea zones, fleets, naval combat, blockades, amphibious movement, air wings, bombing
 - [docs/MILITARY.md](docs/MILITARY.md) — generals and battle plans (fronts, attack arrows)
 - [docs/LOGISTICS.md](docs/LOGISTICS.md) — supply network, attrition, depots
+- [docs/ESPIONAGE.md](docs/ESPIONAGE.md) — spy networks, stealing technology, sabotage, coups and puppets
 - [docs/STRATEGIC.md](docs/STRATEGIC.md) — nuclear weapons and deterrence, cyber, satellites, space
 - [docs/FEATURES.md](docs/FEATURES.md) — implemented / partial / planned checklist and the continuation plan
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — measured numbers and how to reproduce them

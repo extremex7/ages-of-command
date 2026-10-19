@@ -552,3 +552,13 @@ it checks a plant's inputs, and treats a new input as available when the world h
 Gas fields now make 1.5 gas per level (cost 3.5), and a good nobody makes or needs keeps its base
 price. Four 32-year Modern World runs, 2058: energy 96–101% of need, gas 69–86%, world GDP 181–188 T.
 
+## Session 15: espionage
+
+Spy networks for every era (ESPIONAGE.md): build a network month by month, then steal
+technology, sabotage industry, fund the opposition or stage a coup, which can make a small
+country a puppet. Counter-intelligence, a budget line, and an AI that spies on its rival and its
+enemies. The research-stealing and sabotage code is shared with cyber operations. The budget
+table now also lists strategic upkeep, which was already charged but not shown. In a 10-year
+Modern World run, 12 AI countries ran spy services (0.2% of world revenue), with 83 operations
+and no coups.
+

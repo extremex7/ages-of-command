@@ -3,6 +3,7 @@ import { atWar, allied, touchRelations, warBetween, hasAccess, isAtWar } from '.
 import { log, refreshCountryCache, provinceGdp, aiLog } from './state.js';
 import { overlordOf, subjectsOf, defendersOf, treatiesBetween, removeTreaty, breakTreatiesForWar, treatiesBrokenByWar, TREATIES,
   opinion, addMod, addClaim, hasClaim, signTreaty, forgetCountry } from './diplomacy.js';
+import { recordPeace } from './record.js';
 
 export function canDeclareWar(state, map, a, b) {
   const C = state.countries;
@@ -271,6 +272,7 @@ export function makePeace(state, map, rules, war, from, terms) {
     const gained = transferred.length || terms.reparations || terms.subject || terms.independence;
     if (gained && C[from].govt) { C[from].govt.glory = Math.min(1, C[from].govt.glory + 0.4); C[loser].govt.glory = Math.max(-1, C[loser].govt.glory - 0.4); }
   }
+  recordPeace(state, war, from, !!(transferred.length || terms.reparations || terms.subject || terms.independence));
   endWar(state, map, rules, war);
   log(state, 'peace', parts.length ? `Peace: ${parts.join('; ')}.` : `White peace between ${C[war.leaderA].name} and ${C[war.leaderD].name}.`,
     { important: war.attackers.includes(state.player) || war.defenders.includes(state.player) });

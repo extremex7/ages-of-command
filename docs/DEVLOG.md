@@ -600,3 +600,12 @@ every clickable row is focusable and pressed with Enter, the focus survives the 
 rebuilt while time runs, dialogs take the focus, and a cross in the middle of the map works with
 Enter (select), Shift+Enter (order) and [ ] (step through your forces). Screen readers are not
 supported yet: the map is a canvas.
+
+## Session 20: achievements and the game summary
+
+A record of the player's country (ACHIEVEMENTS.md): the starting position, a yearly sample, and
+counts of battles, wars, coups and council resolutions. Menu → Summary shows a headline ("rose
+from #48 to #21 in 12 years, earning a silver star"), the rank history drawn against the star
+bands, and start against now; it opens by itself when the game ends. 24 achievements, from a
+first victory to ten years as the world's first power, are announced in the game and kept on the
+device; games with cheats earn none.

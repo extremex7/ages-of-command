@@ -24,10 +24,12 @@ import { toggleConsole } from './cheats.js';
 import { leaderboardDialog, starBadge } from './leaderboard.js';
 import { startTutorial, offerTutorial } from './tutorial.js';
 import { money, signedMoney, people, pct } from './format.js';
-import { writeSave, rotateAutosaves } from './storage.js';
+import { writeSave, rotateAutosaves, saveAchievement } from './storage.js';
 import { renderPanel, renderProvince, TABS } from './panels.js';
 import { icon } from './icons.js';
 import { renderEditor, editorClick } from './editor.js';
+import { summaryDialog } from './summary.js';
+import { startRecord } from '../core/record.js';
 import { saveDialog, peaceDialog, menuDialog, reportDialog, separatePeaceDialog, eventDialog, civilWarDialog } from './dialogs.js';
 
 export const SPEEDS = [0, 1, 3, 8, 20, 0]; // days per second; 5 = as fast as the frame budget allows
@@ -479,6 +481,7 @@ export class Client {
   startPlaying(countryIdx) {
     const s = this.state, newGame = this.mode === 'pick';
     s.player = countryIdx;
+    if (countryIdx >= 0 && s.record?.k !== countryIdx) startRecord(s);
     this.mode = 'play';
     this.bannerEl.style.display = 'none';
     this.updateMood();
@@ -575,8 +578,12 @@ export class Client {
     let sound = null, rank = 0;
     for (const l of s.log) {
       if (l.seq <= this.logSeen) continue;
+      if (l.achievement) {
+        saveAchievement(l.achievement, { country: s.countries[s.player]?.name ?? '', scenario: s.scenarioName, date: formatDate(s.day) });
+        sound = 'victory'; rank = 6;
+      }
       if (l.important || (l.type === 'battle' && l.report)) {
-        this.toast(l.text, l.important, l.prov);
+        this.toast(l.text, l.important && !l.achievement, l.prov);
         // the most significant new notification gets a sound
         const [name, r] = soundFor(l);
         if (r > rank) { sound = name; rank = r; }
@@ -604,6 +611,7 @@ export class Client {
     if (s.gameOver && !this.gameOverShown) {
       this.gameOverShown = true; this.speed = 0;
       this.toast(`Game over: ${s.gameOver.reason}`, true);
+      if (s.record) summaryDialog(this, { ended: true });
     }
     // drop selections of armies that no longer exist
     for (const id of [...this.view.selectedArmies]) if (!s.armies.some((a) => a.id === id)) this.view.selectedArmies.delete(id);

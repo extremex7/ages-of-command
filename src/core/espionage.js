@@ -11,6 +11,7 @@ import { changeGovernment, govType } from './government.js';
 import { stealResearch, sabotageIndustry } from './strategic.js';
 import { atWar } from './relations.js';
 import { knowsId, available } from './technology.js';
+import { bump } from './record.js';
 
 function knownCount(state, k) {
   if (!state.tech) return 0;
@@ -109,6 +110,7 @@ export function spyOperation(state, map, rules, k, target, op) {
       changeGovernment(state, rules, t, to, { legitimacy: 30, ruling: rules.politics.types[to].ruling || null });
       t.stability = Math.max(0, t.stability - 10);
       addMod(state, target, k, E.coupOpinion, rules.balance.diplomacy.modDecay, 'Installed our government');
+      if (k === state.player) bump(state, 'coups');
       what = `overthrew the ${was.toLowerCase()} and installed a friendly ${govType(rules, t).name.toLowerCase()}`;
       if (canPuppet(state, map, rules, k, target)) { signTreaty(state, map, rules, 'subject', k, target, { quiet: true }); what += `; ${t.name} is now our puppet`; }
       log(state, 'politics', `Coup in ${t.name}: the government has fallen${seen ? `, backed by ${c.name}` : ''}.`, { important: k === state.player || target === state.player, country: target });

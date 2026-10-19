@@ -5,6 +5,7 @@ import { validateScenario } from '../core/rules.js';
 import { formatDate, parseDate } from '../core/calendar.js';
 import { loadSettings, listSlots, readSave, deleteSave, initStorage, isDesktop, listScenarios, readScenario, deleteScenario } from './storage.js';
 import { editorGame } from './editor.js';
+import { achievementsScreen } from './summary.js';
 import { startEdit, cloneScenario, slug } from '../core/scenario_edit.js';
 import { Client } from './client.js';
 import { icon } from './icons.js';
@@ -79,6 +80,7 @@ export function mainMenu() {
       h('button.primary', { on: { click: newGameScreen } }, icon('new_game'), 'New Game'),
       h('button', { on: { click: loadScreen }, disabled: !listSlots().length }, icon('load'), 'Load Game'),
       h('button', { on: { click: () => editorScreen() } }, icon('editor'), 'Scenario Editor'),
+      h('button', { on: { click: () => achievementsScreen(app, mainMenu) } }, icon('achievements'), 'Achievements'),
       h('button', { on: { click: settingsScreen } }, icon('settings'), 'Settings'),
       canExit() && h('button', { on: { click: exitGame } }, icon('exit'), 'Exit')),
     h('p.note', `Map: ${data.map.ids.length.toLocaleString()} provinces from ${data.map.source}. Loaded in ${Math.round(data.timings.boot)} ms.`))));

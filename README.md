@@ -109,6 +109,7 @@ node tests/browser/session10.mjs    # side panel toggle, leaderboard, tutorial, 
 node tests/browser/features2.mjs    # generals, battle plans, the civil-war choice, intelligence, the world council
 node tests/browser/editor.mjs       # scenario editor: paint a new country, save, play, reload
 node tests/browser/access.mjs       # colour-blind colours, text size, keyboard-only play
+node tests/browser/summary.mjs      # achievements and the game summary
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -167,6 +168,7 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 - [docs/LOGISTICS.md](docs/LOGISTICS.md) — supply network, attrition, depots
 - [docs/ESPIONAGE.md](docs/ESPIONAGE.md) — spy networks, stealing technology, sabotage, coups and puppets
 - [docs/STRATEGIC.md](docs/STRATEGIC.md) — nuclear weapons and deterrence, cyber, satellites, space
+- [docs/ACHIEVEMENTS.md](docs/ACHIEVEMENTS.md) — achievements and the game summary
 - [docs/FEATURES.md](docs/FEATURES.md) — implemented / partial / planned checklist and the continuation plan
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — measured numbers and how to reproduce them
 - [docs/MODDING.md](docs/MODDING.md) — data formats for units, balance, goods, buildings, governments, events, sea zones, forces and scenarios

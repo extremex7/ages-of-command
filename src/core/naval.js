@@ -11,6 +11,7 @@ import { atWar, friendly, canEnter, warBetween } from './relations.js';
 import { portZonesOf } from './mapdata.js';
 import { rand, randRange } from './rng.js';
 import { civilFromDays } from './calendar.js';
+import { bump as recordBump } from './record.js';
 
 export const SUB_ROLES = new Set(['sub', 'nsub', 'ssbn']);
 
@@ -453,6 +454,7 @@ function endNavalBattle(state, map, rules, b, winner) {
   const all = win.concat(lose);
   if (all.some((f) => f.owner === state.player) || report.attackers.includes(C[state.player]?.name) || report.defenders.includes(C[state.player]?.name)) {
     const won = win.some((f) => f.owner === state.player);
+    recordBump(state, won ? 'battlesWon' : 'battlesLost');
     const theirs = b.sunk[won === (winner === 'att') ? 1 : 0], ours = b.sunk[won === (winner === 'att') ? 0 : 1];
     log(state, 'battle', `Naval battle in the ${z.name} ${won ? 'won' : 'lost'}: ${ours} of our ships and ${theirs} enemy ships sunk.`, { zone: b.zone, report: b.id, important: !won });
   }

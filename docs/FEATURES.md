@@ -193,6 +193,7 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | iOS app | ⬜ Postponed; needs a Mac to build |
 | Colour-blind map colours, larger text, keyboard-only play | ✅ |
 | Screen reader support | ⬜ The map is a canvas; clickable rows are labelled as buttons |
+| Achievements and the game summary | ✅ 24 achievements (ACHIEVEMENTS.md), kept on the device; Menu → Summary and the end of a game show the rank history, start against now and the deeds |
 
 ## Known limitations
 

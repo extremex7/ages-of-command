@@ -10,6 +10,7 @@ import { resolveEvent, describeEffects } from '../core/events.js';
 import { people, money } from './format.js';
 import { kvbox } from './panels.js';
 import { settingsForm } from './settings.js';
+import { summaryDialog } from './summary.js';
 
 export function openDialog(cl, ...content) { return open(cl, ...content); }
 
@@ -31,6 +32,7 @@ export function menuDialog(cl) {
     h('div.menu-buttons',
       h('button.primary', { on: { click: () => { w.remove(); if (wasSpeed) cl.setSpeed(wasSpeed); } } }, 'Resume'),
       h('button', { disabled: cl.mode !== 'play', on: { click: () => saveDialog(cl) } }, 'Save game'),
+      h('button', { disabled: !cl.state.record, tip: 'How your country has done since you took over, and the achievements earned.', on: { click: () => summaryDialog(cl) } }, 'Summary'),
       h('button', { on: { click: () => settingsDialog(cl) } }, 'Settings'),
       h('button', { on: { click: () => helpDialog(cl) } }, 'Controls'),
       h('button', { disabled: cl.mode !== 'play', on: { click: () => { w.remove(); cl.startTutorial(); } } }, 'Tutorial'),

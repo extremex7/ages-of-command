@@ -248,3 +248,16 @@ table.lb th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
    buttons stay on screen */
 .topbar { font-size: calc(13px * var(--ui-scale) * min(var(--text-scale), 1.15)); }
 :root.text-large .topbar .opt, :root.text-large .topbar .wide-only { display: none; }
+
+/* game summary and achievements */
+.headline { font-size: 1.15em; font-weight: 600; margin: 0.6em 0; }
+.rank-chart { width: 100%; max-width: 560px; height: auto; display: block; margin: 0.4em auto 0.8em; }
+.rank-chart text { fill: var(--muted); font-size: 11px; }
+.rank-chart .line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
+.rank-chart .dot { fill: var(--accent); }
+.rank-chart .band-gold { fill: rgba(242,201,76,0.16); } .rank-chart .band-silver { fill: rgba(207,214,222,0.10); } .rank-chart .band-bronze { fill: rgba(205,139,85,0.08); }
+.ach-list { display: grid; gap: 0.35em; }
+.ach-list.scroll { max-height: 60vh; overflow: auto; }
+.ach { display: grid; grid-template-columns: auto 1fr auto; gap: 0.6em; align-items: center; padding: 0.35em 0.5em; border: 1px solid var(--line); border-radius: 5px; opacity: 0.6; }
+.ach.got { opacity: 1; border-color: var(--accent); }
+.ach .ach-icon .icon { width: 1.4em; height: 1.4em; } .ach.got .ach-icon { color: var(--accent); }

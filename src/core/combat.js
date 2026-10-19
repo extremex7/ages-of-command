@@ -11,6 +11,7 @@ import { battleSupport, airCombatDay } from './air.js';
 import { satCover } from './strategic.js';
 import { generalFx, battleExperience } from './commanders.js';
 import { planBonus } from './plans.js';
+import { bump } from './record.js';
 
 function sideOf(battle, owner, state) {
   if (battle.att.some((id) => { const a = armyById(state, id); return a && friendly(state, a.owner, owner); })) return 'att';
@@ -200,6 +201,7 @@ function endBattle(state, map, rules, b, winner) {
   const involved = winners.concat(losers).some((a) => a.owner === state.player);
   if (involved || (A && A.armies.some((a) => a.owner === state.player)) || (D && D.armies.some((a) => a.owner === state.player))) {
     const won = winners.some((a) => a.owner === state.player);
+    bump(state, won ? 'battlesWon' : 'battlesLost');
     log(state, 'battle', `Battle of ${map.name[b.prov]} ${won ? 'won' : 'lost'} after ${b.days} days.` +
       (surrendered ? ` ${surrendered.toLocaleString()} troops surrendered.` : ''), { prov: b.prov, report: b.id, important: !won });
   }

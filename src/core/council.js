@@ -18,6 +18,7 @@ import { warScore } from './war.js';
 import { civilFromDays } from './calendar.js';
 import { neighbours } from './mapdata.js';
 import { tradePartners } from './industry.js';
+import { bump } from './record.js';
 
 export const RES_KINDS = ['sanction', 'ceasefire', 'dmz'];
 export const SANCTION_LEVELS = ['arms', 'energy', 'full'];
@@ -249,7 +250,7 @@ export function monthlyCouncil(state, map, rules) {
     if (r.kind === 'ceasefire' && !state.wars.some((w) => w.id === r.war)) continue;
     if ((r.target >= 0 && !C[r.target]?.alive) || (r.a >= 0 && (!C[r.a]?.alive || !C[r.b]?.alive))) continue;
     const t = tally(state, map, rules, r);
-    if (t.passes) apply(state, map, rules, r, t);
+    if (t.passes) { apply(state, map, rules, r, t); if (r.by === state.player) bump(state, 'resolutions'); }
     const how = t.passes ? 'passed' : t.veto.length ? `vetoed by ${t.veto.map((k) => C[k].name).join(', ')}` : 'failed';
     const mine = state.player >= 0 && [r.target, r.a, r.b, r.by].includes(state.player);
     const inWar = r.kind === 'ceasefire' && state.wars.find((w) => w.id === r.war && (w.attackers.includes(state.player) || w.defenders.includes(state.player)));

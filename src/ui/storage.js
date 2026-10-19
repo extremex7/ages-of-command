@@ -144,3 +144,15 @@ export function deleteScenario(id) {
   del('scenario.' + id);
   set('scenarios', JSON.stringify(listScenarios().filter((s) => s.id !== id)));
 }
+
+// Achievements earned in any game on this device: { id: { at, country, scenario, date } }.
+export function loadAchievements() {
+  try { return JSON.parse(get('achievements') || '{}'); } catch { return {}; }
+}
+export function saveAchievement(id, info) {
+  const all = loadAchievements();
+  if (all[id]) return false;
+  all[id] = { at: Date.now(), ...info };
+  set('achievements', JSON.stringify(all));
+  return true;
+}

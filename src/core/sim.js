@@ -18,6 +18,7 @@ import { processWings, strategicBombing } from './air.js';
 import { dailySupply, monthlyDepots } from './supply.js';
 import { dailyStrategic, monthlyStrategic } from './strategic.js';
 import { monthlyPrestige } from './prestige.js';
+import { monthlyCivilWar } from './civilwar.js';
 
 export function tick(game) {
   const { state, map, rules } = game;
@@ -53,6 +54,7 @@ export function tick(game) {
     monthlyMilitary(state, map, rules);
     const warScores = currentWarScores(state, map, rules);
     monthlyGovernment(state, map, rules, warScores);
+    monthlyCivilWar(state, map, rules, warScores);
     monthlyDiplomacy(state, map, rules);
     aiPeace(state, map, rules, warScores);
     aiEconomy(state, map, rules);

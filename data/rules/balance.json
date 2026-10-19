@@ -169,6 +169,20 @@
     "fortDays": 12,
     "devDays": 0.12
   },
+  "civilWar": {
+    "_doc": "Civil wars: a country below `stability` with at least `disgruntledShare` of its people backing unhappy factions may split each month (chance base × how far below × disgruntled share × 2, at most base). See docs/GOVERNMENT.md.",
+    "stability": 15,
+    "disgruntledShare": 0.25,
+    "base": 0.04,
+    "minProvinces": 3,
+    "cooldownYears": 15,
+    "provinceShare": [0.25, 0.45],
+    "armyDefectChance": 0.5,
+    "popPerMilitia": 3000000,
+    "maxMilitia": 12,
+    "rebelVictoryScore": 60,
+    "stalemateYears": 5
+  },
   "war": {
     "truceDays": 1825,
     "battleScoreScale": 25,

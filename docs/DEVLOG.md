@@ -529,3 +529,14 @@ their buildings and stockpiles (tested by rebuilding a save in the old layout).
 Four 32-year Modern World runs, 2058, share of world need produced (Session 11 after → now):
 energy 89% → 97%, coal 84% → 91%, oil 88% → 90%, iron 85% → 87%; world GDP 176 T → 185 T. By then
 the AI has built about 50 dams, 50 gas plants, 190 wind farms and 30 solar farms.
+
+## Session 13: civil wars
+
+A country below 15 stability, with a quarter of its people behind unhappy factions, can now split
+(`src/core/civilwar.js`, GOVERNMENT.md → Civil wars). The rebels are a real new country added
+during the game (`addCountry`: economy, government, research and technology row created on the
+spot, and saved like any other), at war with the government. The war ends in reunification when
+the government retakes every rebel province, or in independence after a 60 war score or 5 years.
+A player whose country splits chooses which side to lead. A 32-year Modern World test run saw
+2 civil wars.
+

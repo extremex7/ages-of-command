@@ -7,7 +7,7 @@ import { warScore, evaluatePeace, makePeace, declareWar, demandCost, provinceVal
   evaluateSeparatePeace, makeSeparatePeace, separateScore } from '../core/war.js';
 import { overlordOf } from '../core/diplomacy.js';
 import { resolveEvent, describeEffects } from '../core/events.js';
-import { people } from './format.js';
+import { people, money } from './format.js';
 import { kvbox } from './panels.js';
 import { settingsForm } from './settings.js';
 
@@ -160,6 +160,19 @@ export function separatePeaceDialog(cl, war) {
       h('input', { type: 'checkbox', on: { change: (e) => { if (e.target.checked) chosen.add(p); else chosen.delete(p); update(); } } }), h('span', map.name[p]))) : h('div.item.muted', 'The enemy occupies none of your provinces.')),
     result);
   update();
+}
+
+// The player's country has split in a civil war: keep leading the government, or take over the rebels.
+export function civilWarDialog(cl, { gov, rebel }) {
+  const s = cl.state, C = s.countries, g = C[gov], r = C[rebel];
+  if (!g || !r?.alive) return;
+  const side = (k, label, tip) => h('button', { tip, on: { click: () => { w.remove(); if (s.player !== k) cl.startPlaying(k); cl.autoResume(); } } }, label);
+  const w = open(cl, h('h2', `Civil war in ${g.name}`),
+    h('p', `The ${r.name} has risen against your government, taking ${r.cache?.provinces ?? 0} province(s) and ${money(r.treasury)} of the treasury. Which side do you lead?`),
+    h('p.muted', 'The government wins by retaking every rebel province. The rebels win with a war score of 60, or by holding out for 5 years.'),
+    h('div.row',
+      side(gov, `Lead the government (${g.cache?.provinces ?? 0} provinces)`, 'Keep playing your country and crush the rising.'),
+      side(rebel, `Join the ${r.name}`, 'Play as the rebels from here on.')));
 }
 
 // A domestic event for the player: the text, and each option with its effects spelled out.

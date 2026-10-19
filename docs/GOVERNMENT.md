@@ -79,6 +79,35 @@ factions with approval under 30. The chance scales with that share and how low s
 largest unhappy faction installs its preferred government type. Coups and revolutions share a
 3-year cooldown.
 
+## Civil wars
+
+A deeper collapse splits the country (`src/core/civilwar.js`, numbers in `balance.json` →
+`civilWar`). Each month a country may fall into civil war when its stability is below 15, it has
+at least 3 provinces, it has not had one in the last 15 years, and at least 25% of the population
+backs factions with approval under 30. The monthly chance is
+
+```
+0.04 × (15 − stability)/15 × min(1, disgruntled share × 2)
+```
+
+The largest unhappy faction rises as a new country with its own government type (liberals: a
+parliamentary "Free X"; socialists: a one-party "People's Republic of X"; nationalists or the
+military: a military government; and so on). It takes a connected block of 25–45% of the
+provinces, grown from the province farthest from the capital (never the capital itself). Each
+army standing in those provinces defects with a 50% chance. The rebels get a share of the
+treasury, manpower and stockpiles equal to their share of the population, the country's
+technology, and a militia of the best line infantry it knows (one unit per 3 million people, at
+most 12).
+
+The war ends when:
+
+- the government controls every rebel province: the country is reunited (+10 stability);
+- the rebels reach a war score of 60, or hold out for 5 years: they become an independent country
+  and keep the provinces they occupy.
+
+Neither side accepts an ordinary peace for the first 3 years. When the player's country splits,
+the game pauses and asks whether to keep leading the government or to take over the rebels.
+
 ## Policies and reforms
 
 Five policy groups, three options each: conscription (volunteer, limited, mass), press (free,

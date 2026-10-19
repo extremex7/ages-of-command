@@ -26,7 +26,7 @@ import { money, signedMoney, people, pct } from './format.js';
 import { writeSave, rotateAutosaves } from './storage.js';
 import { renderPanel, renderProvince, TABS } from './panels.js';
 import { icon } from './icons.js';
-import { saveDialog, peaceDialog, menuDialog, reportDialog, separatePeaceDialog, eventDialog } from './dialogs.js';
+import { saveDialog, peaceDialog, menuDialog, reportDialog, separatePeaceDialog, eventDialog, civilWarDialog } from './dialogs.js';
 
 export const SPEEDS = [0, 1, 3, 8, 20, 0]; // days per second; 5 = as fast as the frame budget allows
 
@@ -554,6 +554,8 @@ export class Client {
     // a domestic event waits for the player's decision
     const ev = s.pendingEvents.find((p) => p.c === s.player && !p.shown);
     if (ev && this.mode === 'play') { ev.shown = true; this.autoPause(); this.openEvent(ev); }
+    // the player's country split: lead the government or the rebels
+    if (s.civilChoice && this.mode === 'play') { const cc = s.civilChoice; delete s.civilChoice; this.autoPause(); civilWarDialog(this, cc); }
     if (s.gameOver && !this.gameOverShown) {
       this.gameOverShown = true; this.speed = 0;
       this.toast(`Game over: ${s.gameOver.reason}`, true);

@@ -381,6 +381,8 @@ export function describeTerms(state, terms) {
 
 function peaceTerms(state, map, rules, war, side, leader, other, myScore, months) {
   const C = state.countries, D = rules.balance.diplomacy, PC = D.peaceCost;
+  // civil wars are fought out (see civilwar.js) unless they drag on past three years
+  if (war.kind === 'civil' && months < 36) return null;
   if (war.kind === 'independence' && side === 'A' && myScore >= PC.independence) return { provinces: [], independence: true };
   if (myScore > 20) {
     const mySide = side === 'A' ? war.attackers : war.defenders;

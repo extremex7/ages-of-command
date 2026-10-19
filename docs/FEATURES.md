@@ -40,7 +40,7 @@ Nothing is marked ✅ if it is only a placeholder.
 | Armies, recruitment, movement, combat | ✅ | Merge / split / stop |
 | War declarations, occupation, peace | ✅ | Alliances join defensively; truces |
 | Basic country AI, military interface | ✅ | |
-| Separate peace for non-leaders | ⬜ | Only war leaders negotiate |
+| Separate peace for non-leaders | ✅ | Co-belligerents leave a war with their own terms; the AI does it too (DIPLOMACY.md) |
 | Fronts, battle plans, commanders | ⬜ | |
 
 ## Milestone 3 — economy
@@ -93,7 +93,7 @@ See [DIPLOMACY.md](DIPLOMACY.md) and [GOVERNMENT.md](GOVERNMENT.md).
 | Diplomacy and government map modes | ✅ | Keys `y` and `j` |
 | The player voting on bloc applicants | 🟡 | The player's vote is cast automatically by opinion, like the AI's |
 | Sanctions short of a full embargo, international votes (UN-style) | ⬜ | |
-| Civil wars (a country splitting) | ⬜ | Revolutions change the government in place |
+| Civil wars (a country splitting) | ✅ | The most disgruntled faction takes a block of provinces as a new country; the player picks a side |
 | Espionage, demilitarised zones, ceasefires, puppet governments by coup | ⬜ | |
 | AI reforming its own government type | ⬜ | AI changes policies only |
 
@@ -221,6 +221,6 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
    planning, supply with goods cost, winning back the simulation speed lost in M6.
 2. **Milestone 5 follow-ups**: a scenario editor UI, more start dates (1444, 1815, 1861),
    colonisation of unowned land, a war AI that sustains long wars, technology trading.
-3. **Milestone 4 follow-ups**: civil wars, the player's own bloc votes, UN-style votes and
+3. **Milestone 4 follow-ups**: the player's own bloc votes, UN-style votes and
    partial sanctions, AI government reform.
 4. Economy follow-ups: a gas and renewable energy split, transport costs.

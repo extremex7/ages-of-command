@@ -144,7 +144,7 @@ export function efficiencyBreakdown(state, map, rules, i, b) {
 // ---------------------------------------------------------------------------------------------
 // state setup
 
-function newCountryEcon(G, tariff) {
+export function newCountryEcon(G, tariff) {
   const f32 = () => new Float32Array(G);
   return {
     stock: new Float32Array(G), // the only per-good array the next month depends on

@@ -8,7 +8,8 @@ import { computeLedgers } from '../core/economy.js';
 import {
   knows, available, techCost, researchPoints, setResearch, queueResearch, setResearchShare, eraOf,
 } from '../core/technology.js';
-import { openDialog } from './dialogs.js';
+import { techTreeDialog } from './techtree.js';
+import { icon } from './icons.js';
 
 const EFFECT_NAMES = {
   farm: 'Farm output', mine: 'Mine output', industry: 'Industrial output', research: 'Research', popGrowth: 'Population growth',
@@ -82,39 +83,11 @@ export function researchTab(cl) {
     r.queue.length > 0 && h('div', h('h4', 'Queue'), h('table.t.small', r.queue.map((id, n) => h('tr',
       h('td', { tip: techTip(cl, k, T.idx[id]) }, `${n + 1}. ${T.list[T.idx[id]].name}`),
       mine && h('td.n', h('button', { tip: 'Remove from the queue', on: { click: () => { r.queue.splice(n, 1); refresh(); } } }, '×')))))),
-    h('div.row.spread', { style: { marginTop: '0.8em' } }, h('h3', 'Available'), h('button', { on: { click: () => techTreeDialog(cl, k) } }, 'Technology tree…')),
+    h('div.row.spread', { style: { marginTop: '0.8em' } }, h('h3', 'Available'), h('button', { on: { click: () => techTreeDialog(cl, k, techTip) } }, icon('tech_tree'), 'Technology tree')),
     avail.length ? h('table.t.small', avail.map(({ t, cost: tc }) => h('tr',
       h('td', { tip: techTip(cl, k, t.i) }, t.name, t.fictional ? h('span.muted', ' (speculative)') : null, h('div.muted', `${T.fields[t.field] || t.field} · ${yearText(t.year)}`)),
       h('td.n', Math.round(tc)),
       mine && h('td.n', h('button', { tip: 'Research now (half of the current progress is kept as banked points)', disabled: r.current === t.id, on: { click: () => act(() => setResearch(s, R, k, t.id)) } }, 'Start'),
         h('button', { tip: 'Add to the queue', disabled: r.queue.includes(t.id) || r.current === t.id, on: { click: () => act(() => queueResearch(s, R, k, t.id)) } }, '+')))))
       : h('p.muted', 'Everything available is known.'));
-}
-
-// Era × field grid of every technology; click one to queue it (with missing prerequisites).
-export function techTreeDialog(cl, k) {
-  const s = cl.state, R = cl.game.rules, T = R.tech;
-  const mine = k === s.player;
-  const fields = Object.keys(T.fields).filter((f) => T.list.some((t) => t.field === f));
-  const r = s.countries[k].research;
-  const render = () => {
-    const grid = h('div.tree', { style: { gridTemplateColumns: `8em repeat(${T.eras.length}, minmax(7.5em, 1fr))` } },
-      h('div.th', ''), T.eras.map((e) => h('div.th', { tip: `${e.name}\nManpower share ${pct(e.manpowerShare ?? 0, 1)} of population` }, e.name)),
-      fields.map((f) => [h('div.th', T.fields[f]), T.eras.map((e) => h('div.cell', T.list.filter((t) => t.field === f && t.eraI === e.i).map((t) => {
-        const st = knows(s, k, t.i) ? 'known' : r.current === t.id ? 'current' : r.queue.includes(t.id) ? 'queued' : available(s, R, k, t.i) ? 'avail' : 'locked';
-        return h('div.tech.' + st + (t.fictional ? '.fict' : ''), { tip: techTip(cl, k, t.i), on: { click: () => {
-          if (!mine || st === 'known') return;
-          const e = st === 'current' || st === 'queued' ? null : queueResearch(s, R, k, t.id);
-          if (e) cl.toast(e, true);
-          cl.uiDirty = true; cl.requestFrame(); render();
-        } } }, t.name);
-      })))]));
-    mount(body, grid);
-  };
-  const body = h('div');
-  const wrap = openDialog(cl, h('div.row.spread', h('h3', `Technology tree: ${s.countries[k].name}`), h('button', { on: { click: () => wrap.remove() } }, 'Close')),
-    h('p.muted', 'Green: known. Blue: being researched or queued. Bright: available now. Dim: needs prerequisites. Italic: speculative (never given at start).' + (mine ? ' Click a technology to queue it with its prerequisites.' : '')),
-    body);
-  wrap.firstChild.classList.add('wide');
-  render();
 }

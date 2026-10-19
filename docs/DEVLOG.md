@@ -408,3 +408,35 @@ events because their later steps expect a paused game.
 activity, the desktop app closes its window through a new `POST /api/quit` in the launcher (or
 stops itself when the game runs in a browser window). A browser tab cannot close itself, so the
 button is hidden there.
+
+## 2026-10-19 — Session 9: top-bar points, technology tree, music and sound
+
+**Points in the top bar.** Influence (the diplomacy currency, spent for example to improve
+relations) and research points per month now sit beside treasury, population and wars. Each
+has a tooltip explaining how it is gained and spent and opens its tab when clicked; the research
+figure turns amber when no project is running and points are being banked.
+
+**Technology tree** (`src/ui/techtree.js`, replaces the era × field grid). Technologies sit in era
+columns and field rows with a curved line from each prerequisite (203 lines; a prerequisite in the
+same era is joined round the left side). Each technology and field has an icon (`TECH_ICONS` in
+`tools/build_icons.mjs`; 126 icons, 37 KB in all). Drag to pan, wheel or pinch to zoom, or use the
+zoom and "whole tree" buttons; zoomed far out the names give way to icons. Selecting a
+technology lights its whole prerequisite chain (blue) and what it leads to (dashed amber), and
+shows its details with "Research now" and "Add to queue" (or "Queue with prerequisites"). The
+tree opens on the current project, keeps its position for the session and recolours as research
+finishes.
+
+**Music and sound** (`src/ui/audio.js`). Everything is synthesised with the Web Audio API, so no
+audio files ship. The music is generated live in six moods with their own chords, tempo,
+instruments and drums: main menu, peace, prosperity (stable and in surplus), unrest (stability
+under 50 or heavy debt), war, and crisis (stability under 30). The mood is re-read every 15 game
+days and changes at the next 4-bar phrase. Effects: clicks, tabs, construction, research done,
+events, offers, war declared, peace, battles won and lost, nuclear strikes. Volumes are in
+Settings → Sound. Sound starts after the first click (a browser rule) and stops while the window
+is hidden. Measured with offline rendering: every mood is audible without clipping (peak ≤ 0.35)
+and runs about 7 oscillators a second. Not judged by ear here: the music is procedural and
+simple, and recorded tracks would sound better.
+
+Checked with `tests/browser/techtree.mjs` (top bar, tree lines and icons, drag, wheel, synthetic
+two-finger pinch, select and queue, every mood renders, mood follows war and stability, Sound
+settings).

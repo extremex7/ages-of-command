@@ -80,7 +80,7 @@ programmes, cyber operations, satellites and space.
 **Settings** (main menu, or Menu → Settings in a game) apply at once: window mode (windowed,
 maximised, full screen) and window size in the desktop app, interface scale (Auto fits the
 window), graphics quality, map resolution, a frame rate limit, whether the game resumes after an
-event decision (it does by default), tooltips and autosaves. **Exit** on the main menu closes
+event decision (it does by default), music and sound effect volumes, tooltips and autosaves. **Exit** on the main menu closes
 the desktop and Android apps.
 
 ## Test
@@ -97,6 +97,7 @@ node tests/browser/m6.mjs           # Milestone 6 interface: navies, air wings, 
 node tests/browser/clicks.mjs       # tab and build presses while time runs
 node tests/browser/settings.mjs     # display settings
 node tests/browser/flags.mjs        # every scenario's flags load; the game resumes after an event decision
+node tests/browser/techtree.mjs     # top-bar points, technology tree (pan, zoom, pinch, queue), music moods and sound settings
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```

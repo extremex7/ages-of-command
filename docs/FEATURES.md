@@ -178,6 +178,10 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Icons for map modes, tabs, the top bar, buildings and the main menu | ✅ Lucide icons (ISC licence), generated into src/ui/icons.js by tools/build_icons.mjs |
 | Real country flags | ✅ Present-day flags from flag-icons (MIT) for all 196 countries; 52 historical flags drawn for the 1914, 1936 and 1962 scenarios, several simplified (data/flags/index.json lists which). Ancient states of 117 (Rome excepted) and the invented unions of 2085 keep pattern flags, as do Jabal Shammar and Asir in 1914 (no reliable source) |
 | Game resumes after an event decision | ✅ At the speed it ran before; "Stay paused" in Settings keeps the old behaviour |
+| Influence and research points in the top bar | ✅ Click either to open its tab; tooltips explain how they are gained and spent |
+| Technology tree with lines, icons, pan and zoom | ✅ Era columns and field rows, a line from each prerequisite, an icon for each of the 132 technologies; drag, wheel, pinch and buttons to move and zoom; select a technology to see its prerequisite chain and research or queue it (src/ui/techtree.js) |
+| Music that follows the country | ✅ Generated live with the Web Audio API in six moods (main menu, peace, prosperity, unrest, war, crisis), chosen from wars, stability and finances. Synthesised, not recorded music |
+| Sound effects | ✅ Synthesised: clicks, tabs, construction, research, events, offers, war, peace, battles, nuclear strikes. Music and effects volumes in Settings |
 | Exit button on the main menu | ✅ Desktop and Android apps (a browser tab cannot close itself, so it is hidden there) |
 | iOS app | ⬜ Postponed; needs a Mac to build |
 | Audio, onboarding tutorial, accessibility pass | ⬜ |

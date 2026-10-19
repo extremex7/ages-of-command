@@ -139,7 +139,7 @@ if (!q1) errors.push('research Start button did not set a project');
 await page.click('.panel button:has-text("Technology tree")');
 await page.waitForTimeout(300);
 await page.screenshot({ path: out + '21-tech-tree.png' });
-if (!(await page.locator('.dialog .tree .tech').count())) errors.push('technology tree is empty');
+if (!(await page.locator('.dialog .tt-node').count())) errors.push('technology tree is empty');
 await page.keyboard.press('Escape');
 await page.keyboard.press('q'); await page.waitForTimeout(300); await page.screenshot({ path: out + '22-technology-map.png' });
 // declare-war dialog shows joiners and consequences (cancelled)

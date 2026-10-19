@@ -4,7 +4,7 @@ import { h, mount } from './dom.js';
 import { MapRenderer } from '../map/renderer.js';
 import { buildIndex, pickProvince } from '../map/picking.js';
 import { MAP_MODES, MODE_LEGENDS } from '../map/modes.js';
-import { eraOf } from '../core/technology.js';
+import { eraOf, researchPoints, techCost } from '../core/technology.js';
 import { TREATIES } from '../core/diplomacy.js';
 
 const TREATY_NAMES = Object.fromEntries(Object.entries(TREATIES).map(([k, t]) => [k, t.name.toLowerCase()]));
@@ -18,6 +18,7 @@ import { zoneAt, portZonesOf } from '../core/mapdata.js';
 import { computeLedgers } from '../core/economy.js';
 import { isAtWar } from '../core/relations.js';
 import { flagCanvas, setFlagScenario } from './flags.js';
+import { sfx, setMood, moodFor } from './audio.js';
 import { money, signedMoney, people, pct } from './format.js';
 import { writeSave, rotateAutosaves } from './storage.js';
 import { renderPanel, renderProvince, TABS } from './panels.js';
@@ -25,6 +26,18 @@ import { icon } from './icons.js';
 import { saveDialog, peaceDialog, menuDialog, reportDialog, separatePeaceDialog, eventDialog } from './dialogs.js';
 
 export const SPEEDS = [0, 1, 3, 8, 20, 0]; // days per second; 5 = as fast as the frame budget allows
+
+// Sound for a notification: [name, priority].
+function soundFor(l) {
+  const t = l.text;
+  if (/nuclear/i.test(t) && /destroyed|strike/.test(t)) return ['explosion', 9];
+  if (l.type === 'war' && /declared war/.test(t)) return ['war', 8];
+  if (l.type === 'peace') return ['peace', 7];
+  if (l.type === 'battle' && / won/.test(t)) return ['victory', 5];
+  if (l.type === 'battle' && / lost/.test(t)) return ['defeat', 5];
+  if (l.type === 'research' && /researched|era/.test(t)) return ['research', 4];
+  return ['notify', 1];
+}
 
 export class Client {
   constructor(root, data, game, opts) {
@@ -37,6 +50,7 @@ export class Client {
     this.uiDirty = true; this.lastUi = 0;
     this.index = buildIndex(game.map);
     setFlagScenario(game.state.scenarioId, game.state.countries);
+    this.updateMood();
     this.build();
     this.renderer = new MapRenderer(this.canvas, game.map);
     this.renderer.rules = game.rules;
@@ -408,6 +422,7 @@ export class Client {
     s.player = countryIdx;
     this.mode = 'play';
     this.bannerEl.style.display = 'none';
+    this.updateMood();
     this.renderer.focus = countryIdx;
     this.renderer.invalidate();
     if (countryIdx >= 0) this.focusCountry(countryIdx);
@@ -494,10 +509,18 @@ export class Client {
     const s = this.state;
     this.uiDirty = true;
     // toasts for important new notifications concerning the player
+    let sound = null, rank = 0;
     for (const l of s.log) {
       if (l.seq <= this.logSeen) continue;
-      if (l.important || (l.type === 'battle' && l.report)) this.toast(l.text, l.important, l.prov);
+      if (l.important || (l.type === 'battle' && l.report)) {
+        this.toast(l.text, l.important, l.prov);
+        // the most significant new notification gets a sound
+        const [name, r] = soundFor(l);
+        if (r > rank) { sound = name; rank = r; }
+      }
     }
+    if (sound) sfx(sound);
+    if (s.day - (this.moodDay ?? -99) >= 15) this.updateMood();
     this.logSeen = s.logSeq || 0;
     if (s.offers.some((o) => o.to === s.player && !o.notified)) {
       for (const o of s.offers) {
@@ -506,6 +529,7 @@ export class Client {
         const who = s.countries[o.from].name;
         const what = { treaty: `proposes a ${TREATY_NAMES[o.type] || 'treaty'}`, call: 'calls you to arms', separate: 'asks for a separate peace' }[o.kind] || 'offers peace';
         this.toast(`${who} ${what}. See the Diplomacy tab.`, o.kind !== 'treaty');
+        sfx('notify');
         if (this.speed && o.kind !== 'treaty') this.setSpeed(0);
       }
     }
@@ -585,12 +609,35 @@ export class Client {
       me && h('div.stat', { tip: 'Stability 0–100: affects tax efficiency. Lowered by high taxes, low public spending, debt, war and occupation.' }, h('b', icon('stability'), Math.round(me.stability)), h('span', 'Stability')),
       me && h('div.stat.opt', { tip: `Available manpower for recruiting and reinforcement. Cap ${people(me.cache.maxManpower)}, regenerates monthly.` }, h('b', icon('manpower'), people(me.manpower)), h('span', 'Manpower')),
       me && h('div.stat.opt', { tip: 'Population' }, h('b', icon('population'), people(me.cache.pop)), h('span', 'Population')),
+      me && h('div.stat', { tip: this.influenceTip(me), on: { click: () => this.setTab('diplomacy') } }, h('b', icon('influence'), Math.floor(me.influence ?? 0)), h('span', 'Influence')),
+      me && me.research && h('div.stat', { tip: this.researchTip(me), on: { click: () => this.setTab('research') } },
+        h('b', { className: me.research.current ? '' : 'warn' }, icon('research_points'), '+' + researchPoints(s, this.game.rules, me).toFixed(1)), h('span', 'Research')),
       me && me.tfx && h('div.stat.opt', { tip: `Era: ${me.tfx.known} technologies known${me.research?.current ? `, researching ${this.game.rules.tech.list[this.game.rules.tech.idx[me.research.current]].name}` : ', no research project'}. Click for the Research tab.`, on: { click: () => this.setTab('research') } }, h('b', icon('era'), eraOf(this.game.rules, me).name), h('span', 'Era')),
       h('div.stat' + (wars ? '.bad' : ''), { tip: me ? 'Wars you are part of' : 'Wars in the world' }, h('b', icon('wars'), wars), h('span', 'Wars')),
       h('div.spacer'),
       this.searchBox(),
       h('button', { tip: 'Save the game (Ctrl+S quick-saves)', on: { click: () => saveDialog(this) }, disabled: this.mode !== 'play' }, icon('save'), h('span.lbl', 'Save')),
       h('button', { on: { click: () => menuDialog(this) } }, icon('menu'), h('span.lbl', 'Menu')));
+  }
+
+  influenceTip(c) {
+    const D = this.game.rules.balance.diplomacy;
+    return `Influence (diplomatic points): ${Math.floor(c.influence ?? 0)} of at most ${D.influenceCap}.\n`
+      + `Gained every month (${D.influenceBase} + more for larger economies). Spent in the Diplomacy tab, `
+      + `for example ${D.improveCost} to improve relations with a country. Click for the Diplomacy tab.`;
+  }
+
+  researchTip(c) {
+    const s = this.state, R = this.game.rules, T = R.tech, r = c.research;
+    const rp = researchPoints(s, R, c);
+    const lines = [`Research points: ${rp.toFixed(1)} a month (from research spending, education and technologies).`];
+    if (r.current && T.idx[r.current] != null) {
+      const t = T.idx[r.current], cost = techCost(s, this.game.map, R, c.idx, t);
+      lines.push(`Researching ${T.list[t].name}: ${Math.round(r.progress)} of ${Math.round(cost)} points (${Math.round(100 * r.progress / Math.max(1, cost))}%).`);
+    } else lines.push('No research project: points are being banked. Pick one in the Research tab.');
+    if (r.bank >= 1) lines.push(`Banked: ${Math.round(r.bank)} points.`);
+    lines.push('Click for the Research tab.');
+    return lines.join('\n');
   }
 
   searchBox() {
@@ -650,7 +697,13 @@ export class Client {
 
   openPeace(war) { peaceDialog(this, war); }
   openSeparatePeace(war) { separatePeaceDialog(this, war); }
-  openEvent(p) { eventDialog(this, p); }
+  openEvent(p) { sfx('event'); eventDialog(this, p); }
+
+  // background music follows the player's country (the AI-run world in observer mode)
+  updateMood() {
+    this.moodDay = this.state.day;
+    setMood(this.mode === 'play' ? moodFor(this.state, this.state.player) : 'peace');
+  }
   openReport(id) { reportDialog(this, id); }
   isAtWar() { return isAtWar(this.state, this.state.player); }
 }

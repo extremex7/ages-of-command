@@ -128,6 +128,8 @@ Unknown keys are rejected on load with the file and field named.
   `"tech"` in units.json, which must agree. Units have a `role` (`line`, `support`, `mobile`),
   and optional `munitions` (default 1), `fuel` (default 0) and `siege` (default 1) factors.
 - `fictional: true` marks speculative technologies (never given at a scenario start).
+- Icons: the technology tree shows the icon named for the technology in `TECH_ICONS` of
+  `tools/build_icons.mjs` (Lucide names; rerun the tool), otherwise its field's icon.
 - Prerequisite cycles, unknown ids and unknown effect keys are rejected when the rules load.
   Formulas: [TECHNOLOGY.md](TECHNOLOGY.md).
 

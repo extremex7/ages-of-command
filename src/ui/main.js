@@ -7,6 +7,7 @@ import { loadSettings, listSlots, readSave, deleteSave, initStorage, isDesktop }
 import { Client } from './client.js';
 import { icon } from './icons.js';
 import { loadFlagIndex } from './flags.js';
+import { setupAudio, setMood } from './audio.js';
 import { settingsForm, applyUiScale, applyWindow, setAppInfo, watchAutoScale, toggleFullscreen, platform, canExit, exitGame } from './settings.js';
 
 const app = document.getElementById('app');
@@ -26,6 +27,7 @@ async function boot() {
   if (data.desktop) data.settings = loadSettings();
   setAppInfo(data.desktop);
   applyUiScale(data.settings);
+  setupAudio(data.settings);
   watchAutoScale(() => data.settings);
   // the desktop app's window opens in the saved mode and size (a browser needs a click first)
   if (platform() === 'native' && (data.settings.windowMode !== 'windowed' || data.settings.windowSize)) applyWindow(data.settings);
@@ -63,6 +65,7 @@ async function getScenario(id) {
 }
 
 export function mainMenu() {
+  setMood('menu');
   mount(app, h('div.screen', h('div.menu-card',
     h('div.title', 'AGES OF COMMAND'),
     h('div.subtitle', 'A grand strategy sandbox — prototype build'),

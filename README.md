@@ -48,8 +48,8 @@ npm start            # serves the game at http://localhost:8080/
 # or: node tools/serve.mjs 8080   (any static server works, e.g. python3 -m http.server)
 ```
 
-Open the URL, choose **New Game**, pick a scenario (Modern World, Height of Rome 117, The Great
-War 1914, The Gathering Storm 1936, The Cold War 1962, or the fictional Flashpoint 2035 and
+Open the URL, choose **New Game**, pick a scenario (Modern World, Height of Rome 117, Rise of
+Empires 1444, Concert of Europe 1815, A House Divided 1861, The Great War 1914, The Gathering Storm 1936, The Cold War 1962, or the fictional Flashpoint 2035 and
 Orbital Age 2085), then **Choose country**, click a country
 and **Play as …**.
 Press **Space** to start time. To build, select one of your provinces and use **Build here** in
@@ -93,7 +93,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 136 unit/integration tests of the simulation (node:test)
+npm test                            # 156 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary

@@ -53,6 +53,7 @@ function startScenarioWars(state, map, rules, scenario) {
     if (!att.length || !def.length || declareWar(state, map, rules, att[0], def[0])) continue;
     const war = state.wars[state.wars.length - 1];
     if (w.name) war.name = w.name;
+    if (w.kind) war.kind = w.kind; // 'civil': rebels (the attackers) against their government, see civilwar.js
     war.start = state.day - 30;
     for (const k of att.slice(1)) joinWar(state, map, rules, war, k, 'A');
     for (const k of def.slice(1)) joinWar(state, map, rules, war, k, 'D');

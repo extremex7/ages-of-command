@@ -186,12 +186,26 @@ HIST_NOTES = {
     'rhodesia_nyasaland': 'arms reduced to a shield', 'sikkim': 'approximation, after the 1967 flag',
 }
 
-ROME_TAGS = [c['tag'] for c in json.load(open(os.path.join(ROOT, 'data', 'scenarios', 'height_of_rome_117.json')))['countries']]
+def scenario_tags(sid):
+    return [c['tag'] for c in json.load(open(os.path.join(ROOT, 'data', 'scenarios', sid + '.json')))['countries']]
+
+
+ROME_TAGS = scenario_tags('height_of_rome_117')
 
 # Per-scenario choices; anything not listed uses the present-day flag of its tag if there is one.
 SCENARIO = {
     # states of the year 117 had no national flags: every country but Rome keeps its pattern flag
     'height_of_rome_117': {**{t: None for t in ROME_TAGS}, 'ROM': 'hist/rome_vexillum'},
+    # 1444: no national flags in the modern sense; every country keeps its pattern flag
+    'rise_of_empires_1444': {t: None for t in scenario_tags('rise_of_empires_1444')},
+    # 1815 and 1861: present-day or drawn flags only where that flag was already in use; the rest
+    # keep pattern flags (a present-day flag would be wrong, e.g. the 50-star United States)
+    'concert_1815': {**{t: None for t in scenario_tags('concert_1815')},
+                     'GBR': 'gb', 'DEN': 'dk', 'NET': 'nl', 'CHL': 'cl', 'UPR': 'ar'},
+    'house_divided_1861': {**{t: None for t in scenario_tags('house_divided_1861')},
+        'GBR': 'gb', 'FRA': 'fr', 'DEN': 'dk', 'NET': 'nl', 'BEL': 'be', 'SWI': 'ch', 'LUX': 'lu', 'ITA': 'hist/italy_kingdom',
+        'GRE': 'hist/greece_cross', 'SPA': 'hist/spain_plain', 'OTT': 'hist/ottoman', 'PER': 'hist/persia', 'SIA': 'hist/siam_elephant',
+        'JAP': 'jp', 'CHL': 'cl', 'ARG': 'ar', 'PRU': 'pe', 'PAR': 'py', 'BOL': 'bo', 'URY': 'uy', 'CRI': 'cr', 'LBR': 'lr', 'NEP': 'np'},
     'great_war_1914': {
         'GER': 'hist/german_empire', 'AUH': 'hist/austria_hungary', 'OTT': 'hist/ottoman', 'ITA': 'hist/italy_kingdom',
         'CHN': 'hist/china_beiyang', 'PER': 'hist/persia', 'GRE': 'hist/greece_cross', 'SPA': 'hist/spain_plain',

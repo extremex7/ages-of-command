@@ -1,0 +1,29 @@
+# Concert of Europe 1815: starting navies. capital = ships of the line, screens = frigates (sloops, brigs,
+# gunboats and galleys are not counted). Rounded from fleet lists of 1815-1817; most battle fleets were
+# being laid up "in ordinary" after the peace, so the figures count hulls on the lists that could be
+# recommissioned and are uncertain by a fifth or more (by half for the non-European navies). No country
+# has aircraft or strategic forces in 1815; the upkeep cap cuts the largest fleets.
+tag,carriers,capital,screens,subs,nsubs,ssbns,fighters,bombers,attack,drones,warheads,icbms,satellites,note
+GBR,0,100,150,0,0,0,0,0,0,0,0,0,0,c. 214 ships of the line on the Navy List incl. ordinary and hulks; ~100 serviceable counted; ~150 frigates excl. sloops
+FRA,0,45,40,0,0,0,0,0,0,0,0,0,0,Restoration lists show ~65 ships of the line incl. unfinished hulls; ~45 serviceable counted
+RUS,0,40,25,0,0,0,0,0,0,0,0,0,0,Baltic and Black Sea fleets; many hulls rotten; uncertain
+SPA,0,20,15,0,0,0,0,0,0,0,0,0,0,Decayed fleet before the 1817 purchase of Russian ships
+NET,0,8,15,0,0,0,0,0,0,0,0,0,0,Rebuilt Dutch navy of the United Kingdom of the Netherlands
+SWE,0,11,8,0,0,0,0,0,0,0,0,0,0,Karlskrona battle fleet; the archipelago galley fleet not counted
+DEN,0,0,4,0,0,0,0,0,0,0,0,0,0,Battle fleet surrendered in 1807; a few frigates and many gunboats
+USA,0,3,8,0,0,0,0,0,0,0,0,0,0,Independence; Washington and Franklin (3 ships of the line: too few for one game unit); 44- and 38-gun frigates
+POR,0,5,10,0,0,0,0,0,0,0,0,0,0,Much of the fleet based at Rio de Janeiro since 1808
+OTT,0,17,12,0,0,0,0,0,0,0,0,0,0,Ottoman fleet at Constantinople; uncertain
+EGY,0,0,4,0,0,0,0,0,0,0,0,0,0,Muhammad Ali's first purchased frigates and corvettes; uncertain
+SIC,0,3,4,0,0,0,0,0,0,0,0,0,0,Neapolitan navy (ships of the line too few for one game unit)
+SAR,0,0,4,0,0,0,0,0,0,0,0,0,0,Frigates of the Genoese squadron
+HAB,0,0,6,0,0,0,0,0,0,0,0,0,0,Ex-Venetian frigates and brigs at Venice and Trieste
+ALG,0,0,8,0,0,0,0,0,0,0,0,0,0,Corsair frigates and corvettes (Exmouth destroyed most in 1816)
+TUN,0,0,4,0,0,0,0,0,0,0,0,0,0,Corsair frigates and xebecs; uncertain
+TRI,0,0,3,0,0,0,0,0,0,0,0,0,0,Corsair vessels; uncertain
+MOR,0,0,2,0,0,0,0,0,0,0,0,0,0,Sale corsairs; uncertain
+OMA,0,0,4,0,0,0,0,0,0,0,0,0,0,Sultan Said's European-built frigates and armed merchantmen; uncertain
+EIC,0,0,8,0,0,0,0,0,0,0,0,0,0,Bombay Marine cruisers and sloops; uncertain
+VIE,0,0,4,0,0,0,0,0,0,0,0,0,0,Gia Long's European-style ships; galleys not counted; uncertain
+QNG,0,0,20,0,0,0,0,0,0,0,0,0,0,Green Standard war junks counted as screens; very uncertain
+UPR,0,0,4,0,0,0,0,0,0,0,0,0,0,Brown's squadron and privateers; uncertain

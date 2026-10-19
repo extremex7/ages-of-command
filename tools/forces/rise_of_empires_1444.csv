@@ -1,0 +1,26 @@
+# Rise of Empires 1444: war fleets of the mid-15th century. All counts are rounded, low-confidence
+# estimates of oared war galleys (and for the Atlantic powers armed round ships and caravels) that
+# a state kept or could readily arm; they all become galleys (1 unit = 10 ships) in the game.
+tag,carriers,capital,screens,subs,nsubs,ssbns,fighters,bombers,attack,drones,warheads,icbms,satellites,note
+VEN,0,80,0,0,0,0,0,0,0,0,0,0,0,Arsenal war galleys (Gulf guard; Romania and Candia squadrons) plus armed merchant galleys; the Arsenal could arm about 100; moderate confidence
+GEN,0,30,0,0,0,0,0,0,0,0,0,0,0,Communal and Maona of Chios galleys; Genoese fleets were largely privately armed; low confidence
+OTT,0,60,0,0,0,0,0,0,0,0,0,0,0,Gallipoli fleet of galleys and fustae after the 1444 Dardanelles crossing; 1453 accounts give 100+ vessels including transports; low confidence
+ARA,0,40,0,0,0,0,0,0,0,0,0,0,0,Catalan and Sicilian galleys of Alfonso V; low confidence
+NAP,0,15,0,0,0,0,0,0,0,0,0,0,0,Neapolitan royal galleys; low confidence
+CAS,0,30,0,0,0,0,0,0,0,0,0,0,0,Biscayan naos and Seville galleys; low confidence
+POR,0,20,0,0,0,0,0,0,0,0,0,0,0,Royal galleys plus armed caravels; low confidence
+FRA,0,10,0,0,0,0,0,0,0,0,0,0,0,Royal galleys at Rouen-Harfleur and Marseille-Aigues-Mortes; speculative
+ENG,0,15,0,0,0,0,0,0,0,0,0,0,0,The royal fleet had been sold off after 1422; impressed armed merchantmen; speculative
+BUR,0,15,0,0,0,0,0,0,0,0,0,0,0,Philip the Good's crusading galleys (several sent to the Black Sea in 1444-45); low confidence
+KAL,0,10,0,0,0,0,0,0,0,0,0,0,0,Danish royal and levy ships; speculative
+MAM,0,20,0,0,0,0,0,0,0,0,0,0,0,Galleys used against Rhodes (1440-44); low confidence
+KHO,0,8,0,0,0,0,0,0,0,0,0,0,0,Hospitaller galleys at Rhodes; moderate confidence
+BYZ,0,5,0,0,0,0,0,0,0,0,0,0,0,A handful of imperial galleys; moderate confidence
+MIN,0,200,0,0,0,0,0,0,0,0,0,0,0,Coastal guard war junks after the end of the treasure voyages (the full establishment was far larger); low confidence
+JOS,0,150,0,0,0,0,0,0,0,0,0,0,0,Joseon naval garrisons (Sejong-era registers list several hundred mostly small vessels); low confidence
+DAI,0,30,0,0,0,0,0,0,0,0,0,0,0,Lê river and coastal war boats; speculative
+MLC,0,20,0,0,0,0,0,0,0,0,0,0,0,Malaccan war prahus; speculative
+MAJ,0,30,0,0,0,0,0,0,0,0,0,0,0,Javanese jong and war prahus; speculative
+GUJ,0,20,0,0,0,0,0,0,0,0,0,0,0,Gujarati war vessels at Diu and Cambay; speculative
+CLC,0,20,0,0,0,0,0,0,0,0,0,0,0,Zamorin's paros (light war boats); speculative
+HOR,0,10,0,0,0,0,0,0,0,0,0,0,0,Hormuzi war boats; speculative

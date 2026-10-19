@@ -1,0 +1,1200 @@
+{
+ "events": [
+  {
+   "id": "kingdom_of_brazil",
+   "title": "The United Kingdom of Portugal, Brazil and the Algarves",
+   "text": "With the court still at Rio de Janeiro, the Prince Regent raises Brazil from colony to kingdom, equal in rank to Portugal.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "POR"
+   ],
+   "date": [
+    "1815-12-10",
+    "1816-12-31"
+   ],
+   "mtth": 0.5,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": "POR",
+    "ownsAny": "BRA"
+   },
+   "options": [
+    {
+     "text": "Proclaim the United Kingdom",
+     "ai": 4,
+     "historical": true,
+     "effects": {
+      "rename": {
+       "name": "United Kingdom of Portugal, Brazil and the Algarves"
+      },
+      "stability": 3,
+      "legitimacy": 3
+     }
+    },
+    {
+     "text": "Keep Brazil a colony",
+     "ai": 1,
+     "effects": {
+      "stability": -3,
+      "support": {
+       "liberals": -5
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "treaty_of_sugauli",
+   "title": "The Treaty of Sugauli",
+   "text": "Ochterlony has outflanked the Gurkha positions at Makwanpur. Kathmandu must ratify the treaty it refused in December or fight on in the valley.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "NEP"
+   ],
+   "date": [
+    "1816-01-01",
+    "1817-12-31"
+   ],
+   "mtth": 1.5,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "atWarWith": "EIC"
+   },
+   "options": [
+    {
+     "text": "Ratify the treaty and give up Sikkim and the Terai claims",
+     "ai": 4,
+     "historical": true,
+     "effects": {
+      "peace": {
+       "with": "EIC"
+      },
+      "transfer": {
+       "from": "NEP",
+       "to": "EIC",
+       "names": [
+        "Sikkim"
+       ]
+      },
+      "stability": -3
+     }
+    },
+    {
+     "text": "Fight on in the hills",
+     "ai": 1,
+     "effects": {
+      "stability": -5,
+      "manpower": -0.1
+     }
+    }
+   ]
+  },
+  {
+   "id": "year_without_summer",
+   "title": "The Year Without a Summer",
+   "text": "Ash from Mount Tambora darkens the skies. Frosts in June, ruined harvests and soaring grain prices spread hunger in {country}.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "GBR",
+    "FRA",
+    "PRU",
+    "HAB",
+    "SWI",
+    "BAV",
+    "WUR",
+    "SAX",
+    "HES",
+    "THU",
+    "NET",
+    "HAN",
+    "USA",
+    "SAR",
+    "TUS",
+    "PAP"
+   ],
+   "date": [
+    "1816-05-01",
+    "1817-08-31"
+   ],
+   "mtth": 3,
+   "cooldownYears": 5,
+   "conditions": {},
+   "options": [
+    {
+     "text": "Buy grain abroad and open relief works",
+     "ai": 2,
+     "historical": true,
+     "effects": {
+      "treasuryMonths": -0.4,
+      "popShare": -0.002,
+      "stability": -2
+     }
+    },
+    {
+     "text": "Let prices find their level",
+     "ai": 1,
+     "effects": {
+      "popShare": -0.005,
+      "stability": -6,
+      "support": {
+       "socialists": 5
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "return_of_java",
+   "title": "Java returns to the Dutch",
+   "text": "Under the Convention of London of 1814, Britain is to hand Java and the Moluccas, occupied since 1811, back to the restored Netherlands. Raffles argues for keeping them.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "GBR"
+   ],
+   "date": [
+    "1816-07-01",
+    "1818-12-31"
+   ],
+   "mtth": 1,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": "NET",
+    "notAtWarWith": "NET",
+    "ownsAny": "IDN"
+   },
+   "options": [
+    {
+     "text": "Honour the convention and hand them over",
+     "ai": 4,
+     "historical": true,
+     "effects": {
+      "transfer": {
+       "from": "GBR",
+       "to": "NET",
+       "iso": [
+        "IDN"
+       ],
+       "box": [
+        104,
+        -11,
+        135,
+        5
+       ]
+      },
+      "opinion": {
+       "target": "NET",
+       "value": 25
+      }
+     }
+    },
+    {
+     "text": "Keep Java",
+     "ai": 1,
+     "effects": {
+      "opinion": {
+       "target": "NET",
+       "value": -50
+      },
+      "legitimacy": -3
+     }
+    }
+   ]
+  },
+  {
+   "id": "chacabuco",
+   "title": "The crossing of the Andes",
+   "text": "San Martín's Army of the Andes has crossed the cordillera from Mendoza and routed the royalists at Chacabuco. Santiago welcomes O'Higgins.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "SPA"
+   ],
+   "date": [
+    "1817-01-15",
+    "1819-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": "UPR",
+    "ownsAny": "CHL"
+   },
+   "options": [
+    {
+     "text": "Chile is lost: O'Higgins proclaims independence",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "release": {
+       "tag": "CHL",
+       "from": "SPA"
+      },
+      "stability": -3
+     }
+    },
+    {
+     "text": "Hold Chile with the Lima garrison",
+     "ai": 1,
+     "effects": {
+      "stability": -5,
+      "manpower": -0.05,
+      "treasuryMonths": -0.5
+     }
+    }
+   ]
+  },
+  {
+   "id": "third_maratha_war",
+   "title": "The Third Anglo-Maratha War",
+   "text": "The Company's campaign against the Pindari raiders has massed its armies around the Maratha states. Peshwa Baji Rao II resolves to throw off the subsidiary treaty and attack the Residency at Khadki.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "MRT"
+   ],
+   "date": [
+    "1817-10-01",
+    "1818-12-31"
+   ],
+   "mtth": 1,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": "EIC",
+    "notAtWarWith": "EIC"
+   },
+   "options": [
+    {
+     "text": "Attack the Residency",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "war": {
+       "target": "EIC"
+      },
+      "stability": 2
+     }
+    },
+    {
+     "text": "Sign the Treaty of Poona and submit",
+     "ai": 1,
+     "effects": {
+      "stability": -10,
+      "legitimacy": -10,
+      "opinion": {
+       "target": "EIC",
+       "value": 20
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "peshwa_surrenders",
+   "title": "The Peshwa surrenders",
+   "text": "Beaten at Koregaon and Ashti, Baji Rao II offers to surrender to Sir John Malcolm in return for a pension at Bithur. The Peshwa's lands would pass to the Company.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "EIC"
+   ],
+   "date": [
+    "1818-03-01",
+    "1820-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "atWarWith": "MRT",
+    "warScore": [
+     ">",
+     10
+    ]
+   },
+   "options": [
+    {
+     "text": "Accept the surrender and annex the Peshwa's dominions",
+     "ai": 4,
+     "historical": true,
+     "effects": {
+      "annex": "MRT",
+      "stability": 3
+     }
+    },
+    {
+     "text": "Restore a Peshwa as a client",
+     "ai": 1,
+     "effects": {
+      "peace": {
+       "with": "MRT"
+      },
+      "legitimacy": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "boyaca",
+   "title": "The Battle of Boyacá",
+   "text": "Bolívar has crossed the Andes from the llanos and destroyed Barreiro's army at the Boyacá bridge. Viceroy Sámano flees Bogotá; at Angostura the congress proclaims the Republic of Colombia.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "SPA"
+   ],
+   "date": [
+    "1819-08-01",
+    "1822-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "any": [
+     {
+      "ownsAny": "COL"
+     },
+     {
+      "ownsAny": "VEN"
+     }
+    ]
+   },
+   "options": [
+    {
+     "text": "The Republic of Colombia is born",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "release": {
+       "tag": "GCO",
+       "from": [
+        "SPA",
+        "NGR"
+       ]
+      },
+      "stability": -4
+     }
+    },
+    {
+     "text": "Send Morillo reinforcements",
+     "ai": 1,
+     "effects": {
+      "stability": -6,
+      "treasuryMonths": -1,
+      "manpower": -0.05
+     }
+    }
+   ]
+  },
+  {
+   "id": "adams_onis",
+   "title": "The Adams–Onís Treaty",
+   "text": "After Jackson's raid into Florida, Secretary of State Adams presses Spain to cede the Floridas and fix the border with New Spain. Madrid cannot defend the peninsula.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "SPA"
+   ],
+   "date": [
+    "1819-02-01",
+    "1821-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": "USA",
+    "notAtWarWith": "USA",
+    "ownsAny": "USA"
+   },
+   "options": [
+    {
+     "text": "Cede the Floridas for a settled border",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "transfer": {
+       "from": "SPA",
+       "to": "USA",
+       "names": [
+        "Florida"
+       ]
+      },
+      "opinion": {
+       "target": "USA",
+       "value": 20
+      }
+     }
+    },
+    {
+     "text": "Refuse and protest Jackson's invasion",
+     "ai": 1,
+     "effects": {
+      "opinion": {
+       "target": "USA",
+       "value": -30
+      },
+      "stability": -2
+     }
+    }
+   ]
+  },
+  {
+   "id": "plan_of_iguala",
+   "title": "The Plan of Iguala",
+   "text": "Agustín de Iturbide, sent to crush the last insurgents, has joined Guerrero instead and proclaimed Mexican independence under a Catholic constitutional monarchy. The garrisons are going over to the Army of the Three Guarantees.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "SPA"
+   ],
+   "date": [
+    "1821-02-24",
+    "1823-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "ownsAny": "MEX"
+   },
+   "options": [
+    {
+     "text": "Mexico is lost: O'Donojú signs the Treaty of Córdoba",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "release": {
+       "tag": "MEX",
+       "from": "SPA"
+      },
+      "stability": -5,
+      "trigger": {
+       "event": "central_american_independence"
+      }
+     }
+    },
+    {
+     "text": "Disown O'Donojú and fight on from Veracruz",
+     "ai": 1,
+     "effects": {
+      "stability": -8,
+      "manpower": -0.05
+     }
+    }
+   ]
+  },
+  {
+   "id": "central_american_independence",
+   "title": "Central America declares independence",
+   "text": "News of Iguala reaches Guatemala City. The Captaincy General's notables declare independence from Spain.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "SPA"
+   ],
+   "date": [
+    "1821-02-24",
+    "1825-12-31"
+   ],
+   "mtth": 6,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "fired": "plan_of_iguala",
+    "ownsAny": "GTM"
+   },
+   "options": [
+    {
+     "text": "Accept the separation of Central America",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "release": {
+       "tag": "UCA",
+       "from": "SPA"
+      }
+     }
+    },
+    {
+     "text": "Hold Guatemala",
+     "ai": 1,
+     "effects": {
+      "stability": -4
+     }
+    }
+   ]
+  },
+  {
+   "id": "greek_revolution",
+   "title": "The Greek War of Independence",
+   "text": "The Philiki Etaireia has raised the Morea. Kalamata, Tripolitsa and the islands rise against the Porte, and a Greek national assembly gathers at Epidaurus.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "OTT"
+   ],
+   "date": [
+    "1821-03-01",
+    "1823-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": "OTT",
+    "ownsAny": "GRC"
+   },
+   "options": [
+    {
+     "text": "The Morea and the islands are lost to the insurgents",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "release": {
+       "tag": "GRE",
+       "from": "OTT"
+      },
+      "stability": -6
+     }
+    },
+    {
+     "text": "Hang the Patriarch and crush the revolt",
+     "ai": 1,
+     "effects": {
+      "stability": -10,
+      "manpower": -0.08,
+      "opinion": {
+       "target": "RUS",
+       "value": -30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ipiranga",
+   "title": "The Cry of Ipiranga",
+   "text": "João VI has returned to Lisbon and the Cortes wants Brazil reduced to a colony again. On the banks of the Ipiranga, Prince Pedro declares 'Independence or death!'",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "POR"
+   ],
+   "date": [
+    "1822-06-01",
+    "1825-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "ownsAny": "BRA"
+   },
+   "options": [
+    {
+     "text": "Brazil becomes an empire under Pedro I",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "release": {
+       "tag": "BRZ",
+       "from": "POR"
+      },
+      "rename": {
+       "name": "Kingdom of Portugal"
+      },
+      "stability": -5
+     }
+    },
+    {
+     "text": "Send troops to Bahia",
+     "ai": 1,
+     "effects": {
+      "stability": -8,
+      "manpower": -0.05,
+      "treasuryMonths": -0.5
+     }
+    }
+   ]
+  },
+  {
+   "id": "monroe_doctrine",
+   "title": "The Monroe Doctrine",
+   "text": "Britain proposes a joint declaration against European intervention in Spanish America. Adams argues the United States should speak alone.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "USA"
+   ],
+   "date": [
+    "1823-09-01",
+    "1825-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": "USA"
+   },
+   "options": [
+    {
+     "text": "Declare the Americas closed to new colonisation",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "stability": 3,
+      "legitimacy": 4,
+      "opinion": {
+       "target": "SPA",
+       "value": -20
+      }
+     }
+    },
+    {
+     "text": "Issue a joint declaration with Britain",
+     "ai": 1,
+     "effects": {
+      "opinion": {
+       "target": "GBR",
+       "value": 25
+      },
+      "legitimacy": -2
+     }
+    }
+   ]
+  },
+  {
+   "id": "ayacucho",
+   "title": "The Battle of Ayacucho",
+   "text": "Sucre has destroyed the last royalist army in Peru and captured Viceroy La Serna. Spain's rule on the South American mainland is at an end.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "SPA"
+   ],
+   "date": [
+    "1824-08-01",
+    "1827-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "ownsAny": "PER"
+   },
+   "options": [
+    {
+     "text": "Capitulate: Peru is independent",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "release": {
+       "tag": "PEU",
+       "from": "SPA"
+      },
+      "stability": -4,
+      "trigger": {
+       "event": "bolivian_independence"
+      }
+     }
+    },
+    {
+     "text": "Hold out in Callao",
+     "ai": 1,
+     "effects": {
+      "stability": -6,
+      "manpower": -0.05
+     }
+    }
+   ]
+  },
+  {
+   "id": "bolivian_independence",
+   "title": "The Republic of Bolívar",
+   "text": "The assembly at Chuquisaca declares Upper Peru independent and names the new republic after the Liberator.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "SPA"
+   ],
+   "date": [
+    "1821-07-28",
+    "1827-12-31"
+   ],
+   "mtth": 6,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "fired": "ayacucho",
+    "ownsAny": "BOL"
+   },
+   "options": [
+    {
+     "text": "Upper Peru goes its own way",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "release": {
+       "tag": "BOL",
+       "from": "SPA"
+      }
+     }
+    },
+    {
+     "text": "Hold Potosí",
+     "ai": 1,
+     "effects": {
+      "stability": -3
+     }
+    }
+   ]
+  },
+  {
+   "id": "first_anglo_burmese_war",
+   "title": "The First Anglo-Burmese War",
+   "text": "Burmese armies have overrun Assam and Manipur and are pressing on Cachar and the Chittagong frontier. Calcutta resolves to strike at Rangoon by sea.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "EIC"
+   ],
+   "date": [
+    "1824-01-01",
+    "1826-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": "BUR",
+    "notAtWarWith": "BUR"
+   },
+   "options": [
+    {
+     "text": "Send Campbell's expedition to Rangoon",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "war": {
+       "target": "BUR"
+      },
+      "claims": "BUR"
+     }
+    },
+    {
+     "text": "Hold the frontier",
+     "ai": 1,
+     "effects": {
+      "stability": -2,
+      "opinion": {
+       "target": "BUR",
+       "value": -20
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "navarino",
+   "title": "Navarino",
+   "text": "Under the Treaty of London, British, French and Russian squadrons have entered Navarino Bay to impose an armistice. Codrington's guns have destroyed the Ottoman-Egyptian fleet.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "GBR"
+   ],
+   "date": [
+    "1827-07-06",
+    "1830-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": [
+     "GRE",
+     "OTT"
+    ]
+   },
+   "options": [
+    {
+     "text": "Stand as guarantor of Greece",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "treaty": {
+       "type": "guarantee",
+       "with": "GRE"
+      },
+      "opinion": {
+       "target": "OTT",
+       "value": -30
+      }
+     }
+    },
+    {
+     "text": "Disown Codrington's 'untoward event'",
+     "ai": 1,
+     "effects": {
+      "opinion": {
+       "target": "GRE",
+       "value": -20
+      },
+      "legitimacy": -2
+     }
+    }
+   ]
+  },
+  {
+   "id": "july_revolution",
+   "title": "The July Revolution",
+   "text": "Charles X's ordinances suspending the free press and dissolving the Chamber have brought Paris to the barricades. After three glorious days the Chamber offers the crown to Louis-Philippe of Orléans.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "FRA"
+   ],
+   "date": [
+    "1830-07-01",
+    "1831-12-31"
+   ],
+   "mtth": 1.5,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "gov": "const_monarchy"
+   },
+   "options": [
+    {
+     "text": "Louis-Philippe becomes King of the French",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "rename": {
+       "name": "Kingdom of the French"
+      },
+      "stability": -6,
+      "legitimacy": 5,
+      "support": {
+       "liberals": 10
+      }
+     }
+    },
+    {
+     "text": "Enforce the ordinances",
+     "ai": 1,
+     "effects": {
+      "stability": -12,
+      "legitimacy": -10,
+      "support": {
+       "conservatives": 5
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "belgian_revolution",
+   "title": "The Belgian Revolution",
+   "text": "A performance of La Muette de Portici has set off riots in Brussels. The southern provinces demand separation from the Dutch north and a provisional government proclaims Belgian independence.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "NET"
+   ],
+   "date": [
+    "1830-08-25",
+    "1832-12-31"
+   ],
+   "mtth": 1.5,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "ownsAny": "BEL"
+   },
+   "options": [
+    {
+     "text": "Accept the London Conference's settlement",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "release": {
+       "tag": "BEL",
+       "from": "NET"
+      },
+      "stability": -5
+     }
+    },
+    {
+     "text": "Send Prince Frederick to Brussels",
+     "ai": 1,
+     "effects": {
+      "stability": -8,
+      "manpower": -0.05
+     }
+    }
+   ]
+  },
+  {
+   "id": "november_uprising",
+   "title": "The November Uprising",
+   "text": "Cadets of the Warsaw officer school have attacked the Belweder palace. The Sejm deposes Nicholas I as King of Poland.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "POL"
+   ],
+   "date": [
+    "1830-11-01",
+    "1831-12-31"
+   ],
+   "mtth": 1.5,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "subjectOf": "RUS"
+   },
+   "options": [
+    {
+     "text": "Fight for independence",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "war": {
+       "target": "RUS"
+      },
+      "stability": 5
+     }
+    },
+    {
+     "text": "Disarm the cadets",
+     "ai": 1,
+     "effects": {
+      "stability": -10,
+      "legitimacy": -5
+     }
+    }
+   ]
+  },
+  {
+   "id": "egyptian_ottoman_war",
+   "title": "Muhammad Ali marches on Syria",
+   "text": "Denied the pashalik of Syria promised for his help in Greece, Muhammad Ali sends Ibrahim Pasha against Acre with the army trained by Colonel Sève.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "EGY"
+   ],
+   "date": [
+    "1831-10-01",
+    "1833-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "subjectOf": "OTT"
+   },
+   "options": [
+    {
+     "text": "Invade Syria",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "war": {
+       "target": "OTT"
+      },
+      "claims": "OTT",
+      "stability": 2
+     }
+    },
+    {
+     "text": "Remain the Sultan's obedient servant",
+     "ai": 1,
+     "effects": {
+      "stability": -4,
+      "legitimacy": -3
+     }
+    }
+   ]
+  },
+  {
+   "id": "zollverein",
+   "title": "The Zollverein",
+   "text": "Prussia's customs treaties with Hesse-Darmstadt, Bavaria and Württemberg come together on 1 January 1834 in a German customs union without Austria.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "PRU"
+   ],
+   "date": [
+    "1834-01-01",
+    "1836-12-31"
+   ],
+   "mtth": 0.5,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": [
+     "PRU",
+     "BAV"
+    ],
+    "notAtWarWith": "BAV"
+   },
+   "options": [
+    {
+     "text": "Found the customs union",
+     "ai": 4,
+     "historical": true,
+     "effects": {
+      "treaty": {
+       "type": "trade",
+       "with": "BAV"
+      },
+      "stability": 2,
+      "support": {
+       "business": 8
+      }
+     }
+    },
+    {
+     "text": "Keep the Prussian tariff alone",
+     "ai": 1,
+     "effects": {
+      "support": {
+       "business": -5
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "opium_war",
+   "title": "The First Opium War",
+   "text": "Commissioner Lin has destroyed the British opium stocks at Canton and blockaded the factories. The merchants call for war.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "GBR"
+   ],
+   "date": [
+    "1839-09-01",
+    "1842-12-31"
+   ],
+   "mtth": 2,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "exists": "QNG",
+    "notAtWarWith": "QNG"
+   },
+   "options": [
+    {
+     "text": "Send an expeditionary force to China",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "war": {
+       "target": "QNG"
+      },
+      "claims": "QNG"
+     }
+    },
+    {
+     "text": "Accept Lin's terms",
+     "ai": 1,
+     "effects": {
+      "support": {
+       "business": -10
+      },
+      "legitimacy": -3
+     }
+    }
+   ]
+  },
+  {
+   "id": "revolutions_of_1848",
+   "title": "The February Revolution",
+   "text": "The banquet campaign for electoral reform has ended in barricades. Louis-Philippe abdicates and a provisional government proclaims the Second Republic.",
+   "scenario": [
+    "concert_1815"
+   ],
+   "tags": [
+    "FRA"
+   ],
+   "date": [
+    "1848-02-01",
+    "1849-12-31"
+   ],
+   "mtth": 1.5,
+   "once": true,
+   "news": true,
+   "conditions": {
+    "family": "democracy",
+    "not": {
+     "gov": "republic"
+    }
+   },
+   "options": [
+    {
+     "text": "Proclaim the Republic",
+     "ai": 3,
+     "historical": true,
+     "effects": {
+      "government": "republic",
+      "rename": {
+       "name": "French Republic"
+      },
+      "stability": -10,
+      "support": {
+       "socialists": 10,
+       "liberals": 5
+      }
+     }
+    },
+    {
+     "text": "Call Bugeaud and clear the streets",
+     "ai": 1,
+     "effects": {
+      "stability": -12,
+      "legitimacy": -10
+     }
+    }
+   ]
+  }
+ ]
+}

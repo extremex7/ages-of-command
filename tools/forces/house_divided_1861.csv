@@ -1,0 +1,27 @@
+# A House Divided (April 1861). Counts are rounded from period fleet lists (Conway's All the World's Fighting Ships 1860-1905 and navy registers) and are uncertain by roughly 10-20%.
+# capital = ironclads plus screw ships of the line and the heaviest screw frigates; screens = other frigates, corvettes and sloops (small gunboats and sailing hulks omitted).
+# No aircraft, missiles, warheads or satellites exist in 1861. The upkeep cap in tools/build_forces.mjs cuts the large navies further.
+tag,carriers,capital,screens,subs,nsubs,ssbns,fighters,bombers,attack,drones,warheads,icbms,satellites,note
+GBR,0,70,250,0,0,0,0,0,0,0,0,0,0,HMS Warrior commissioned 1861 + ~60 screw ships of the line; screw frigates; corvettes and sloops
+FRA,0,40,150,0,0,0,0,0,0,0,0,0,0,Gloire (1860) and sisters building + ~35 screw ships of the line; frigates and avisos
+USA,0,6,40,0,0,0,0,0,0,0,0,0,0,Union navy April 1861: ~90 ships on the list; ~42 in commission; Merrimack-class screw frigates as capital (Merrimack itself scuttled at Norfolk 20 Apr)
+CSA,0,0,10,0,0,0,0,0,0,0,0,0,0,Seized revenue cutters and converted steamers (CSS Sumter); CSS Virginia only in 1862; very uncertain
+RUS,0,12,40,0,0,0,0,0,0,0,0,0,0,Baltic screw ships of the line and frigates; Black Sea fleet barred by the 1856 Treaty of Paris
+AUS,0,7,20,0,0,0,0,0,0,0,0,0,0,Screw ship of the line Kaiser + Drache/Salamander ironclads building; frigates and corvettes
+ITA,0,6,25,0,0,0,0,0,0,0,0,0,0,Sardinian and Neapolitan fleets merged; Formidabile/Terribile ironclads ordered; screw frigates
+PRS,0,0,10,0,0,0,0,0,0,0,0,0,0,Arcona/Gazelle screw corvettes and smaller craft
+OTT,0,8,25,0,0,0,0,0,0,0,0,0,0,Screw ships of the line converted 1850s; frigates
+SPA,0,3,30,0,0,0,0,0,0,0,0,0,0,Screw frigates; Numancia ironclad ordered 1861
+NET,0,2,20,0,0,0,0,0,0,0,0,0,0,Screw frigates and colonial steamers
+DEN,0,1,10,0,0,0,0,0,0,0,0,0,0,Skjold screw ship of the line; Niels Juel/Jylland frigates
+SWE,0,3,8,0,0,0,0,0,0,0,0,0,0,Sailing and converted ships of the line; frigates
+POR,0,0,10,0,0,0,0,0,0,0,0,0,0,Corvettes and colonial gunboats
+BRA,0,0,20,0,0,0,0,0,0,0,0,0,0,Steam corvettes and gunboats; ironclads from 1865
+EGY,0,2,8,0,0,0,0,0,0,0,0,0,0,Ageing sailing ships of the line and frigates
+GRE,0,0,4,0,0,0,0,0,0,0,0,0,0,Small corvettes
+PRU,0,0,4,0,0,0,0,0,0,0,0,0,0,Peru: frigate Amazonas and steamers
+CHL,0,0,3,0,0,0,0,0,0,0,0,0,0,Esmeralda corvette and small steamers
+BAS,0,0,2,0,0,0,0,0,0,0,0,0,0,River steamers
+PAR,0,0,3,0,0,0,0,0,0,0,0,0,0,Tacuari and river steamers
+JAP,0,0,3,0,0,0,0,0,0,0,0,0,0,Kanrin Maru and Dutch-built training steamers
+QNG,0,0,5,0,0,0,0,0,0,0,0,0,0,War junks; Lay-Osborn flotilla only bought 1863

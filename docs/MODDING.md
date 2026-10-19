@@ -212,7 +212,7 @@ them (saves drop fleets in zones that no longer exist).
 - Register the file in `data/scenarios/index.json` to show it in the New Game screen.
 - Dates use astronomical years (`-0499-01-01` = 500 BCE).
 - Milestone 5 fields: top-level `techYear` (countries know technologies up to this year),
-  `wars` (`[{ attackers: [tags], defenders: [tags], name? }]`, running at the start) and
+  `wars` (`[{ attackers: [tags], defenders: [tags], name?, kind? }]`, running at the start; `kind: "civil"` makes it a civil war of the first attacker against the first defender, ended by the civil-war rules in GOVERNMENT.md) and
   `releases` (`{ TAG: [province ids] }` for dormant countries). Per country: `techLag`,
   `techYear`, `techs` (extra ids), `researchShare`, `policies` (`{ group: option }`) and `dormant`
   (owns nothing until an event releases it).

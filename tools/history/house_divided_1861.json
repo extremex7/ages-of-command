@@ -1,0 +1,4919 @@
+{
+  "id": "house_divided_1861",
+  "name": "A House Divided",
+  "era": "industrial",
+  "startDate": "1861-04-12",
+  "techYear": 1861,
+  "description": "12 April 1861: Confederate guns open on Fort Sumter and the American Civil War begins. Italy has just been proclaimed a kingdom, Prussia and Austria contend for Germany, Napoleon III looks to Mexico, the Taiping hold Nanjing against the Qing and Japan's shogunate totters.",
+  "approximations": "Borders follow modern admin-1 provinces, so each province goes to whoever held most of it in April 1861. The Confederacy starts with the seven states of February 1861; Virginia, North Carolina, Tennessee and Arkansas start in the Union and join the Confederacy by an opening event (West Virginia, Kentucky, Missouri, Maryland and Delaware stay Union; Indian Territory is drawn as Union). The US western territories, the Great Plains held in fact by Native nations, Rupert's Land and British Columbia (Hudson's Bay Company and Crown colony, drawn as British), Russian Alaska, Australia's unsettled interior and New Zealand's Maori-held districts are given to the states that claimed them. Natal is not shown: KwaZulu-Natal is one province and goes to the Zulu Kingdom. The German Confederation's minor states are merged: Württemberg with Baden, Saxony with the Thuringian duchies, Hanover with Oldenburg, Brunswick, Mecklenburg and the Hanseatic cities, the Hesses with Nassau and Frankfurt; Rhineland-Palatinate goes to Prussia and Schleswig-Holstein (with Hamburg) to Denmark. Princely India is merged into British India except Hyderabad and Jammu and Kashmir (British subjects); the Ionian Islands (a British protectorate) and Austrian Mantua are too small to draw; Austria holds Venetia as the Udine province and Trentino-South Tyrol as Bozen, and the Papal States are Lazio. The Taiping hold Jiangsu and Anhui. Spain holds Santo Domingo (re-annexed March 1861), Mindanao and Sulu are drawn as Spanish, Siam's Lao and northern Malay vassals and Battambang-Siem Reap are folded into Siam, and Cambodia is a Siamese subject. Lands without states of the period are left unowned: most of interior Africa (including the Yoruba, Benin, Kongo, Lunda, Luba and Lozi polities, which are too fragmented to draw), Patagonia, the Chaco, Araucania, the Turkmen and Pamir lands, Asir, Hadramawt, the Rub al-Khali, New Guinea, Arunachal, the Naga and Mizo hills and the Pacific islands other than Hawaii, Tonga and French Polynesia and New Caledonia. Population (millions) and GDP (billions of 1990 international dollars) are rounded Maddison-style estimates including colonies, and are especially uncertain outside Europe and the Americas; army sizes are rounded start strengths (the Union and the Confederacy only beginning to mobilise). Ongoing internal wars in Colombia and Venezuela, the Nian and Muslim rebellions in China, the Circassian war and the Banjarmasin war are not modelled. Flags are simplified patterns.",
+  "countries": [
+    {
+      "tag": "USA",
+      "name": "United States",
+      "color": "#4f6fa8",
+      "gov": "federal_republic",
+      "capital": [
+        38.9,
+        -77.04
+      ],
+      "pop": 26.4,
+      "gdp": 60,
+      "techLag": 0,
+      "armyK": 90,
+      "aggression": 0.35,
+      "stability": 60,
+      "policies": {
+        "conscription": "volunteer",
+        "press": "free",
+        "economy": "market"
+      },
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#b22234",
+          "#ffffff",
+          "#b22234",
+          "#ffffff",
+          "#3c3b6e"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "USA"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "South Carolina",
+                "Mississippi",
+                "Florida",
+                "Alabama",
+                "Georgia",
+                "Louisiana",
+                "Texas (West)",
+                "Texas (West 2)",
+                "Texas (East)",
+                "Texas (Southeast)",
+                "Texas (South)",
+                "Texas (North)",
+                "Alaska (South)",
+                "Alaska (South 2)",
+                "Alaska (South 3)",
+                "Alaska (Central)",
+                "Alaska (Central 2)",
+                "Alaska (Central 3)",
+                "Alaska (Central 4)",
+                "Alaska (Central 5)",
+                "Alaska (Central 6)",
+                "Alaska (North)",
+                "Alaska (Central 7)",
+                "Hawaii"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "CSA",
+      "name": "Confederate States",
+      "color": "#9c8456",
+      "gov": "republic",
+      "capital": [
+        32.38,
+        -86.3
+      ],
+      "pop": 5,
+      "gdp": 9,
+      "techLag": 3,
+      "armyK": 60,
+      "aggression": 0.5,
+      "stability": 70,
+      "policies": {
+        "conscription": "limited",
+        "press": "regulated",
+        "economy": "market"
+      },
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#bf0a30",
+          "#ffffff",
+          "#bf0a30"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "USA"
+          ],
+          "names": [
+            "South Carolina",
+            "Mississippi",
+            "Florida",
+            "Alabama",
+            "Georgia",
+            "Louisiana",
+            "Texas (West)",
+            "Texas (West 2)",
+            "Texas (East)",
+            "Texas (Southeast)",
+            "Texas (South)",
+            "Texas (North)"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "CAN",
+      "name": "Province of Canada",
+      "color": "#b5545c",
+      "gov": "parliamentary",
+      "capital": [
+        46.81,
+        -71.21
+      ],
+      "pop": 2.5,
+      "gdp": 4.6,
+      "techLag": 2,
+      "armyK": 5,
+      "aggression": 0.1,
+      "stability": 65,
+      "flag": {
+        "pattern": "cross",
+        "colors": [
+          "#c8102e",
+          "#ffffff",
+          "#012169"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "CAN"
+          ],
+          "names": [
+            "Ottawa",
+            "Ontario (Southeast 2)",
+            "Ontario (East)",
+            "Québec (Southwest)",
+            "Québec (South)",
+            "Québec (Southeast)"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "MEX",
+      "name": "Mexican Republic",
+      "color": "#5a8a4a",
+      "gov": "federal_republic",
+      "capital": [
+        19.43,
+        -99.13
+      ],
+      "pop": 8.2,
+      "gdp": 6,
+      "techLag": 22,
+      "armyK": 30,
+      "aggression": 0.3,
+      "stability": 30,
+      "policies": {
+        "press": "free",
+        "religion": "secular"
+      },
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#006847",
+          "#ffffff",
+          "#ce1126"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MEX"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "GUA",
+      "name": "Guatemala",
+      "color": "#7fa3c4",
+      "gov": "military",
+      "capital": [
+        14.63,
+        -90.51
+      ],
+      "pop": 1,
+      "gdp": 0.7,
+      "techLag": 30,
+      "armyK": 5,
+      "aggression": 0.3,
+      "stability": 50,
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#4997d0",
+          "#ffffff",
+          "#4997d0"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "GTM"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "HON",
+      "name": "Honduras",
+      "color": "#5b7fb0",
+      "gov": "republic",
+      "capital": [
+        14.07,
+        -87.19
+      ],
+      "pop": 0.3,
+      "gdp": 0.2,
+      "techLag": 35,
+      "armyK": 2,
+      "aggression": 0.2,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#0073cf",
+          "#ffffff",
+          "#0073cf"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "HND"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SAL",
+      "name": "El Salvador",
+      "color": "#3d5f8f",
+      "gov": "republic",
+      "capital": [
+        13.69,
+        -89.19
+      ],
+      "pop": 0.4,
+      "gdp": 0.3,
+      "techLag": 33,
+      "armyK": 2,
+      "aggression": 0.2,
+      "stability": 45,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#0047ab",
+          "#ffffff",
+          "#0047ab"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "SLV"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "NIC",
+      "name": "Nicaragua",
+      "color": "#8fb3d9",
+      "gov": "republic",
+      "capital": [
+        12.13,
+        -86.25
+      ],
+      "pop": 0.3,
+      "gdp": 0.2,
+      "techLag": 35,
+      "armyK": 2,
+      "aggression": 0.2,
+      "stability": 45,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#0067c6",
+          "#ffffff",
+          "#0067c6"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "NIC"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "CRI",
+      "name": "Costa Rica",
+      "color": "#a85d6b",
+      "gov": "republic",
+      "capital": [
+        9.93,
+        -84.08
+      ],
+      "pop": 0.13,
+      "gdp": 0.12,
+      "techLag": 32,
+      "armyK": 1,
+      "aggression": 0.1,
+      "stability": 60,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#002b7f",
+          "#ffffff",
+          "#ce1126",
+          "#ffffff",
+          "#002b7f"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "CRI"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "HAI",
+      "name": "Republic of Haiti",
+      "color": "#4a5f9c",
+      "gov": "republic",
+      "capital": [
+        18.54,
+        -72.34
+      ],
+      "pop": 1,
+      "gdp": 0.8,
+      "techLag": 40,
+      "armyK": 10,
+      "aggression": 0.2,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#00209f",
+          "#d21034"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "HTI"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "COL",
+      "name": "Granadine Confederation",
+      "color": "#d4b84a",
+      "gov": "federal_republic",
+      "capital": [
+        4.71,
+        -74.07
+      ],
+      "pop": 2.7,
+      "gdp": 2.2,
+      "techLag": 28,
+      "armyK": 10,
+      "aggression": 0.25,
+      "stability": 30,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#fcd116",
+          "#003893",
+          "#ce1126"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "COL",
+            "PAN"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "VEN",
+      "name": "Venezuela",
+      "color": "#c9a23c",
+      "gov": "military",
+      "capital": [
+        10.49,
+        -66.88
+      ],
+      "pop": 1.6,
+      "gdp": 1.4,
+      "techLag": 30,
+      "armyK": 10,
+      "aggression": 0.25,
+      "stability": 25,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffcc00",
+          "#00247d",
+          "#cf142b"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "VEN"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "ECU",
+      "name": "Ecuador",
+      "color": "#e0c45c",
+      "gov": "republic",
+      "capital": [
+        -0.22,
+        -78.51
+      ],
+      "pop": 1,
+      "gdp": 0.8,
+      "techLag": 32,
+      "armyK": 5,
+      "aggression": 0.25,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffdd00",
+          "#034ea2",
+          "#ed1c24"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ECU"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "PRU",
+      "name": "Peru",
+      "color": "#c06a5a",
+      "gov": "republic",
+      "capital": [
+        -12.05,
+        -77.04
+      ],
+      "pop": 2.4,
+      "gdp": 2.4,
+      "techLag": 25,
+      "armyK": 15,
+      "aggression": 0.3,
+      "stability": 50,
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#d91023",
+          "#ffffff",
+          "#d91023"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "PER"
+          ]
+        },
+        {
+          "iso": [
+            "CHL"
+          ],
+          "names": [
+            "Tarapacá",
+            "Arica y Parinacota"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BOL",
+      "name": "Bolivia",
+      "color": "#6f9a5a",
+      "gov": "military",
+      "capital": [
+        -19.04,
+        -65.26
+      ],
+      "pop": 1.7,
+      "gdp": 1.2,
+      "techLag": 32,
+      "armyK": 5,
+      "aggression": 0.25,
+      "stability": 35,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#d52b1e",
+          "#f9e300",
+          "#007934"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "BOL"
+          ]
+        },
+        {
+          "iso": [
+            "CHL"
+          ],
+          "names": [
+            "Antofagasta"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "CHL",
+      "name": "Chile",
+      "color": "#9a4f63",
+      "gov": "republic",
+      "capital": [
+        -33.45,
+        -70.67
+      ],
+      "pop": 1.7,
+      "gdp": 2,
+      "techLag": 18,
+      "armyK": 5,
+      "aggression": 0.3,
+      "stability": 65,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#d52b1e"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "CHL"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Tarapacá",
+                "Arica y Parinacota",
+                "Antofagasta",
+                "La Araucanía",
+                "Aisén del General Carlos Ibáñez del Campo"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "ARG",
+      "name": "Argentine Confederation",
+      "color": "#7fb0d8",
+      "gov": "federal_republic",
+      "capital": [
+        -31.73,
+        -60.53
+      ],
+      "pop": 1,
+      "gdp": 1.4,
+      "techLag": 22,
+      "armyK": 15,
+      "aggression": 0.35,
+      "stability": 35,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#74acdf",
+          "#ffffff",
+          "#74acdf"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ARG"
+          ],
+          "names": [
+            "San Juan",
+            "Mendoza",
+            "San Luis",
+            "Córdoba",
+            "Catamarca",
+            "Jujuy",
+            "La Rioja",
+            "Salta",
+            "Santiago del Estero",
+            "Tucumán",
+            "Corrientes",
+            "Entre Ríos",
+            "Santa Fe"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BAS",
+      "name": "State of Buenos Aires",
+      "color": "#5d8fc0",
+      "gov": "republic",
+      "capital": [
+        -34.6,
+        -58.38
+      ],
+      "pop": 0.37,
+      "gdp": 0.9,
+      "techLag": 18,
+      "armyK": 15,
+      "aggression": 0.4,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#74acdf",
+          "#ffffff",
+          "#74acdf"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ARG"
+          ],
+          "names": [
+            "Buenos Aires"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "URY",
+      "name": "Uruguay",
+      "color": "#a6c4e0",
+      "gov": "republic",
+      "capital": [
+        -34.9,
+        -56.16
+      ],
+      "pop": 0.23,
+      "gdp": 0.4,
+      "techLag": 22,
+      "armyK": 3,
+      "aggression": 0.2,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#0038a8",
+          "#ffffff",
+          "#0038a8"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "URY"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "PAR",
+      "name": "Paraguay",
+      "color": "#b84a4a",
+      "gov": "military",
+      "capital": [
+        -25.28,
+        -57.63
+      ],
+      "pop": 0.45,
+      "gdp": 0.35,
+      "techLag": 35,
+      "armyK": 15,
+      "aggression": 0.45,
+      "stability": 60,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#d52b1e",
+          "#ffffff",
+          "#0038a8"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "PRY"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BRA",
+      "name": "Empire of Brazil",
+      "color": "#4f9a5f",
+      "gov": "const_monarchy",
+      "capital": [
+        -22.91,
+        -43.17
+      ],
+      "pop": 8.5,
+      "gdp": 6,
+      "techLag": 18,
+      "armyK": 20,
+      "aggression": 0.3,
+      "stability": 60,
+      "policies": {
+        "conscription": "limited",
+        "press": "free"
+      },
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#009c3b",
+          "#ffdf00"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "BRA"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "HAW",
+      "name": "Kingdom of Hawaii",
+      "color": "#8a6fa8",
+      "gov": "const_monarchy",
+      "capital": [
+        21.31,
+        -157.86
+      ],
+      "pop": 0.07,
+      "gdp": 0.07,
+      "techLag": 20,
+      "armyK": 0.5,
+      "aggression": 0,
+      "stability": 60,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#c8102e",
+          "#012169"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "USA"
+          ],
+          "names": [
+            "Hawaii"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "GBR",
+      "name": "United Kingdom",
+      "color": "#c0505a",
+      "gov": "const_monarchy",
+      "capital": [
+        51.51,
+        -0.13
+      ],
+      "pop": 260,
+      "gdp": 222,
+      "techLag": 0,
+      "armyK": 300,
+      "aggression": 0.3,
+      "stability": 75,
+      "policies": {
+        "conscription": "volunteer",
+        "press": "free",
+        "economy": "market"
+      },
+      "flag": {
+        "pattern": "cross",
+        "colors": [
+          "#012169",
+          "#ffffff",
+          "#c8102e"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "GBR",
+            "IRL",
+            "IMN",
+            "GGY",
+            "JEY",
+            "GIB",
+            "MLT",
+            "BMU",
+            "BHS",
+            "JAM",
+            "CYM",
+            "TCA",
+            "VGB",
+            "AIA",
+            "ATG",
+            "KNA",
+            "DMA",
+            "LCA",
+            "VCT",
+            "GRD",
+            "BRB",
+            "TTO",
+            "MSR",
+            "BLZ",
+            "GUY",
+            "FLK",
+            "SHN",
+            "MUS",
+            "SYC",
+            "GMB",
+            "BGD",
+            "LKA",
+            "MDV",
+            "SGP",
+            "HKG",
+            "AUS",
+            "NFK",
+            "NZL"
+          ]
+        },
+        {
+          "iso": [
+            "CAN"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Ottawa",
+                "Ontario (Southeast 2)",
+                "Ontario (East)",
+                "Québec (Southwest)",
+                "Québec (South)",
+                "Québec (Southeast)",
+                "Nunavut (Northeast)",
+                "Nunavut (Northwest)",
+                "Nunavut (North)",
+                "Nunavut (Northeast 2)",
+                "Nunavut (North 2)",
+                "Nunavut (North 3)",
+                "Nunavut (Central 2)",
+                "Nunavut (Central 3)",
+                "Northwest Territories (Northeast)",
+                "Northwest Territories (North)"
+              ]
+            }
+          ]
+        },
+        {
+          "iso": [
+            "IND"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Goa",
+                "Telangana",
+                "Jammu and Kashmir",
+                "Ladakh",
+                "Arunachal Pradesh",
+                "Nagaland",
+                "Mizoram"
+              ]
+            }
+          ]
+        },
+        {
+          "iso": [
+            "PAK"
+          ],
+          "names": [
+            "Punjab",
+            "Sind",
+            "Islamabad"
+          ]
+        },
+        {
+          "iso": [
+            "MMR"
+          ],
+          "names": [
+            "Rakhine",
+            "Tanintharyi",
+            "Mon",
+            "Yangon",
+            "Ayeyarwady",
+            "Bago",
+            "Kayin"
+          ]
+        },
+        {
+          "iso": [
+            "SLE"
+          ],
+          "names": [
+            "Freetown"
+          ]
+        },
+        {
+          "iso": [
+            "GHA"
+          ],
+          "names": [
+            "Central",
+            "Accra",
+            "Eastern"
+          ]
+        },
+        {
+          "iso": [
+            "ZAF"
+          ],
+          "names": [
+            "Western Cape",
+            "Eastern Cape",
+            "Northern Cape (West)",
+            "Northern Cape (Central)"
+          ]
+        },
+        {
+          "iso": [
+            "YEM"
+          ],
+          "names": [
+            "Lahij"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "FRA",
+      "name": "French Empire",
+      "color": "#4a68c4",
+      "gov": "abs_monarchy",
+      "capital": [
+        48.86,
+        2.35
+      ],
+      "pop": 41,
+      "gdp": 73,
+      "techLag": 0,
+      "armyK": 400,
+      "aggression": 0.45,
+      "stability": 70,
+      "policies": {
+        "conscription": "limited",
+        "press": "censored",
+        "administration": "centralised",
+        "religion": "state"
+      },
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#0055a4",
+          "#ffffff",
+          "#ef4135"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "FRA",
+            "SPM",
+            "MAF",
+            "NCL",
+            "PYF"
+          ]
+        },
+        {
+          "iso": [
+            "DZA"
+          ],
+          "box": [
+            -9,
+            32,
+            12,
+            38
+          ]
+        },
+        {
+          "iso": [
+            "SEN"
+          ],
+          "names": [
+            "Saint-Louis",
+            "Dakar",
+            "Matam"
+          ]
+        },
+        {
+          "iso": [
+            "VNM"
+          ],
+          "names": [
+            "Bình Thuận"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SPA",
+      "name": "Kingdom of Spain",
+      "color": "#d9a84a",
+      "gov": "const_monarchy",
+      "capital": [
+        40.42,
+        -3.7
+      ],
+      "pop": 22.3,
+      "gdp": 27,
+      "techLag": 10,
+      "armyK": 100,
+      "aggression": 0.35,
+      "stability": 45,
+      "policies": {
+        "conscription": "limited"
+      },
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#aa151b",
+          "#f1bf00",
+          "#aa151b"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ESP",
+            "CUB",
+            "PRI",
+            "DOM",
+            "PHL",
+            "GUM",
+            "MNP"
+          ]
+        },
+        {
+          "iso": [
+            "GNQ"
+          ],
+          "names": [
+            "Malabo",
+            "Annobón"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "POR",
+      "name": "Kingdom of Portugal",
+      "color": "#3f8a6a",
+      "gov": "const_monarchy",
+      "capital": [
+        38.72,
+        -9.14
+      ],
+      "pop": 4.8,
+      "gdp": 4.4,
+      "techLag": 12,
+      "armyK": 25,
+      "aggression": 0.15,
+      "stability": 55,
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#003399",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "PRT",
+            "CPV",
+            "GNB",
+            "STP",
+            "MAC",
+            "TLS"
+          ]
+        },
+        {
+          "iso": [
+            "IND"
+          ],
+          "names": [
+            "Goa"
+          ]
+        },
+        {
+          "iso": [
+            "SEN"
+          ],
+          "names": [
+            "Ziguinchor"
+          ]
+        },
+        {
+          "iso": [
+            "AGO"
+          ],
+          "names": [
+            "Luanda",
+            "Bengo",
+            "Cuanza Norte",
+            "Cuanza Sul",
+            "Malanje",
+            "Benguela",
+            "Namibe",
+            "Zaire"
+          ]
+        },
+        {
+          "iso": [
+            "MOZ"
+          ],
+          "names": [
+            "Nampula",
+            "Zambezia",
+            "Tete",
+            "Sofala",
+            "Inhambane",
+            "Maputo"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "NET",
+      "name": "Kingdom of the Netherlands",
+      "color": "#e08a3c",
+      "gov": "const_monarchy",
+      "capital": [
+        52.37,
+        4.9
+      ],
+      "pop": 17,
+      "gdp": 17,
+      "techLag": 2,
+      "armyK": 60,
+      "aggression": 0.15,
+      "stability": 70,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ae1c28",
+          "#ffffff",
+          "#21468b"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "NLD",
+            "SUR",
+            "ABW",
+            "CUW",
+            "SXM"
+          ]
+        },
+        {
+          "iso": [
+            "IDN"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Aceh",
+                "Papua",
+                "Papua Barat"
+              ]
+            }
+          ]
+        },
+        {
+          "iso": [
+            "GHA"
+          ],
+          "names": [
+            "Western"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BEL",
+      "name": "Kingdom of Belgium",
+      "color": "#b8a040",
+      "gov": "const_monarchy",
+      "capital": [
+        50.85,
+        4.35
+      ],
+      "pop": 4.7,
+      "gdp": 12,
+      "techLag": 0,
+      "armyK": 40,
+      "aggression": 0.1,
+      "stability": 70,
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#000000",
+          "#fdda24",
+          "#ef3340"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "BEL"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "LUX",
+      "name": "Grand Duchy of Luxembourg",
+      "color": "#7aa6c2",
+      "gov": "const_monarchy",
+      "capital": [
+        49.61,
+        6.13
+      ],
+      "pop": 0.2,
+      "gdp": 0.4,
+      "techLag": 3,
+      "armyK": 0.5,
+      "aggression": 0,
+      "stability": 70,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ed2939",
+          "#ffffff",
+          "#00a1de"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "LUX"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SWI",
+      "name": "Swiss Confederation",
+      "color": "#c25a5a",
+      "gov": "federal_republic",
+      "capital": [
+        46.95,
+        7.45
+      ],
+      "pop": 2.5,
+      "gdp": 6.3,
+      "techLag": 2,
+      "armyK": 10,
+      "aggression": 0.05,
+      "stability": 80,
+      "flag": {
+        "pattern": "cross",
+        "colors": [
+          "#d52b1e",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "CHE"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "DEN",
+      "name": "Kingdom of Denmark",
+      "color": "#d47a7a",
+      "gov": "const_monarchy",
+      "capital": [
+        55.68,
+        12.57
+      ],
+      "pop": 2.6,
+      "gdp": 4.8,
+      "techLag": 4,
+      "armyK": 40,
+      "aggression": 0.2,
+      "stability": 60,
+      "flag": {
+        "pattern": "cross",
+        "colors": [
+          "#c8102e",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "DNK",
+            "FRO",
+            "GRL",
+            "ISL",
+            "VIR"
+          ]
+        },
+        {
+          "iso": [
+            "DEU"
+          ],
+          "names": [
+            "Schleswig-Holstein"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SWE",
+      "name": "Sweden-Norway",
+      "color": "#5a8ab8",
+      "gov": "const_monarchy",
+      "capital": [
+        59.33,
+        18.07
+      ],
+      "pop": 5.5,
+      "gdp": 8.1,
+      "techLag": 4,
+      "armyK": 40,
+      "aggression": 0.1,
+      "stability": 75,
+      "flag": {
+        "pattern": "cross",
+        "colors": [
+          "#006aa7",
+          "#fecc00"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "SWE",
+            "BLM"
+          ]
+        },
+        {
+          "iso": [
+            "NOR"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Svalbard",
+                "Bouvet Island"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "AND",
+      "name": "Andorra",
+      "color": "#d9b56a",
+      "gov": "const_monarchy",
+      "capital": [
+        42.51,
+        1.52
+      ],
+      "pop": 0.005,
+      "gdp": 0.005,
+      "techLag": 15,
+      "armyK": 0,
+      "aggression": 0,
+      "stability": 70,
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#10069f",
+          "#fedd00",
+          "#d50032"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "AND"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "MCO",
+      "name": "Monaco",
+      "color": "#d96a6a",
+      "gov": "const_monarchy",
+      "capital": [
+        43.73,
+        7.42
+      ],
+      "pop": 0.01,
+      "gdp": 0.01,
+      "techLag": 5,
+      "armyK": 0,
+      "aggression": 0,
+      "stability": 60,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ce1126",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MCO"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "ITA",
+      "name": "Kingdom of Italy",
+      "color": "#5fa86b",
+      "gov": "const_monarchy",
+      "capital": [
+        45.07,
+        7.69
+      ],
+      "pop": 22,
+      "gdp": 31,
+      "techLag": 6,
+      "armyK": 120,
+      "aggression": 0.45,
+      "stability": 50,
+      "policies": {
+        "conscription": "limited",
+        "press": "free"
+      },
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#009246",
+          "#ffffff",
+          "#ce2b37"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ITA"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Bozen",
+                "Udine",
+                "Rome"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "PAP",
+      "name": "Papal States",
+      "color": "#e8d9a0",
+      "gov": "theocracy",
+      "capital": [
+        41.9,
+        12.45
+      ],
+      "pop": 0.7,
+      "gdp": 0.9,
+      "techLag": 12,
+      "armyK": 10,
+      "aggression": 0,
+      "stability": 50,
+      "policies": {
+        "religion": "state",
+        "press": "censored"
+      },
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#ffe000",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ITA"
+          ],
+          "names": [
+            "Rome"
+          ]
+        },
+        {
+          "iso": [
+            "VAT"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SMR",
+      "name": "San Marino",
+      "color": "#8fc0d9",
+      "gov": "republic",
+      "capital": [
+        43.94,
+        12.45
+      ],
+      "pop": 0.008,
+      "gdp": 0.006,
+      "techLag": 10,
+      "armyK": 0,
+      "aggression": 0,
+      "stability": 70,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#5eb6e4"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "SMR"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "AUS",
+      "name": "Austrian Empire",
+      "color": "#e0c56a",
+      "gov": "const_monarchy",
+      "capital": [
+        48.21,
+        16.37
+      ],
+      "pop": 35,
+      "gdp": 42,
+      "techLag": 5,
+      "armyK": 300,
+      "aggression": 0.4,
+      "stability": 45,
+      "policies": {
+        "conscription": "limited",
+        "press": "regulated",
+        "administration": "centralised",
+        "religion": "state"
+      },
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#000000",
+          "#ffd700"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "AUT",
+            "HUN",
+            "CZE",
+            "SVK",
+            "SVN",
+            "HRV"
+          ]
+        },
+        {
+          "iso": [
+            "POL"
+          ],
+          "names": [
+            "Subcarpathian",
+            "Lesser Poland"
+          ]
+        },
+        {
+          "iso": [
+            "UKR"
+          ],
+          "names": [
+            "L'viv",
+            "Ivano-Frankivs'k"
+          ]
+        },
+        {
+          "iso": [
+            "ROU"
+          ],
+          "names": [
+            "Arad",
+            "Bihor",
+            "Timis",
+            "Maramures",
+            "Mures",
+            "Sibiu"
+          ]
+        },
+        {
+          "iso": [
+            "SRB"
+          ],
+          "names": [
+            "Južno-Backi"
+          ]
+        },
+        {
+          "iso": [
+            "ITA"
+          ],
+          "names": [
+            "Bozen",
+            "Udine"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "LIE",
+      "name": "Liechtenstein",
+      "color": "#5a6fb0",
+      "gov": "const_monarchy",
+      "capital": [
+        47.14,
+        9.52
+      ],
+      "pop": 0.008,
+      "gdp": 0.008,
+      "techLag": 5,
+      "armyK": 0,
+      "aggression": 0,
+      "stability": 70,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#002b7f",
+          "#ce1126"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "LIE"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "PRS",
+      "name": "Kingdom of Prussia",
+      "color": "#5c5c66",
+      "gov": "const_monarchy",
+      "capital": [
+        52.52,
+        13.4
+      ],
+      "pop": 18.5,
+      "gdp": 30,
+      "techLag": 0,
+      "armyK": 210,
+      "aggression": 0.45,
+      "stability": 65,
+      "policies": {
+        "conscription": "mass",
+        "press": "regulated",
+        "administration": "centralised"
+      },
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#000000",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "DEU"
+          ],
+          "names": [
+            "Berlin",
+            "Nordrhein-Westfalen",
+            "Rheinland-Pfalz",
+            "Saarland",
+            "Sachsen-Anhalt"
+          ]
+        },
+        {
+          "iso": [
+            "POL"
+          ],
+          "names": [
+            "Warmian-Masurian",
+            "Pomeranian",
+            "Lower Silesian",
+            "West Pomeranian",
+            "Lubusz",
+            "Greater Poland",
+            "Kuyavian-Pomeranian",
+            "Silesian"
+          ]
+        },
+        {
+          "iso": [
+            "RUS"
+          ],
+          "names": [
+            "Kaliningrad"
+          ]
+        },
+        {
+          "iso": [
+            "LTU"
+          ],
+          "names": [
+            "Klaipedos"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BAV",
+      "name": "Kingdom of Bavaria",
+      "color": "#7a9cc6",
+      "gov": "const_monarchy",
+      "capital": [
+        48.14,
+        11.58
+      ],
+      "pop": 4.7,
+      "gdp": 7,
+      "techLag": 4,
+      "armyK": 50,
+      "aggression": 0.2,
+      "stability": 65,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#0098d4"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "DEU"
+          ],
+          "names": [
+            "Bayern"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "WUR",
+      "name": "Württemberg and Baden",
+      "color": "#b06a4a",
+      "gov": "const_monarchy",
+      "capital": [
+        48.78,
+        9.18
+      ],
+      "pop": 3.1,
+      "gdp": 5.2,
+      "techLag": 4,
+      "armyK": 35,
+      "aggression": 0.15,
+      "stability": 65,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#000000",
+          "#ff0000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "DEU"
+          ],
+          "names": [
+            "Baden-Württemberg"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SAX",
+      "name": "Kingdom of Saxony",
+      "color": "#4f8a5a",
+      "gov": "const_monarchy",
+      "capital": [
+        51.05,
+        13.74
+      ],
+      "pop": 3.2,
+      "gdp": 6,
+      "techLag": 3,
+      "armyK": 25,
+      "aggression": 0.15,
+      "stability": 65,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#008000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "DEU"
+          ],
+          "names": [
+            "Sachsen",
+            "Thüringen"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "HAN",
+      "name": "Kingdom of Hanover",
+      "color": "#c9b25a",
+      "gov": "const_monarchy",
+      "capital": [
+        52.37,
+        9.73
+      ],
+      "pop": 3.5,
+      "gdp": 6,
+      "techLag": 4,
+      "armyK": 25,
+      "aggression": 0.15,
+      "stability": 65,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffd700",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "DEU"
+          ],
+          "names": [
+            "Niedersachsen",
+            "Mecklenburg-Vorpommern"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "HES",
+      "name": "Hessian States",
+      "color": "#a85a8a",
+      "gov": "const_monarchy",
+      "capital": [
+        50.11,
+        8.68
+      ],
+      "pop": 2.1,
+      "gdp": 3.6,
+      "techLag": 4,
+      "armyK": 15,
+      "aggression": 0.15,
+      "stability": 60,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ff0000",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "DEU"
+          ],
+          "names": [
+            "Hessen"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "RUS",
+      "name": "Russian Empire",
+      "color": "#3f7d5a",
+      "gov": "abs_monarchy",
+      "capital": [
+        59.94,
+        30.31
+      ],
+      "pop": 74,
+      "gdp": 72,
+      "techLag": 12,
+      "armyK": 800,
+      "aggression": 0.45,
+      "stability": 45,
+      "policies": {
+        "conscription": "limited",
+        "press": "censored",
+        "administration": "centralised",
+        "religion": "state"
+      },
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#0039a6",
+          "#d52b1e"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "RUS"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Kaliningrad"
+              ]
+            }
+          ]
+        },
+        {
+          "iso": [
+            "USA"
+          ],
+          "names": [
+            "Alaska (South)",
+            "Alaska (South 2)",
+            "Alaska (South 3)",
+            "Alaska (Central)",
+            "Alaska (Central 2)",
+            "Alaska (Central 3)",
+            "Alaska (Central 4)",
+            "Alaska (Central 5)",
+            "Alaska (Central 6)",
+            "Alaska (North)",
+            "Alaska (Central 7)"
+          ]
+        },
+        {
+          "iso": [
+            "FIN",
+            "ALA",
+            "EST",
+            "LVA",
+            "BLR",
+            "MDA",
+            "GEO",
+            "ARM",
+            "AZE"
+          ]
+        },
+        {
+          "iso": [
+            "LTU"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Klaipedos"
+              ]
+            }
+          ]
+        },
+        {
+          "iso": [
+            "UKR"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "L'viv",
+                "Ivano-Frankivs'k"
+              ]
+            }
+          ]
+        },
+        {
+          "iso": [
+            "POL"
+          ],
+          "names": [
+            "Łódź",
+            "Warsaw",
+            "Świętokrzyskie",
+            "Podlachian",
+            "Lublin"
+          ]
+        },
+        {
+          "iso": [
+            "KAZ"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "South Kazakhstan",
+                "Zhambyl"
+              ]
+            }
+          ]
+        },
+        {
+          "iso": [
+            "KGZ"
+          ],
+          "names": [
+            "Ysyk-Köl"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "OTT",
+      "name": "Ottoman Empire",
+      "color": "#b8735a",
+      "gov": "abs_monarchy",
+      "capital": [
+        41.01,
+        28.98
+      ],
+      "pop": 26,
+      "gdp": 19,
+      "techLag": 20,
+      "armyK": 200,
+      "aggression": 0.35,
+      "stability": 40,
+      "policies": {
+        "conscription": "limited",
+        "press": "censored",
+        "religion": "state"
+      },
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#e30a17",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "TUR",
+            "SYR",
+            "LBN",
+            "ISR",
+            "PSE",
+            "JOR",
+            "IRQ",
+            "KWT",
+            "CYP",
+            "BGR",
+            "MKD",
+            "ALB",
+            "BIH"
+          ]
+        },
+        {
+          "iso": [
+            "GRC"
+          ],
+          "names": [
+            "Thessalia",
+            "Kriti",
+            "Kentriki Makedonia",
+            "Anatoliki Makedonia kai Thraki",
+            "Dytiki Makedonia",
+            "Voreio Aigaio"
+          ]
+        },
+        {
+          "iso": [
+            "SRB"
+          ],
+          "names": [
+            "Nišavski",
+            "Pristina"
+          ]
+        },
+        {
+          "iso": [
+            "MNE"
+          ],
+          "names": [
+            "Pljevlja"
+          ]
+        },
+        {
+          "iso": [
+            "ROU"
+          ],
+          "names": [
+            "Tulcea"
+          ]
+        },
+        {
+          "iso": [
+            "LBY"
+          ],
+          "box": [
+            9,
+            24.5,
+            26,
+            34
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Al Kufrah (North)",
+                "Ghat"
+              ]
+            }
+          ]
+        },
+        {
+          "iso": [
+            "SAU"
+          ],
+          "names": [
+            "Makkah",
+            "Al Madinah",
+            "Tabuk",
+            "Al Bahah"
+          ]
+        },
+        {
+          "iso": [
+            "YEM"
+          ],
+          "names": [
+            "Al Hudaydah"
+          ]
+        },
+        {
+          "iso": [
+            "ERI"
+          ],
+          "names": [
+            "Semenawi Keyih Bahri"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "EGY",
+      "name": "Khedivate of Egypt",
+      "color": "#d9b26a",
+      "gov": "abs_monarchy",
+      "capital": [
+        30.04,
+        31.24
+      ],
+      "pop": 7.5,
+      "gdp": 5.5,
+      "techLag": 22,
+      "armyK": 40,
+      "aggression": 0.3,
+      "stability": 55,
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#c8102e",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "EGY"
+          ]
+        },
+        {
+          "iso": [
+            "SDN"
+          ],
+          "names": [
+            "Blue Nile",
+            "Red Sea",
+            "Khartoum",
+            "Gezira",
+            "Gedarif",
+            "River Nile",
+            "Northern (West)",
+            "Northern (Central)",
+            "White Nile",
+            "Sennar",
+            "North Kordufan",
+            "South Kordufan",
+            "Kassala"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "ROM",
+      "name": "United Principalities",
+      "color": "#8e6fb0",
+      "gov": "const_monarchy",
+      "capital": [
+        44.43,
+        26.1
+      ],
+      "pop": 3.9,
+      "gdp": 3.2,
+      "techLag": 20,
+      "armyK": 20,
+      "aggression": 0.25,
+      "stability": 45,
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#002b7f",
+          "#fcd116",
+          "#ce1126"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ROU"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Arad",
+                "Bihor",
+                "Timis",
+                "Maramures",
+                "Mures",
+                "Sibiu",
+                "Tulcea"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SRB",
+      "name": "Principality of Serbia",
+      "color": "#8a5a7a",
+      "gov": "abs_monarchy",
+      "capital": [
+        44.79,
+        20.45
+      ],
+      "pop": 1.1,
+      "gdp": 0.9,
+      "techLag": 22,
+      "armyK": 10,
+      "aggression": 0.35,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#c6363c",
+          "#0c4076",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "SRB"
+          ],
+          "names": [
+            "Belgrade",
+            "Raški",
+            "Branicevski",
+            "Zlatiborski"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "MNT",
+      "name": "Principality of Montenegro",
+      "color": "#6a8fa0",
+      "gov": "abs_monarchy",
+      "capital": [
+        42.39,
+        18.92
+      ],
+      "pop": 0.13,
+      "gdp": 0.08,
+      "techLag": 30,
+      "armyK": 5,
+      "aggression": 0.4,
+      "stability": 55,
+      "flag": {
+        "pattern": "cross",
+        "colors": [
+          "#c40308",
+          "#d4af37"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MNE"
+          ],
+          "names": [
+            "Plužine",
+            "Podgorica"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "GRE",
+      "name": "Kingdom of Greece",
+      "color": "#5f8fd0",
+      "gov": "const_monarchy",
+      "capital": [
+        37.98,
+        23.73
+      ],
+      "pop": 1.1,
+      "gdp": 1.1,
+      "techLag": 18,
+      "armyK": 12,
+      "aggression": 0.3,
+      "stability": 40,
+      "flag": {
+        "pattern": "cross",
+        "colors": [
+          "#0d5eaf",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "GRC"
+          ],
+          "names": [
+            "Peloponnisos",
+            "Athens",
+            "Notio Aigaio"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "TUN",
+      "name": "Beylik of Tunis",
+      "color": "#c97a6a",
+      "gov": "abs_monarchy",
+      "capital": [
+        36.81,
+        10.18
+      ],
+      "pop": 1,
+      "gdp": 0.8,
+      "techLag": 30,
+      "armyK": 5,
+      "aggression": 0.1,
+      "stability": 50,
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#e70013",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "TUN"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "PER",
+      "name": "Persia",
+      "color": "#6aa08a",
+      "gov": "abs_monarchy",
+      "capital": [
+        35.69,
+        51.39
+      ],
+      "pop": 8,
+      "gdp": 5,
+      "techLag": 40,
+      "armyK": 30,
+      "aggression": 0.3,
+      "stability": 45,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#239f40",
+          "#ffffff",
+          "#da0000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "IRN"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "AFG",
+      "name": "Emirate of Afghanistan",
+      "color": "#8a7a5a",
+      "gov": "abs_monarchy",
+      "capital": [
+        34.53,
+        69.17
+      ],
+      "pop": 3.5,
+      "gdp": 2.2,
+      "techLag": 60,
+      "armyK": 30,
+      "aggression": 0.4,
+      "stability": 45,
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#000000",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "AFG"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Hirat",
+                "Badghis"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "HER",
+      "name": "Principality of Herat",
+      "color": "#a89a6a",
+      "gov": "abs_monarchy",
+      "capital": [
+        34.35,
+        62.2
+      ],
+      "pop": 0.6,
+      "gdp": 0.35,
+      "techLag": 60,
+      "armyK": 8,
+      "aggression": 0.2,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#3a7a3a",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "AFG"
+          ],
+          "names": [
+            "Hirat",
+            "Badghis"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "KAL",
+      "name": "Khanate of Kalat",
+      "color": "#b89a7a",
+      "gov": "abs_monarchy",
+      "capital": [
+        29.03,
+        66.59
+      ],
+      "pop": 0.5,
+      "gdp": 0.25,
+      "techLag": 80,
+      "armyK": 5,
+      "aggression": 0.15,
+      "stability": 45,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#b22222",
+          "#2e8b57"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "PAK"
+          ],
+          "names": [
+            "Baluchistan (West)",
+            "Baluchistan (South)",
+            "Baluchistan (Southwest)",
+            "Baluchistan (Northeast)"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "KHI",
+      "name": "Khanate of Khiva",
+      "color": "#7aa0a0",
+      "gov": "abs_monarchy",
+      "capital": [
+        41.38,
+        60.36
+      ],
+      "pop": 0.7,
+      "gdp": 0.4,
+      "techLag": 80,
+      "armyK": 10,
+      "aggression": 0.3,
+      "stability": 45,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#2e6f9e",
+          "#d4af37"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "UZB"
+          ],
+          "names": [
+            "Khorezm",
+            "Karakalpakstan"
+          ]
+        },
+        {
+          "iso": [
+            "TKM"
+          ],
+          "names": [
+            "Tashauz"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BUK",
+      "name": "Emirate of Bukhara",
+      "color": "#b07a9a",
+      "gov": "abs_monarchy",
+      "capital": [
+        39.77,
+        64.42
+      ],
+      "pop": 2.5,
+      "gdp": 1.5,
+      "techLag": 80,
+      "armyK": 25,
+      "aggression": 0.35,
+      "stability": 45,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#008000",
+          "#d4af37"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "UZB"
+          ],
+          "names": [
+            "Bukhoro",
+            "Navoi",
+            "Samarkand",
+            "Kashkadarya",
+            "Surkhandarya",
+            "Jizzakh"
+          ]
+        },
+        {
+          "iso": [
+            "TKM"
+          ],
+          "names": [
+            "Chardzhou"
+          ]
+        },
+        {
+          "iso": [
+            "TJK"
+          ],
+          "names": [
+            "Dushanbe",
+            "Khatlon"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "KOK",
+      "name": "Khanate of Kokand",
+      "color": "#9ab06a",
+      "gov": "abs_monarchy",
+      "capital": [
+        40.53,
+        70.94
+      ],
+      "pop": 2,
+      "gdp": 1.2,
+      "techLag": 80,
+      "armyK": 25,
+      "aggression": 0.35,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#4b6f2a",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "UZB"
+          ],
+          "names": [
+            "Andijon",
+            "Ferghana",
+            "Namangan",
+            "Tashkent",
+            "Sirdaryo"
+          ]
+        },
+        {
+          "iso": [
+            "TJK"
+          ],
+          "names": [
+            "Leninabad"
+          ]
+        },
+        {
+          "iso": [
+            "KAZ"
+          ],
+          "names": [
+            "South Kazakhstan",
+            "Zhambyl"
+          ]
+        },
+        {
+          "iso": [
+            "KGZ"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Ysyk-Köl"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "NEP",
+      "name": "Kingdom of Nepal",
+      "color": "#b04a5a",
+      "gov": "military",
+      "capital": [
+        27.72,
+        85.32
+      ],
+      "pop": 4,
+      "gdp": 2.2,
+      "techLag": 60,
+      "armyK": 25,
+      "aggression": 0.25,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#dc143c",
+          "#003893"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "NPL"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BHU",
+      "name": "Bhutan",
+      "color": "#e0a050",
+      "gov": "theocracy",
+      "capital": [
+        27.47,
+        89.64
+      ],
+      "pop": 0.2,
+      "gdp": 0.1,
+      "techLag": 85,
+      "armyK": 2,
+      "aggression": 0.1,
+      "stability": 50,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffd520",
+          "#ff4e12"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "BTN"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "HYD",
+      "name": "Hyderabad",
+      "color": "#c0a0c0",
+      "gov": "abs_monarchy",
+      "capital": [
+        17.39,
+        78.49
+      ],
+      "pop": 10,
+      "gdp": 5.5,
+      "techLag": 40,
+      "armyK": 30,
+      "aggression": 0.1,
+      "stability": 55,
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#ffd700",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "IND"
+          ],
+          "names": [
+            "Telangana"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "KAS",
+      "name": "Jammu and Kashmir",
+      "color": "#9ac0b0",
+      "gov": "abs_monarchy",
+      "capital": [
+        32.73,
+        74.86
+      ],
+      "pop": 1.5,
+      "gdp": 0.8,
+      "techLag": 50,
+      "armyK": 15,
+      "aggression": 0.15,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#cc0000",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "IND"
+          ],
+          "names": [
+            "Jammu and Kashmir",
+            "Ladakh"
+          ]
+        },
+        {
+          "iso": [
+            "PAK"
+          ],
+          "names": [
+            "Azad Kashmir",
+            "Northern Areas"
+          ]
+        },
+        {
+          "iso": [
+            "KAS"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "QNG",
+      "name": "Qing Empire",
+      "color": "#d6c25a",
+      "gov": "abs_monarchy",
+      "capital": [
+        39.9,
+        116.4
+      ],
+      "pop": 345,
+      "gdp": 183,
+      "techLag": 40,
+      "armyK": 800,
+      "aggression": 0.25,
+      "stability": 25,
+      "policies": {
+        "conscription": "limited",
+        "press": "censored",
+        "religion": "state"
+      },
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#f9d71c",
+          "#1f4fa0"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "CHN"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Jiangsu",
+                "Anhui"
+              ]
+            }
+          ]
+        },
+        {
+          "iso": [
+            "MNG",
+            "TWN"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "TPG",
+      "name": "Taiping Heavenly Kingdom",
+      "color": "#b03a3a",
+      "gov": "theocracy",
+      "capital": [
+        32.06,
+        118.78
+      ],
+      "pop": 30,
+      "gdp": 16,
+      "techLag": 45,
+      "armyK": 300,
+      "aggression": 0.6,
+      "stability": 45,
+      "policies": {
+        "conscription": "mass",
+        "religion": "state"
+      },
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffd700",
+          "#c41e3a"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "CHN"
+          ],
+          "names": [
+            "Jiangsu",
+            "Anhui"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "JAP",
+      "name": "Tokugawa Shogunate",
+      "color": "#d9d0c3",
+      "gov": "military",
+      "capital": [
+        35.68,
+        139.69
+      ],
+      "pop": 32,
+      "gdp": 23,
+      "techLag": 35,
+      "armyK": 100,
+      "aggression": 0.2,
+      "stability": 45,
+      "policies": {
+        "press": "censored",
+        "administration": "decentralised"
+      },
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#ffffff",
+          "#bc002d"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "JPN"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "KOR",
+      "name": "Joseon",
+      "color": "#a0b8d0",
+      "gov": "abs_monarchy",
+      "capital": [
+        37.57,
+        126.98
+      ],
+      "pop": 9.5,
+      "gdp": 6,
+      "techLag": 60,
+      "armyK": 20,
+      "aggression": 0.05,
+      "stability": 50,
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#ffffff",
+          "#cd2e3a"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "KOR",
+            "PRK"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SIA",
+      "name": "Kingdom of Siam",
+      "color": "#c06a8a",
+      "gov": "abs_monarchy",
+      "capital": [
+        13.75,
+        100.5
+      ],
+      "pop": 5,
+      "gdp": 3.4,
+      "techLag": 35,
+      "armyK": 20,
+      "aggression": 0.2,
+      "stability": 60,
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#ed1c24",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "THA",
+            "LAO"
+          ]
+        },
+        {
+          "iso": [
+            "MYS"
+          ],
+          "names": [
+            "Kedah",
+            "Kelantan",
+            "Terengganu"
+          ]
+        },
+        {
+          "iso": [
+            "KHM"
+          ],
+          "names": [
+            "Batdâmbâng",
+            "Siemréab"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BUR",
+      "name": "Kingdom of Burma",
+      "color": "#c0b06a",
+      "gov": "abs_monarchy",
+      "capital": [
+        21.97,
+        96.08
+      ],
+      "pop": 3.5,
+      "gdp": 2,
+      "techLag": 50,
+      "armyK": 20,
+      "aggression": 0.2,
+      "stability": 45,
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#ffffff",
+          "#d4af37"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MMR"
+          ],
+          "names": [
+            "Naypyidaw",
+            "Magway",
+            "Sagaing",
+            "Chin",
+            "Kachin",
+            "Shan",
+            "Kayah"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "VIE",
+      "name": "Đại Nam",
+      "color": "#d0905a",
+      "gov": "abs_monarchy",
+      "capital": [
+        16.46,
+        107.59
+      ],
+      "pop": 9,
+      "gdp": 5,
+      "techLag": 45,
+      "armyK": 50,
+      "aggression": 0.15,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffd700",
+          "#c8102e"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "VNM"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Bình Thuận"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "CAM",
+      "name": "Kingdom of Cambodia",
+      "color": "#7a9a8a",
+      "gov": "abs_monarchy",
+      "capital": [
+        11.56,
+        104.92
+      ],
+      "pop": 1,
+      "gdp": 0.5,
+      "techLag": 55,
+      "armyK": 5,
+      "aggression": 0.05,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#032ea1",
+          "#e00025"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "KHM"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Batdâmbâng",
+                "Siemréab"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "MAL",
+      "name": "Malay Sultanates",
+      "color": "#5a9a7a",
+      "gov": "abs_monarchy",
+      "capital": [
+        2.2,
+        102.25
+      ],
+      "pop": 0.3,
+      "gdp": 0.2,
+      "techLag": 60,
+      "armyK": 3,
+      "aggression": 0.1,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffcc00",
+          "#000000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MYS"
+          ],
+          "names": [
+            "Perak",
+            "Johor",
+            "Pahang",
+            "Negeri Sembilan",
+            "Kuala Lumpur"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "ACE",
+      "name": "Sultanate of Aceh",
+      "color": "#3a7a5a",
+      "gov": "abs_monarchy",
+      "capital": [
+        5.55,
+        95.32
+      ],
+      "pop": 0.5,
+      "gdp": 0.3,
+      "techLag": 60,
+      "armyK": 10,
+      "aggression": 0.2,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#cc0000",
+          "#000000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "IDN"
+          ],
+          "names": [
+            "Aceh"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BRU",
+      "name": "Sultanate of Brunei",
+      "color": "#e0d070",
+      "gov": "abs_monarchy",
+      "capital": [
+        4.89,
+        114.94
+      ],
+      "pop": 0.15,
+      "gdp": 0.08,
+      "techLag": 60,
+      "armyK": 1,
+      "aggression": 0.05,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#f7e017",
+          "#000000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "BRN"
+          ]
+        },
+        {
+          "iso": [
+            "MYS"
+          ],
+          "names": [
+            "Sabah"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SWK",
+      "name": "Raj of Sarawak",
+      "color": "#c87a4a",
+      "gov": "abs_monarchy",
+      "capital": [
+        1.55,
+        110.35
+      ],
+      "pop": 0.2,
+      "gdp": 0.12,
+      "techLag": 40,
+      "armyK": 1,
+      "aggression": 0.1,
+      "stability": 55,
+      "flag": {
+        "pattern": "cross",
+        "colors": [
+          "#ffd700",
+          "#000000",
+          "#c8102e"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MYS"
+          ],
+          "names": [
+            "Sarawak"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "TON",
+      "name": "Kingdom of Tonga",
+      "color": "#c84a4a",
+      "gov": "abs_monarchy",
+      "capital": [
+        -21.14,
+        -175.2
+      ],
+      "pop": 0.03,
+      "gdp": 0.02,
+      "techLag": 60,
+      "armyK": 0.5,
+      "aggression": 0,
+      "stability": 60,
+      "flag": {
+        "pattern": "cross",
+        "colors": [
+          "#ffffff",
+          "#c10000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "TON"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "NEJ",
+      "name": "Emirate of Nejd",
+      "color": "#a0906a",
+      "gov": "abs_monarchy",
+      "capital": [
+        24.63,
+        46.72
+      ],
+      "pop": 1,
+      "gdp": 0.4,
+      "techLag": 80,
+      "armyK": 10,
+      "aggression": 0.3,
+      "stability": 50,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#006c35",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "SAU"
+          ],
+          "names": [
+            "Riyadh",
+            "Ar Riyad (West)",
+            "Ar Riyad (Northwest)",
+            "Ar Riyad (South)",
+            "Al Quassim",
+            "Ash Sharqiyah (North)",
+            "Ash Sharqiyah (Northwest)"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SHM",
+      "name": "Emirate of Jabal Shammar",
+      "color": "#7a6a4a",
+      "gov": "abs_monarchy",
+      "capital": [
+        27.52,
+        41.69
+      ],
+      "pop": 0.3,
+      "gdp": 0.12,
+      "techLag": 85,
+      "armyK": 5,
+      "aggression": 0.3,
+      "stability": 50,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#c8102e",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "SAU"
+          ],
+          "names": [
+            "Ha'il",
+            "Al Hudud ash Shamaliyah",
+            "Al Jawf"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "YEM",
+      "name": "Zaydi Imamate",
+      "color": "#9a6a5a",
+      "gov": "theocracy",
+      "capital": [
+        15.35,
+        44.21
+      ],
+      "pop": 1.5,
+      "gdp": 0.8,
+      "techLag": 80,
+      "armyK": 10,
+      "aggression": 0.2,
+      "stability": 30,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ce1126",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "YEM"
+          ],
+          "names": [
+            "Sa`dah",
+            "Dhamar",
+            "Hajjah",
+            "Amran",
+            "Ibb",
+            "Ta`izz",
+            "Al Bayda'",
+            "Al Jawf",
+            "Ma'rib",
+            "Sanaa"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "OMA",
+      "name": "Sultanate of Muscat and Oman",
+      "color": "#b05a4a",
+      "gov": "abs_monarchy",
+      "capital": [
+        23.59,
+        58.41
+      ],
+      "pop": 0.5,
+      "gdp": 0.3,
+      "techLag": 70,
+      "armyK": 5,
+      "aggression": 0.15,
+      "stability": 45,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#db161b",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "OMN"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BHR",
+      "name": "Bahrain",
+      "color": "#c05a6a",
+      "gov": "abs_monarchy",
+      "capital": [
+        26.22,
+        50.59
+      ],
+      "pop": 0.08,
+      "gdp": 0.05,
+      "techLag": 70,
+      "armyK": 1,
+      "aggression": 0.1,
+      "stability": 50,
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#ffffff",
+          "#ce1126"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "BHR",
+            "QAT"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "TRU",
+      "name": "Trucial States",
+      "color": "#d08a8a",
+      "gov": "abs_monarchy",
+      "capital": [
+        25.27,
+        55.3
+      ],
+      "pop": 0.08,
+      "gdp": 0.04,
+      "techLag": 75,
+      "armyK": 1,
+      "aggression": 0.1,
+      "stability": 50,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ff0000",
+          "#ffffff",
+          "#ff0000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ARE"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "MOR",
+      "name": "Sultanate of Morocco",
+      "color": "#a04a4a",
+      "gov": "abs_monarchy",
+      "capital": [
+        34.02,
+        -6.84
+      ],
+      "pop": 3.5,
+      "gdp": 2,
+      "techLag": 45,
+      "armyK": 20,
+      "aggression": 0.2,
+      "stability": 40,
+      "flag": {
+        "pattern": "disc",
+        "colors": [
+          "#c1272d",
+          "#006233"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MAR"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Laâyoune - Boujdour - Sakia El Hamra",
+                "Guelmim - Es-Semara",
+                "Oued el Dahab"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "ETH",
+      "name": "Ethiopian Empire",
+      "color": "#6a9a4a",
+      "gov": "abs_monarchy",
+      "capital": [
+        12.6,
+        37.47
+      ],
+      "pop": 4,
+      "gdp": 1.6,
+      "techLag": 80,
+      "armyK": 60,
+      "aggression": 0.4,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#078930",
+          "#fcdd09",
+          "#da121a"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ETH"
+          ],
+          "names": [
+            "Amhara",
+            "Tigray",
+            "Addis Ababa"
+          ]
+        },
+        {
+          "iso": [
+            "ERI"
+          ],
+          "names": [
+            "Asmara"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "DAR",
+      "name": "Sultanate of Darfur",
+      "color": "#c0905a",
+      "gov": "abs_monarchy",
+      "capital": [
+        13.63,
+        25.35
+      ],
+      "pop": 1.5,
+      "gdp": 0.5,
+      "techLag": 120,
+      "armyK": 15,
+      "aggression": 0.25,
+      "stability": 50,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#5a3a1a",
+          "#d4af37"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "SDN"
+          ],
+          "names": [
+            "Southern Darfur",
+            "Eastern Darfur",
+            "Western Darfur",
+            "Central Darfur",
+            "North Darfur"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "WAD",
+      "name": "Sultanate of Wadai",
+      "color": "#b0a07a",
+      "gov": "abs_monarchy",
+      "capital": [
+        13.83,
+        20.83
+      ],
+      "pop": 1,
+      "gdp": 0.35,
+      "techLag": 120,
+      "armyK": 10,
+      "aggression": 0.3,
+      "stability": 50,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#2a5a2a",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "TCD"
+          ],
+          "names": [
+            "Ouaddaï",
+            "Wadi Fira",
+            "Sila",
+            "Batha",
+            "Guéra",
+            "Salamat",
+            "Hadjer-Lamis",
+            "N'Djamena",
+            "Barh El Gazel"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BOR",
+      "name": "Bornu Empire",
+      "color": "#8a6a4a",
+      "gov": "abs_monarchy",
+      "capital": [
+        12.89,
+        13.03
+      ],
+      "pop": 1.5,
+      "gdp": 0.5,
+      "techLag": 110,
+      "armyK": 10,
+      "aggression": 0.2,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#006400",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "NGA"
+          ],
+          "names": [
+            "Borno",
+            "Yobe"
+          ]
+        },
+        {
+          "iso": [
+            "NER"
+          ],
+          "names": [
+            "Zinder",
+            "Diffa"
+          ]
+        },
+        {
+          "iso": [
+            "TCD"
+          ],
+          "names": [
+            "Lac",
+            "Kanem"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SOK",
+      "name": "Sokoto Caliphate",
+      "color": "#4a7a4a",
+      "gov": "theocracy",
+      "capital": [
+        13.06,
+        5.24
+      ],
+      "pop": 10,
+      "gdp": 4,
+      "techLag": 100,
+      "armyK": 50,
+      "aggression": 0.3,
+      "stability": 50,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#1a5a1a"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "NGA"
+          ],
+          "names": [
+            "Sokoto",
+            "Kebbi",
+            "Zamfara",
+            "Katsina",
+            "Kano",
+            "Jigawa",
+            "Kaduna",
+            "Bauchi",
+            "Niger",
+            "Kwara",
+            "Adamawa",
+            "Plateau",
+            "Abuja"
+          ]
+        },
+        {
+          "iso": [
+            "NER"
+          ],
+          "names": [
+            "Maradi"
+          ]
+        },
+        {
+          "iso": [
+            "CMR"
+          ],
+          "names": [
+            "Adamaoua",
+            "Nord"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "TOU",
+      "name": "Toucouleur Empire",
+      "color": "#9a7a3a",
+      "gov": "theocracy",
+      "capital": [
+        13.43,
+        -6.26
+      ],
+      "pop": 2,
+      "gdp": 0.8,
+      "techLag": 110,
+      "armyK": 30,
+      "aggression": 0.5,
+      "stability": 45,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#000000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MLI"
+          ],
+          "names": [
+            "Ségou",
+            "Kayes",
+            "Bamako"
+          ]
+        },
+        {
+          "iso": [
+            "GIN"
+          ],
+          "names": [
+            "Dinguiraye"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "MSN",
+      "name": "Massina Caliphate",
+      "color": "#b0904a",
+      "gov": "theocracy",
+      "capital": [
+        14.49,
+        -4.2
+      ],
+      "pop": 0.8,
+      "gdp": 0.3,
+      "techLag": 110,
+      "armyK": 10,
+      "aggression": 0.2,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#2e5a2e",
+          "#e0d0a0"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MLI"
+          ],
+          "names": [
+            "Mopti"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "FJL",
+      "name": "Imamate of Futa Jallon",
+      "color": "#6a8a5a",
+      "gov": "theocracy",
+      "capital": [
+        11.32,
+        -12.29
+      ],
+      "pop": 0.5,
+      "gdp": 0.2,
+      "techLag": 110,
+      "armyK": 8,
+      "aggression": 0.15,
+      "stability": 45,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#4a7a2a"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "GIN"
+          ],
+          "names": [
+            "Mamou",
+            "Mali",
+            "Gaoual"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "ASA",
+      "name": "Asante Empire",
+      "color": "#d0a030",
+      "gov": "abs_monarchy",
+      "capital": [
+        6.69,
+        -1.62
+      ],
+      "pop": 1,
+      "gdp": 0.4,
+      "techLag": 100,
+      "armyK": 40,
+      "aggression": 0.35,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#fcd116",
+          "#006b3f",
+          "#000000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "GHA"
+          ],
+          "names": [
+            "Ashanti",
+            "Brong Ahafo",
+            "Northern"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "DAH",
+      "name": "Kingdom of Dahomey",
+      "color": "#a0503a",
+      "gov": "abs_monarchy",
+      "capital": [
+        7.18,
+        1.99
+      ],
+      "pop": 0.4,
+      "gdp": 0.15,
+      "techLag": 100,
+      "armyK": 12,
+      "aggression": 0.4,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#008751",
+          "#fcd116",
+          "#e8112d"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "BEN"
+          ],
+          "names": [
+            "Zou",
+            "Atlantique",
+            "Kouffo",
+            "Collines"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "LBR",
+      "name": "Republic of Liberia",
+      "color": "#4a6a9a",
+      "gov": "republic",
+      "capital": [
+        6.3,
+        -10.8
+      ],
+      "pop": 0.25,
+      "gdp": 0.13,
+      "techLag": 50,
+      "armyK": 1,
+      "aggression": 0.05,
+      "stability": 50,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#bf0a30",
+          "#ffffff",
+          "#bf0a30",
+          "#002868"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "LBR"
+          ],
+          "names": [
+            "Monrovia",
+            "Grand Bassa",
+            "Sinoe",
+            "River Gee"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "ZAN",
+      "name": "Sultanate of Zanzibar",
+      "color": "#c03a3a",
+      "gov": "abs_monarchy",
+      "capital": [
+        -6.16,
+        39.19
+      ],
+      "pop": 0.5,
+      "gdp": 0.3,
+      "techLag": 50,
+      "armyK": 3,
+      "aggression": 0.15,
+      "stability": 50,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#c8102e",
+          "#c8102e"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "TZA"
+          ],
+          "names": [
+            "Tanga",
+            "Pwani",
+            "Lindi",
+            "Mtwara"
+          ]
+        },
+        {
+          "iso": [
+            "KEN"
+          ],
+          "names": [
+            "Coast"
+          ]
+        },
+        {
+          "iso": [
+            "SOM"
+          ],
+          "names": [
+            "Mogadishu",
+            "Shabeellaha Hoose",
+            "Jubbada Hoose"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BUG",
+      "name": "Kingdom of Buganda",
+      "color": "#5a8a9a",
+      "gov": "abs_monarchy",
+      "capital": [
+        0.32,
+        32.58
+      ],
+      "pop": 1,
+      "gdp": 0.4,
+      "techLag": 120,
+      "armyK": 20,
+      "aggression": 0.3,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#000000",
+          "#ffffff",
+          "#1a5aa0"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "UGA"
+          ],
+          "names": [
+            "Kampala",
+            "Kalangala",
+            "Mubende",
+            "Nakasongola"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "RWA",
+      "name": "Kingdom of Rwanda",
+      "color": "#8ab06a",
+      "gov": "abs_monarchy",
+      "capital": [
+        -1.95,
+        30.06
+      ],
+      "pop": 1,
+      "gdp": 0.3,
+      "techLag": 140,
+      "armyK": 10,
+      "aggression": 0.3,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#00a1de",
+          "#fad201",
+          "#20603d"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "RWA"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "BDI",
+      "name": "Kingdom of Burundi",
+      "color": "#6ab08a",
+      "gov": "abs_monarchy",
+      "capital": [
+        -3.38,
+        29.36
+      ],
+      "pop": 0.8,
+      "gdp": 0.25,
+      "techLag": 140,
+      "armyK": 8,
+      "aggression": 0.2,
+      "stability": 55,
+      "flag": {
+        "pattern": "cross",
+        "colors": [
+          "#ce1126",
+          "#ffffff",
+          "#1eb53a"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "BDI"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "MAD",
+      "name": "Kingdom of Madagascar",
+      "color": "#8a5aa0",
+      "gov": "abs_monarchy",
+      "capital": [
+        -18.91,
+        47.52
+      ],
+      "pop": 2.5,
+      "gdp": 1,
+      "techLag": 45,
+      "armyK": 20,
+      "aggression": 0.25,
+      "stability": 45,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#fc3d32",
+          "#007e3a"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MDG"
+          ],
+          "exclude": [
+            {
+              "names": [
+                "Menabe",
+                "Melaky",
+                "Atsimo-Andrefana",
+                "Ihorombe",
+                "Anosy"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "GAZ",
+      "name": "Gaza Empire",
+      "color": "#a07a5a",
+      "gov": "abs_monarchy",
+      "capital": [
+        -23.5,
+        32.6
+      ],
+      "pop": 0.5,
+      "gdp": 0.15,
+      "techLag": 140,
+      "armyK": 20,
+      "aggression": 0.35,
+      "stability": 50,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#5a3a1a",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "MOZ"
+          ],
+          "names": [
+            "Gaza",
+            "Manica"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "MTB",
+      "name": "Matabele Kingdom",
+      "color": "#7a5a3a",
+      "gov": "abs_monarchy",
+      "capital": [
+        -20.15,
+        28.58
+      ],
+      "pop": 0.2,
+      "gdp": 0.06,
+      "techLag": 150,
+      "armyK": 15,
+      "aggression": 0.45,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#000000",
+          "#c8102e"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ZWE"
+          ],
+          "names": [
+            "Matabeleland North",
+            "Matabeleland South",
+            "Midlands"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "ZUL",
+      "name": "Zulu Kingdom",
+      "color": "#b0703a",
+      "gov": "abs_monarchy",
+      "capital": [
+        -28.3,
+        31.42
+      ],
+      "pop": 0.4,
+      "gdp": 0.15,
+      "techLag": 150,
+      "armyK": 30,
+      "aggression": 0.45,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#000000",
+          "#ffffff",
+          "#3a7a3a"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ZAF"
+          ],
+          "names": [
+            "KwaZulu-Natal"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "LES",
+      "name": "Basutoland",
+      "color": "#5a7a9a",
+      "gov": "abs_monarchy",
+      "capital": [
+        -29.31,
+        27.48
+      ],
+      "pop": 0.15,
+      "gdp": 0.05,
+      "techLag": 140,
+      "armyK": 10,
+      "aggression": 0.2,
+      "stability": 60,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#00209f",
+          "#ffffff",
+          "#009543"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "LSO"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SWZ",
+      "name": "Kingdom of Swaziland",
+      "color": "#6a6aa0",
+      "gov": "abs_monarchy",
+      "capital": [
+        -26.32,
+        31.14
+      ],
+      "pop": 0.1,
+      "gdp": 0.04,
+      "techLag": 150,
+      "armyK": 5,
+      "aggression": 0.2,
+      "stability": 60,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#3e5eb9",
+          "#ffd900",
+          "#b10c0c"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "SWZ"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "OFS",
+      "name": "Orange Free State",
+      "color": "#e09a3a",
+      "gov": "republic",
+      "capital": [
+        -29.12,
+        26.21
+      ],
+      "pop": 0.1,
+      "gdp": 0.06,
+      "techLag": 20,
+      "armyK": 3,
+      "aggression": 0.3,
+      "stability": 55,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ff8c00",
+          "#ffffff"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ZAF"
+          ],
+          "names": [
+            "Free State"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SAR",
+      "name": "South African Republic",
+      "color": "#4a8a5a",
+      "gov": "republic",
+      "capital": [
+        -25.75,
+        28.19
+      ],
+      "pop": 0.3,
+      "gdp": 0.1,
+      "techLag": 25,
+      "armyK": 5,
+      "aggression": 0.35,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ff0000",
+          "#ffffff",
+          "#0000ff",
+          "#008000"
+        ]
+      },
+      "regions": [
+        {
+          "iso": [
+            "ZAF"
+          ],
+          "names": [
+            "Pretoria",
+            "Limpopo",
+            "Mpumalanga",
+            "North West"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "MXE",
+      "name": "Mexican Empire",
+      "color": "#7a9a3a",
+      "gov": "const_monarchy",
+      "capital": [
+        19.43,
+        -99.13
+      ],
+      "pop": 5,
+      "gdp": 4,
+      "techLag": 22,
+      "armyK": 10,
+      "aggression": 0.3,
+      "stability": 40,
+      "flag": {
+        "pattern": "v",
+        "colors": [
+          "#006847",
+          "#ffffff",
+          "#ce1126"
+        ]
+      },
+      "dormant": true,
+      "regions": [
+        {
+          "iso": [
+            "MEX"
+          ],
+          "names": [
+            "Mexico City",
+            "México",
+            "Puebla",
+            "Veracruz",
+            "Tlaxcala",
+            "Hidalgo",
+            "Querétaro",
+            "Guanajuato",
+            "Jalisco",
+            "Michoacán",
+            "San Luis Potosí",
+            "Aguascalientes",
+            "Zacatecas",
+            "Yucatán",
+            "Campeche"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "POL",
+      "name": "Kingdom of Poland",
+      "color": "#c8506a",
+      "gov": "const_monarchy",
+      "capital": [
+        52.23,
+        21.01
+      ],
+      "pop": 4.8,
+      "gdp": 5,
+      "techLag": 15,
+      "armyK": 30,
+      "aggression": 0.3,
+      "stability": 40,
+      "flag": {
+        "pattern": "h",
+        "colors": [
+          "#ffffff",
+          "#dc143c"
+        ]
+      },
+      "dormant": true,
+      "regions": [
+        {
+          "iso": [
+            "POL"
+          ],
+          "names": [
+            "Łódź",
+            "Warsaw",
+            "Świętokrzyskie",
+            "Podlachian",
+            "Lublin"
+          ]
+        }
+      ]
+    }
+  ],
+  "subjects": [
+    [
+      "GBR",
+      "CAN"
+    ],
+    [
+      "GBR",
+      "HYD"
+    ],
+    [
+      "GBR",
+      "KAS"
+    ],
+    [
+      "GBR",
+      "TRU"
+    ],
+    [
+      "OTT",
+      "EGY"
+    ],
+    [
+      "OTT",
+      "ROM"
+    ],
+    [
+      "OTT",
+      "SRB"
+    ],
+    [
+      "OTT",
+      "TUN"
+    ],
+    [
+      "SIA",
+      "CAM"
+    ]
+  ],
+  "treaties": [
+    {
+      "type": "guarantee",
+      "a": "FRA",
+      "b": "PAP"
+    },
+    {
+      "type": "guarantee",
+      "a": "GBR",
+      "b": "BEL"
+    },
+    {
+      "type": "guarantee",
+      "a": "FRA",
+      "b": "BEL"
+    },
+    {
+      "type": "guarantee",
+      "a": "GBR",
+      "b": "POR"
+    },
+    {
+      "type": "guarantee",
+      "a": "GBR",
+      "b": "OTT"
+    },
+    {
+      "type": "guarantee",
+      "a": "FRA",
+      "b": "OTT"
+    },
+    {
+      "type": "trade",
+      "a": "GBR",
+      "b": "FRA"
+    },
+    {
+      "type": "nap",
+      "a": "GBR",
+      "b": "FRA"
+    },
+    {
+      "type": "trade",
+      "a": "GBR",
+      "b": "BRA"
+    },
+    {
+      "type": "trade",
+      "a": "GBR",
+      "b": "OTT"
+    },
+    {
+      "type": "alliance",
+      "a": "FRA",
+      "b": "SPA"
+    },
+    {
+      "type": "guarantee",
+      "a": "GBR",
+      "b": "BHR"
+    },
+    {
+      "type": "guarantee",
+      "a": "RUS",
+      "b": "MNT"
+    },
+    {
+      "type": "guarantee",
+      "a": "BRA",
+      "b": "URY"
+    },
+    {
+      "type": "trade",
+      "a": "GBR",
+      "b": "JAP"
+    },
+    {
+      "type": "trade",
+      "a": "USA",
+      "b": "HAW"
+    },
+    {
+      "type": "guarantee",
+      "a": "GBR",
+      "b": "ZAN"
+    }
+  ],
+  "blocs": [
+    {
+      "name": "German Confederation",
+      "kind": "defense",
+      "members": [
+        "AUS",
+        "PRS",
+        "BAV",
+        "WUR",
+        "SAX",
+        "HAN",
+        "HES",
+        "LUX",
+        "LIE"
+      ]
+    }
+  ],
+  "rivals": [
+    [
+      "USA",
+      "CSA"
+    ],
+    [
+      "CSA",
+      "USA"
+    ],
+    [
+      "PRS",
+      "AUS"
+    ],
+    [
+      "AUS",
+      "PRS"
+    ],
+    [
+      "ITA",
+      "AUS"
+    ],
+    [
+      "AUS",
+      "ITA"
+    ],
+    [
+      "ITA",
+      "PAP"
+    ],
+    [
+      "FRA",
+      "PRS"
+    ],
+    [
+      "RUS",
+      "OTT"
+    ],
+    [
+      "OTT",
+      "RUS"
+    ],
+    [
+      "GRE",
+      "OTT"
+    ],
+    [
+      "MNT",
+      "OTT"
+    ],
+    [
+      "QNG",
+      "TPG"
+    ],
+    [
+      "TPG",
+      "QNG"
+    ],
+    [
+      "BAS",
+      "ARG"
+    ],
+    [
+      "ARG",
+      "BAS"
+    ],
+    [
+      "PAR",
+      "BRA"
+    ],
+    [
+      "AFG",
+      "HER"
+    ],
+    [
+      "PER",
+      "AFG"
+    ],
+    [
+      "RUS",
+      "KOK"
+    ],
+    [
+      "KOK",
+      "BUK"
+    ],
+    [
+      "BUK",
+      "KOK"
+    ],
+    [
+      "NEJ",
+      "SHM"
+    ],
+    [
+      "SHM",
+      "NEJ"
+    ],
+    [
+      "TOU",
+      "MSN"
+    ],
+    [
+      "ASA",
+      "GBR"
+    ],
+    [
+      "DAH",
+      "SOK"
+    ],
+    [
+      "GBR",
+      "RUS"
+    ],
+    [
+      "FRA",
+      "VIE"
+    ],
+    [
+      "ZUL",
+      "SAR"
+    ],
+    [
+      "OFS",
+      "LES"
+    ],
+    [
+      "LES",
+      "OFS"
+    ],
+    [
+      "MEX",
+      "SPA"
+    ]
+  ],
+  "wars": [
+    {
+      "name": "American Civil War",
+      "kind": "civil",
+      "attackers": [
+        "CSA"
+      ],
+      "defenders": [
+        "USA"
+      ]
+    },
+    {
+      "name": "Taiping Rebellion",
+      "kind": "civil",
+      "attackers": [
+        "TPG"
+      ],
+      "defenders": [
+        "QNG"
+      ]
+    },
+    {
+      "name": "Cochinchina Campaign",
+      "attackers": [
+        "FRA",
+        "SPA"
+      ],
+      "defenders": [
+        "VIE"
+      ]
+    }
+  ]
+}

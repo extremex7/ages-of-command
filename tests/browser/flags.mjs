@@ -19,7 +19,7 @@ const failed = [];
 page.on('requestfailed', (r) => failed.push(r.url()));
 page.on('response', (r) => { if (r.status() >= 400) failed.push(r.url() + ' ' + r.status()); });
 
-const scenarios = ['Modern World', 'Height of Rome', 'The Great War', 'The Gathering Storm', 'Cold War', 'Flashpoint 2035', 'Orbital Age 2085'];
+const scenarios = ['Modern World', 'Height of Rome', 'Rise of Empires', 'Concert of Europe', 'A House Divided', 'The Great War', 'The Gathering Storm', 'Cold War', 'Flashpoint 2035', 'Orbital Age 2085'];
 for (const name of scenarios) {
   await page.goto(base);
   await page.waitForSelector('text=New Game', { timeout: 20000 });

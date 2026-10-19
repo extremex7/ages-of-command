@@ -6,6 +6,9 @@
 | --- | --- | --- | --- |
 | Modern World | 1 Jan 2026 | 196 | Present-day borders, built from Natural Earth (Milestones 1–4) |
 | Height of Rome | 11 Aug 117 | 29 (+3) | Rome, Parthia, Kushan, Han and 25 smaller polities. 1,686 provinces are unowned: lands without states of the period |
+| Rise of Empires | 11 Nov 1444 | 133 (+1) | The day after Varna: the Ottoman–Hungarian war is running, Byzantium holds Constantinople and the Morea, England holds Normandy and Gascony under the Truce of Tours. Dormant: Sweden. 1,318 provinces are unowned |
+| Concert of Europe | 20 Nov 1815 | 91 (+9) | Quadruple Alliance and German Confederation; Spain at war with New Granada and the Río de la Plata; the East India Company at war with Nepal. Dormant: Greece, Belgium and seven Latin American states. 787 provinces are unowned |
+| A House Divided | 12 Apr 1861 | 107 (+2) | The American Civil War, the Taiping Rebellion and the Cochinchina campaign are running; German Confederation. Dormant: the Mexican Empire and Poland. 432 provinces are unowned |
 | The Great War | 1 Jun 1914 | 67 (+10) | Alliance blocs, colonial empires. Dormant: Poland, Finland, the Baltic states, Czechoslovakia, Hungary, Austria, Yugoslavia, Ukraine |
 | The Gathering Storm | 1 Jan 1936 | 78 (+1) | Italy at war with Ethiopia. Dormant: the Chinese communists |
 | The Cold War | 1 Jan 1962 | 123 (+20) | NATO, Warsaw Pact, EEC, Comecon. Dormant: the Soviet republics and colonies still to become independent |
@@ -25,6 +28,53 @@ Every scenario shows its approximations on the New Game screen. The main ones:
 
 Height of Rome has no historical wars at start. The 1914 file leaves Svalbard and Bouvet Island
 unowned.
+
+### 1444, 1815 and 1861
+
+**Rise of Empires** (`tools/history/rise_of_empires_1444.json`, events `history_1444.json`)
+starts the day after Varna. The Ottomans face a reduced Byzantium and a Hungary still at war with
+them (Wallachia is Hungary's subject); Poland, with Masovia and Moldavia as subjects, is allied to
+a separately ruled Lithuania; Muscovy shares Russia with Novgorod, Pskov, Tver and Ryazan; the
+Kalmar Union, the Teutonic and Livonian Orders, England with Normandy and Gascony, France,
+Burgundy, the Italian states, Castile, Aragon, Portugal and Granada fill Europe, with ten Holy
+Roman Empire states, one per German province. Beyond Europe: the Mamluks, Timurids and Turkmen
+confederations, the Golden Horde's successors, Ming, Joseon and the Ashikaga, South-East Asia, the
+Indian sultanates and Vijayanagara, West and East African kingdoms, the Aztecs and the Inca. 25
+events follow the period: the Kalmar break-up, Tumu, the end of the Hundred Years' War, the Wars
+of the Roses, Gutenberg, the fall of Constantinople, the Thirteen Years' War, the Ōnin War, the
+Catholic Monarchs and Granada, Columbus, da Gama, Novgorod and the Ugra, and the Burgundian
+inheritance. Simplifications: minor states (Siena, Ferrara, Navarre, Ragusa, the Hanseatic towns,
+most Imperial lordships) are merged into neighbours; Byzantium and Granada look larger than they
+were because their provinces include more land; Genoa is drawn without its home coast; Serbia's
+and Byzantium's tribute to the Ottomans is not modelled; American societies lag thousands of years
+on the Eurasian technology tree.
+
+**Concert of Europe** (`concert_1815.json`, events `history_1815.json`) starts on the day of the
+Second Treaty of Paris. Prussia has the Rhineland, Austria Lombardy–Venetia; the United Kingdom of
+the Netherlands, Sweden with Norway, and Congress Poland and Finland as Russian subjects are in
+place, and the German states are merged where the map is too coarse (Hanover is Britain's
+subject). The East India Company is its own country allied to Britain, with Hyderabad, Mysore,
+Travancore and Baroda as subjects, beside the Marathas, the Sikhs, Nepal and others. Spain holds
+royalist America and fights New Granada and the Río de la Plata; nine later states (Greece,
+Belgium, Mexico, Central America, Colombia, Chile, Peru, Bolivia, Brazil) are released by events
+such as Chacabuco, Iguala, Ayacucho, Ipiranga and the Greek and Belgian revolutions. 25 events in
+all, to 1848. Simplifications: small states are folded into neighbours, lands without modelled
+states are unowned, the Company has an absolute-monarchy government, and a released American
+state gets a truce with Spain, so its war of independence ends when the event fires.
+
+**A House Divided** (`house_divided_1861.json`, events `history_1861.json`) opens at Fort Sumter
+with three wars running: the Union against the seven-state Confederacy and the Qing against the
+Taiping, both as civil wars (`"kind": "civil"`: no early AI peace, reunion when the government
+holds every rebel province, independence after a long stalemate), and France and Spain against
+Vietnam. Virginia, North Carolina, Tennessee and Arkansas start in the Union and secede by the
+opening event chain. Italy has just been proclaimed, with Venetia Austrian and Rome papal; the
+German Confederation is a defence bloc. 43 events (about 30 episodes, the rest chained steps)
+cover the Civil War to Appomattox, Maximilian's Mexico, the wars that made the German Empire, the
+Austro-Hungarian Compromise, the Meiji Restoration, the capture of Rome, Canadian Confederation,
+the Alaska Purchase, the Suez Canal and the Paraguayan War. Simplifications: German minor states
+are merged, Natal is part of the Zulu Kingdom, Native-held lands belong to the claimant states,
+and the German Empire is made by annexation and renaming. In test runs the Union usually wins by
+1863 and the Taiping fall within a year, faster than history.
 
 ## Future scenarios (Milestone 6): speculative fiction
 
@@ -90,6 +140,9 @@ so large historical navies and air forces start smaller than in the table.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Modern World 2026 | 101 | 101 (53) | 1,308 | 201 (812) | 12,095 | 1,640 | 244 |
 | Height of Rome 117 | 4 | 6 (3) | 410 | 0 | 0 | 0 | 0 |
+| Rise of Empires 1444 | 22 | 29 (17) | 630 | 0 | 0 | 0 | 0 |
+| Concert of Europe 1815 | 23 | 34 (19) | 484 | 0 | 0 | 0 | 0 |
+| A House Divided 1861 | 23 | 46 (22) | 599 | 0 | 0 | 0 | 0 |
 | The Great War 1914 | 32 | 58 (26) | 1,191 | 7 (21) | 0 | 0 | 0 |
 | The Gathering Storm 1936 | 47 | 58 (31) | 1,486 | 142 (872) | 0 | 0 | 0 |
 | The Cold War 1962 | 63 | 87 (47) | 1,121 | 156 (781) | 28,504 | 795 | 7 |

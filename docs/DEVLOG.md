@@ -609,3 +609,15 @@ from #48 to #21 in 12 years, earning a silver star"), the rank history drawn aga
 bands, and start against now; it opens by itself when the game ends. 24 achievements, from a
 first victory to ten years as the world's first power, are announced in the game and kept on the
 device; games with cheats earn none.
+
+## Session 21: 1444, 1815 and 1861
+
+Three new start dates (SCENARIOS.md): Rise of Empires (11 November 1444, the day after Varna, 133
+countries), Concert of Europe (20 November 1815, the Second Treaty of Paris, 91 countries and nine
+to be released in Latin America and the Balkans) and A House Divided (12 April 1861, Fort Sumter,
+107 countries). Scenario wars can now be civil wars (`"kind": "civil"`), used for the American
+Civil War and the Taiping Rebellion. In 10-year AI runs no war spread across the map and the
+scripted events fired roughly in historical order; AI peace sometimes comes before a scripted
+outcome (the end of the Hundred Years' War in 1444). Average stability falls from about 50 to 26
+in the first years of the 1444 start, as it does in Height of Rome; pre-modern stability needs a
+look.

@@ -124,7 +124,7 @@ See [TECHNOLOGY.md](TECHNOLOGY.md) and [SCENARIOS.md](SCENARIOS.md).
 | Technology espionage | ✅ | Spies (any era) and cyber espionage (modern) steal research |
 | Technology trading | ⬜ | Diffusion models spread instead |
 | Navy, air and space technologies with their own systems | ✅ | Done in Milestone 6: they unlock ships, aircraft, warheads, satellites and space projects |
-| More scenarios (e.g. 1444, 1815, 1861) | ⬜ | The format supports any date; each needs a definition file and events |
+| More scenarios: 1444, 1815, 1861 | ✅ | Rise of Empires, Concert of Europe, A House Divided, with 25, 25 and 43 historical events |
 
 ## Milestone 6 — navies, air forces, logistics and strategic capabilities
 
@@ -223,7 +223,6 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 
 1. **Milestone 6 follow-ups**: transport capacity, aircraft against fleets, AI amphibious
    planning, supply with goods cost, winning back the simulation speed lost in M6.
-2. **Milestone 5 follow-ups**: more start dates (1444, 1815, 1861),
-   colonisation of unowned land, a war AI that sustains long wars, technology trading.
+2. **Milestone 5 follow-ups**: colonisation of unowned land, a war AI that sustains long wars, technology trading.
 3. **Milestone 4 follow-ups**: the player's own bloc votes.
 4. Economy follow-ups: a gas and renewable energy split, transport costs.

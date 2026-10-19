@@ -55,10 +55,8 @@ that produces it and, if people should consume it, a `demand` above 0.
 Each key is a building id, run in file order every month: `name`, `out` and `in` (good → units per
 level per month), `workers` per level, `cost` (B at price level 1), `goods` consumed when
 construction starts, `days`, `maxLevel` (≤ 255), optional `deposit` (resource name; levels cannot
-exceed the province's deposit), `fertility: true` (scales with farmland), `minDev`.
+exceed the province's deposit), `fertility: true` (scales with farmland), `site: "solar"` or `"wind"` (scales with the province's sunshine or wind), `minDev`. Saves store the ids of goods, buildings and resources, so adding or reordering them keeps old saves loadable (new resources take their deposits from the scenario).
 Put producers before their consumers so this month's output is available downstream.
-Changing the number of buildings or resources makes older saves of that mod refuse to load with a
-message (their arrays no longer match).
 
 ## Governments — `data/rules/governments.json`
 

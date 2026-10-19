@@ -514,3 +514,18 @@ Nine 32-year Modern World runs, 2058, share of world need produced (before → a
 energy 75% → 89%, oil 81% → 88%, coal 85% → 84%, iron 89% → 85%, steel 84% → 83%, consumer goods
 82% → 83%; world GDP 159 T → 176 T. One run of the nine came out worse (coal 71%). Monthly tick
 p50 12.7 → 15.8 ms. New unit test: an AI with unused deposits mines for a world shortage.
+
+## Session 12: more power sources
+
+Natural gas (a new raw good), gas fields, gas power plants, hydroelectric dams (on new hydro
+deposits in hills and mountains), and wind and solar farms whose output follows each province's
+wind and sunshine. Gas Turbine is a new technology (1939); dams come with Electric Power, wind and
+solar with Renewable Energy. `tools/add_energy_deposits.mjs` added gas and hydro deposits to all
+seven scenarios. The AI now ranks the ways to make a good by value per unit of cost at its best
+site, and builds a fuel-burning plant only where the fuel exists or can be dug. Saves now record
+the ids of goods, buildings and resources and are remapped by id on load, so older saves keep
+their buildings and stockpiles (tested by rebuilding a save in the old layout).
+
+Four 32-year Modern World runs, 2058, share of world need produced (Session 11 after → now):
+energy 89% → 97%, coal 84% → 91%, oil 88% → 90%, iron 85% → 87%; world GDP 176 T → 185 T. By then
+the AI has built about 50 dams, 50 gas plants, 190 wind farms and 30 solar farms.

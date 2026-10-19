@@ -4,6 +4,7 @@
   "timber":         { "name": "Timber",         "tier": "raw",      "price": 0.15, "demand": 0.1,  "incomeExp": 0.8,  "stockMonths": 2 },
   "coal":           { "name": "Coal",           "tier": "raw",      "price": 0.15, "demand": 0,    "incomeExp": 0,    "stockMonths": 2 },
   "oil":            { "name": "Oil",            "tier": "raw",      "price": 0.35, "demand": 0,    "incomeExp": 0,    "stockMonths": 2 },
+  "gas":            { "name": "Natural gas",    "tier": "raw",      "price": 0.25, "demand": 0,    "incomeExp": 0,    "stockMonths": 2 },
   "iron":           { "name": "Iron ore",       "tier": "raw",      "price": 0.15, "demand": 0,    "incomeExp": 0,    "stockMonths": 2 },
   "uranium":        { "name": "Uranium",        "tier": "raw",      "price": 1.2,  "demand": 0,    "incomeExp": 0,    "stockMonths": 4 },
   "rare_earths":    { "name": "Rare earths",    "tier": "raw",      "price": 0.9,  "demand": 0,    "incomeExp": 0,    "stockMonths": 3 },

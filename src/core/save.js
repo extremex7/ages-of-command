@@ -113,6 +113,7 @@ export function deserialize(text, map, rules, scenario = null) {
     if (!m) throw new Error(`No migration from save version ${s.version}`);
     s = m(s, { map, rules, scenario });
   }
+  if (s.econ && !s.needsEconomy && remapEconomy(s, rules)) staleCache = true;
   validate(s, map, rules);
   // newer map with extra provinces: extend arrays (new provinces start unowned)
   const prov = s.prov;
@@ -140,6 +141,16 @@ export function deserialize(text, map, rules, scenario = null) {
   touchRelations(s);
   if (keepSupply) sc.rv = s.relVersion; else delete s.supplyCache;
   if (s.countries.some((c) => !c.cache)) refreshCountryCache(s, map, rules);
+  if (s.econ?.newResources) {
+    // geology is the same in every scenario: new resources take their deposits from it
+    const X = rules.econ;
+    for (const [id, rec] of Object.entries(scenario?.economy?.deposits || {})) {
+      const i = +id;
+      if (!(i < map.count)) continue;
+      for (const r of s.econ.newResources) if (rec[r]) s.econ.dep[i * X.R + X.resources.indexOf(r)] = Math.min(255, rec[r]);
+    }
+    delete s.econ.newResources;
+  }
   if (s.needsEconomy) {
     if (!scenario) throw new Error('This save predates the economy; loading it needs its scenario');
     delete s.needsEconomy;
@@ -245,6 +256,57 @@ function validatePolitics(s, rules) {
     c.claims = (c.claims || []).filter((x) => x.p < s.prov.owner.length);
     c.influence = c.influence ?? 0; c.reputation = c.reputation ?? 0; c.rival = c.rival < C ? c.rival ?? -1 : -1;
   }
+}
+
+// Goods, buildings and resources before the economy saved its ids (Session 11 added gas, hydro,
+// gas, wind and solar).
+const OLD_GOODS = ['food', 'timber', 'coal', 'oil', 'iron', 'uranium', 'rare_earths', 'steel', 'energy', 'fuel', 'consumer_goods', 'electronics', 'machinery', 'munitions'];
+const OLD_BUILDINGS = ['farm', 'lumber_camp', 'coal_mine', 'iron_mine', 'oil_well', 'uranium_mine', 'rare_earth_mine', 'coal_power', 'nuclear_power', 'refinery', 'steel_mill', 'factory', 'electronics_plant', 'machine_works', 'arms_factory'];
+
+// The economy is saved with the ids of its goods, buildings and resources; changed rules (new
+// goods or buildings, or a mod) map every per-good, per-building and per-resource array by id.
+// New goods start empty at their base price; dropped ones are discarded.
+function remapEconomy(s, rules) {
+  const X = rules.econ, ec = s.econ;
+  const gIds = ec.goodIds || OLD_GOODS, bIds = ec.buildingIds || OLD_BUILDINGS, rIds = ec.resources || [];
+  const same = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+  const gSame = same(gIds, X.goods.map((g) => g.id)), bSame = same(bIds, X.buildings.map((b) => b.id)), rSame = same(rIds, X.resources);
+  if (gSame && bSame && rSame) { ec.goodIds = gIds; ec.buildingIds = bIds; return false; }
+  const n = s.prov.owner.length;
+  const per = (arr, oldIds, newIds, rows, fill = 0) => {
+    const O = oldIds.length, Nn = newIds.length, out = new arr.constructor(rows * Nn);
+    if (fill) out.fill(fill);
+    if (arr.length !== rows * O) throw new Error('Save has economy data that does not match its own lists');
+    const from = newIds.map((id) => oldIds.indexOf(id));
+    for (let r = 0; r < rows; r++) for (let j = 0; j < Nn; j++) if (from[j] >= 0) out[r * Nn + j] = arr[r * O + from[j]];
+    return out;
+  };
+  const gNew = X.goods.map((g) => g.id), bNew = X.buildings.map((b) => b.id);
+  if (!gSame) {
+    const prices = per(ec.prices, gIds, gNew, 1);
+    X.goods.forEach((g, j) => { if (!gIds.includes(g.id)) prices[j] = g.price; });
+    ec.prices = prices;
+    ec.ratio0 = per(ec.ratio0, gIds, gNew, 1);
+    for (const c of s.countries) {
+      if (!c.econ) continue;
+      for (const k of ['stock', 'prod', 'need', 'imp', 'exp', 'sat', 'inSat', 'buildUse']) if (ArrayBuffer.isView(c.econ[k])) c.econ[k] = per(c.econ[k], gIds, gNew, 1);
+    }
+  }
+  if (!bSame) {
+    ec.bld = per(ec.bld, bIds, bNew, n);
+    const bi = Object.fromEntries(bNew.map((id, i) => [id, i]));
+    s.construction = (s.construction || []).filter((p) => p.kind !== 'building' || bi[bIds[p.b]] != null);
+    for (const p of s.construction) if (p.kind === 'building') p.b = bi[bIds[p.b]];
+    ec.buildingCount = X.B;
+  }
+  if (!rSame) {
+    ec.dep = per(ec.dep, rIds, X.resources, n);
+    // deposits a new resource adds come from the scenario when it is available (see deserialize)
+    ec.newResources = X.resources.filter((r) => !rIds.includes(r));
+    ec.resources = [...X.resources];
+  }
+  ec.goodIds = gNew; ec.buildingIds = bNew;
+  return true;
 }
 
 // Technologies are saved with their ids; a changed technology file maps known flags by id and

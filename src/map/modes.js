@@ -24,8 +24,8 @@ export const MAP_MODES = [
   { id: 'government', name: 'Government', key: 'j', tip: 'Form of government: democracies, autocracies, theocracies and military rule; darker = lower stability.' },
 ];
 
-const RES_COLORS = { oil: '#1f1f1f', coal: '#6b5640', iron: '#b5582a', uranium: '#6fbf2f', rare_earths: '#9b45b8', timber: '#3f7a3a' };
-const RES_WEIGHT = { oil: 3, uranium: 4, rare_earths: 4, iron: 1.5, coal: 1.4, timber: 0.12 }; // minerals show over forests
+const RES_COLORS = { oil: '#1f1f1f', coal: '#6b5640', iron: '#b5582a', uranium: '#6fbf2f', rare_earths: '#9b45b8', timber: '#3f7a3a', gas: '#e0a030', hydro: '#3a8fd0' };
+const RES_WEIGHT = { oil: 3, uranium: 4, rare_earths: 4, iron: 1.5, coal: 1.4, gas: 2.5, hydro: 0.5, timber: 0.12 }; // minerals show over rivers and forests
 const GOV_COLORS = { democracy: '#4f86c4', autocracy: '#c4704f', theocracy: '#9a7ac4', military: '#6a7a3a' };
 const TERRAIN_COLORS = { plains: '#a9c18a', hills: '#b9a878', mountains: '#8c7f73', forest: '#5f8a5a', desert: '#e0cc94', tundra: '#c7d0cf' };
 

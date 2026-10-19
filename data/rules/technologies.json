@@ -729,11 +729,11 @@
       "effects": { "industry": 0.3, "mine": 0.1, "construction": 0.05, "devGrowth": 0.05 },
       "unlocks": {
         "goods": ["energy"],
-        "buildings": ["coal_power"],
+        "buildings": ["coal_power", "hydro_dam"],
         "units": [],
         "govTypes": []
       },
-      "desc": "Central power stations unlock energy and coal power plants and raise industrial and mine output."
+      "desc": "Central power stations unlock energy, coal power plants and hydroelectric dams and raise industrial and mine output."
     },
     "internal_combustion": {
       "name": "Internal Combustion Engine",
@@ -976,6 +976,22 @@
         "govTypes": []
       },
       "desc": "Controlled chain reactions unlock uranium and uranium mines."
+    },
+    "gas_turbine": {
+      "name": "Gas Turbine",
+      "era": "world_war",
+      "field": "energy",
+      "year": 1939,
+      "cost": 1.4,
+      "req": ["internal_combustion", "electricity"],
+      "effects": { "industry": 0.05 },
+      "unlocks": {
+        "goods": ["gas"],
+        "buildings": ["gas_well", "gas_power"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Natural gas pipelines and gas-fired turbines: unlocks gas fields and gas power plants, a cleaner alternative to coal."
     },
     "jet_engine": {
       "name": "Jet Engine",
@@ -1223,7 +1239,13 @@
       "cost": 1.2,
       "req": ["rare_earth_refining", "electricity"],
       "effects": { "industry": 0.1 },
-      "desc": "Cheap solar panels and wind turbines add power, raising industrial output."
+      "unlocks": {
+        "goods": [],
+        "buildings": ["wind_farm", "solar_farm"],
+        "units": [],
+        "govTypes": []
+      },
+      "desc": "Cheap solar panels and wind turbines: unlocks wind and solar farms, which need no fuel, and raises industrial output."
     },
     "machine_learning": {
       "name": "Machine Learning",

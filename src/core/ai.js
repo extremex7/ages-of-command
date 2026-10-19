@@ -15,7 +15,7 @@ import { aiWings } from './air.js';
 import { aiDepots } from './supply.js';
 import { nuclearDeterred, hasDeterrent } from './strategic.js';
 import { portZonesOf } from './mapdata.js';
-import { constructionSlots, projectCost, canBuild, startProject, provinceLabour, devEff, infraEff, buildingEff, fertilityMap } from './industry.js';
+import { constructionSlots, projectCost, canBuild, startProject, provinceLabour, devEff, infraEff, buildingEff, fertilityMap, siteMap } from './industry.js';
 
 export { countryNeighbours };
 
@@ -467,10 +467,12 @@ function inputAvailability(e, b) {
   return { f, worst };
 }
 
-function bestSite(state, map, rules, c, b) {
+function bestSite(state, map, rules, c, b) { return bestSiteEff(state, map, rules, c, b).site; }
+
+function bestSiteEff(state, map, rules, c, b) {
   const X = rules.econ, P = state.prov, fert = fertilityMap(map);
   const B = X.buildings[b];
-  let best = -1, bestScore = 0;
+  let best = -1, bestScore = 0, bestEff = 0;
   for (const i of countryProvinces(state, map, c.idx)) {
     if (P.controller[i] !== c.idx) continue;
     const L = state.econ.bld[i * X.B + b];
@@ -481,11 +483,11 @@ function bestSite(state, map, rules, c, b) {
     const lab = provinceLabour(state, rules, i);
     const labF = Math.min(1, lab.avail / (lab.need + B.workers));
     if (labF < 0.6) continue;
-    const eff = labF * infraEff(P.infra[i], rules) * buildingEff(B, devEff(P.dev[i], rules), fert[i]);
+    const eff = labF * infraEff(P.infra[i], rules) * buildingEff(B, devEff(P.dev[i], rules), fert[i], B.site ? siteMap(map, B.site)[i] : 1);
     const score = eff / (1 + 0.04 * L);
-    if (score > bestScore) { bestScore = score; best = i; }
+    if (score > bestScore) { bestScore = score; best = i; bestEff = eff; }
   }
-  return best;
+  return { site: best, eff: bestEff };
 }
 
 const provCache = new WeakMap();
@@ -498,6 +500,32 @@ function countryProvinces(state, map, k) {
     provCache.set(state, c);
   }
   return c.lists[k];
+}
+
+// Producers of good g this country can build, best first: monthly value of a new level at its
+// best site (output at world prices minus inputs, a short input counted at twice its price) per
+// unit of building cost. Picks hydro or wind over coal where the sites are good, for example.
+function rankProducers(state, map, rules, c, g) {
+  const X = rules.econ, prices = state.econ.prices, e = c.econ;
+  if (X.producers[g].length < 2) return X.producers[g];
+  const scored = [];
+  for (const b of X.producers[g]) {
+    if (c.tfx && !c.tfx.bld[b]) continue;
+    const B = X.buildings[b], { site, eff } = bestSiteEff(state, map, rules, c, b);
+    if (site < 0) continue;
+    let v = 0;
+    for (const [o, a] of B.out) v += a * prices[o];
+    v *= eff;
+    let none = false;
+    for (const [i, a] of B.inp) {
+      // no supply at all (gas before any gas field): only worth it if the country can dig its own
+      if (e.prod[i] + e.imp[i] + e.stock[i] <= 1e-6 && !X.producers[i].some((pb) => bestSite(state, map, rules, c, pb) >= 0)) none = true;
+      v -= a * eff * prices[i] * (e.need[i] > 0 && (e.prod[i] + e.imp[i]) / e.need[i] < 0.9 ? 2 : 1);
+    }
+    if (none) continue;
+    scored.push([b, v / B.cost]);
+  }
+  return scored.sort((x, y) => y[1] - x[1]).map((x) => x[0]);
 }
 
 // World need minus world production per good, and unused deposit levels per resource (world
@@ -568,8 +596,7 @@ function aiBuild(state, map, rules, c) {
     let left = units;
     while (left > 0 && started < maxStarts) {
     let done = false;
-    for (const b of X.producers[g]) {
-      const B = X.buildings[b];
+    for (const b of rankProducers(state, map, rules, c, g)) {
       // fix the bottleneck input first, following the chain (factory -> steel mill -> iron mine)
       // so a mill is not built where it would stand idle for want of ore
       let bb = b, why = '', site = -1;

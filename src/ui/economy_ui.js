@@ -8,7 +8,7 @@ import { computeLedgers } from '../core/economy.js';
 import { provinceGdp, provinceGdpParts } from '../core/state.js';
 import {
   popDemand, milDemand, constructionSlots, canBuild, startProject, cancelProject, projectCost,
-  efficiencyBreakdown, provinceLabour, toggleEmbargo, tradePartners, fertilityMap,
+  efficiencyBreakdown, provinceLabour, toggleEmbargo, tradePartners, fertilityMap, siteMap,
 } from '../core/industry.js';
 
 function bar(v, color = '') {
@@ -179,12 +179,13 @@ export function provinceEconomy(cl, p) {
       h('span', { tip: `Industrial workforce = ${pct(R.balance.industry.industrialLaborShare)} of population. Buildings need ${people(lab.need)}; if they need more than there is, all of them run slower.` }, 'Industrial workforce'),
       h('span', { className: lab.factor < 1 ? 'warn' : '' }, `${people(Math.min(lab.need, lab.avail))} / ${people(lab.avail)}`),
       h('span', { tip: 'Farm output multiplier from terrain and latitude.' }, 'Farmland'), h('span', fert.toFixed(2)),
+      h('span', { tip: 'Solar and wind farm output multipliers from terrain, latitude and the coast.' }, 'Sun / wind'), h('span', `${siteMap(map, 'solar')[p].toFixed(2)} / ${siteMap(map, 'wind')[p].toFixed(2)}`),
       h('span', 'Deposits'), h('span', deps.length ? deps.map(([r, v]) => `${r.replace('_', ' ')} ${v}`).join(', ') : 'none')),
   ];
   if (built.length) {
     out.push(h('h4', 'Buildings'), h('table.t.small', built.map((b) => {
       const f = efficiencyBreakdown(s, map, R, p, b.i);
-      const tip = `Efficiency ${pct(f.total)} = workforce ${pct(f.labour)} × infrastructure ${pct(f.infra)} × ${b.fertility ? `farmland ${f.fert.toFixed(2)} × (0.4 + 0.6 × development ${f.dev.toFixed(2)})` : b.dep >= 0 ? `extraction (0.5 + 0.5 × development ${f.dev.toFixed(2)})` : `development ${pct(f.dev)}`}${f.occupied ? ' × 0 (occupied)' : ''}\nNational input shortages reduce this further.`;
+      const tip = `Efficiency ${pct(f.total)} = workforce ${pct(f.labour)} × infrastructure ${pct(f.infra)} × ${b.site ? `${b.site === 'solar' ? 'sunshine' : 'wind'} ${f.site.toFixed(2)} × (0.5 + 0.5 × development ${f.dev.toFixed(2)})` : b.fertility ? `farmland ${f.fert.toFixed(2)} × (0.4 + 0.6 × development ${f.dev.toFixed(2)})` : b.dep >= 0 ? `extraction (0.5 + 0.5 × development ${f.dev.toFixed(2)})` : `development ${pct(f.dev)}`}${f.occupied ? ' × 0 (occupied)' : ''}\nNational input shortages reduce this further.`;
       return h('tr', { tip }, h('td', icon(b.id), ' ', b.name), h('td.n', 'lvl ' + s.econ.bld[p * X.B + b.i]), h('td.n', { className: f.total < 0.5 ? 'warn' : '' }, pct(f.total)));
     })));
   }

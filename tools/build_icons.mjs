@@ -17,6 +17,7 @@ export const ICONS = {
   farm: 'wheat', lumber_camp: 'trees', coal_mine: 'pickaxe', iron_mine: 'drill', oil_well: 'droplet', uranium_mine: 'atom',
   rare_earth_mine: 'gem', coal_power: 'zap', nuclear_power: 'radiation', refinery: 'fuel', steel_mill: 'anvil',
   factory: 'factory', electronics_plant: 'cpu', machine_works: 'cog', arms_factory: 'crosshair',
+  gas_well: 'flame', gas_power: 'flame-kindling', hydro_dam: 'dam', wind_farm: 'wind', solar_farm: 'sun',
   // top bar and menus
   treasury: 'wallet', monthly: 'trending-up', stability: 'scale', manpower: 'hard-hat', era: 'graduation-cap', wars: 'swords',
   play: 'play', pause: 'pause', save: 'save', menu: 'menu', new_game: 'play', load: 'folder-open', settings: 'settings', exit: 'log-out',
@@ -54,7 +55,7 @@ export const TECH_ICONS = {
   helicopters: 'helicopter', nuclear_power: 'radiation', mass_immunisation: 'syringe', containerisation: 'container', spaceflight: 'rocket',
   integrated_circuit: 'cpu', guided_missiles: 'rocket', satellites: 'satellite', green_revolution: 'sprout', rare_earth_refining: 'gem',
   internet: 'globe', gps: 'map-pin', precision_guided_munitions: 'crosshair', mobile_telephony: 'smartphone', gm_crops: 'dna',
-  e_government: 'laptop', drones: 'plane', biotechnology: 'dna', hydraulic_fracturing: 'drill', renewable_energy: 'sun',
+  e_government: 'laptop', drones: 'plane', biotechnology: 'dna', hydraulic_fracturing: 'drill', renewable_energy: 'sun', gas_turbine: 'flame',
   machine_learning: 'brain-circuit', quantum_computing: 'atom', directed_energy_weapons: 'zap', vertical_farming: 'leaf',
   longevity_medicine: 'heart', general_ai: 'bot', fusion_power: 'sun', orbital_industry: 'orbit', powered_exoskeletons: 'dumbbell',
   asteroid_mining: 'pickaxe', arcologies: 'building-2', molecular_nanotechnology: 'sparkles', life_extension: 'infinity',

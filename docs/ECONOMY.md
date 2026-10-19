@@ -22,11 +22,34 @@ On the first day of each month:
 
 Construction advances daily.
 
+## Power
+
+Energy comes from six kinds of plant (`buildings.json`):
+
+| Plant | Energy per level | Needs | Technology |
+| --- | --- | --- | --- |
+| Thermal (coal) power plant | 3 | 1.5 coal | Electric Power |
+| Hydroelectric dam | 2.5 | nothing; a hydro deposit (rivers in hills and mountains) | Electric Power |
+| Gas power plant | 3 | 1 natural gas | Gas Turbine |
+| Nuclear plant | 6 | 0.15 uranium; development 55 | Nuclear Power |
+| Wind farm | 1.2 × wind | nothing | Renewable Energy |
+| Solar farm | 1.2 × sunshine | nothing | Renewable Energy |
+
+Wind and sunshine (about 0.3 to 1.4) come from each province's terrain, latitude and coast
+(`siteMap` in `src/core/industry.js`): deserts and the tropics are sunniest, coasts, plains and
+the far north windiest. Gas fields need a gas deposit. Gas and hydro deposits were added to every
+scenario by `tools/add_energy_deposits.mjs` (gas from approximate national production shares,
+hydro from terrain plus countries with large hydro resources); the starting buildings are
+unchanged, so the starting energy mix is still all thermal and nuclear, and new plants change it
+from there. With several ways to make a good, the AI ranks them by monthly value per unit of cost
+at its best site, counting a short input at twice its price, so it builds dams and wind where
+sites are good and coal where coal is cheap.
+
 ## Goods
 
-There are 14 goods:
+There are 15 goods:
 
-- **Raw:** food, timber, coal, oil, iron ore, uranium and rare earths.
+- **Raw:** food, timber, coal, oil, natural gas, iron ore, uranium and rare earths.
 - **Industrial:** steel, energy and fuel.
 - **Final:** consumer goods, electronics, machinery and munitions.
 

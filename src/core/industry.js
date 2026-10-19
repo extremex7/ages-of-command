@@ -35,10 +35,11 @@ export function compileEconomy(goodsJson, buildingsJson) {
     }
     for (const f of ['workers', 'cost', 'days', 'maxLevel']) if (!(typeof b[f] === 'number' && b[f] >= 0)) errs.push(`building "${id}": "${f}" must be a non-negative number`);
     if (b.maxLevel > 255) errs.push(`building "${id}": maxLevel must be at most 255`);
+    if (b.site && !SITES.includes(b.site)) errs.push(`building "${id}": site must be one of ${SITES.join(', ')}`);
     return {
       id, i, name: b.name || id, out: conv(id, b.out, 'out'), inp: conv(id, b.in, 'in'), dep, fertility: !!b.fertility,
       workers: b.workers, cost: b.cost, goods: conv(id, b.goods, 'goods'), days: Math.max(1, Math.round(b.days)),
-      maxLevel: b.maxLevel, minDev: b.minDev || 0,
+      maxLevel: b.maxLevel, minDev: b.minDev || 0, site: b.site || null,
     };
   });
   for (const g of goods) {
@@ -88,8 +89,30 @@ export function infraEff(infra, rules) {
   return I.infraEffBase + I.infraEffPerLevel * infra;
 }
 
+// Sunshine and wind (0.3..1.4) per province, estimated from terrain, latitude and the coast
+// (static, per map). Solar and wind farms scale with them.
+const SITES = ['solar', 'wind'];
+const siteCache = new WeakMap();
+const SUN_T = [1.0, 1.0, 0.9, 0.7, 1.3, 0.5]; // plains hills mountains forest desert tundra
+const WIND_T = [1.1, 1.0, 0.8, 0.6, 0.9, 1.1];
+export function siteMap(map, kind) {
+  let c = siteCache.get(map);
+  if (!c) {
+    c = { solar: new Float32Array(map.count), wind: new Float32Array(map.count) };
+    for (const i of map.ids) {
+      const lat = Math.abs(map.lat[i]);
+      c.solar[i] = Math.min(1.4, SUN_T[map.terrain[i]] * (lat < 35 ? 1.1 : lat < 50 ? 0.9 : 0.6));
+      c.wind[i] = Math.min(1.4, WIND_T[map.terrain[i]] * (map.coastal[i] ? 1.25 : 1) * (lat > 40 ? 1.1 : 1));
+    }
+    siteCache.set(map, c);
+  }
+  return c[kind];
+}
+
 // Building-specific efficiency multiplier in a province (before workforce and inputs).
-export function buildingEff(b, de, fert) {
+// site = the province's sunshine or wind factor for solar and wind farms (siteMap).
+export function buildingEff(b, de, fert, site = 1) {
+  if (b.site) return site * (0.5 + 0.5 * de);
   if (b.fertility) return fert * (0.4 + 0.6 * de);
   if (b.dep >= 0) return 0.5 + 0.5 * de;
   return de;
@@ -111,10 +134,11 @@ export function efficiencyBreakdown(state, map, rules, i, b) {
   const de = devEff(state.prov.dev[i], rules);
   const ie = infraEff(state.prov.infra[i], rules);
   const fert = fertilityMap(map)[i];
-  const be = buildingEff(B, de, fert);
+  const site = B.site ? siteMap(map, B.site)[i] : null;
+  const be = buildingEff(B, de, fert, site ?? 1);
   const occ = state.prov.controller[i] !== state.prov.owner[i] ? 0 : 1;
   const tech = techOutput(state.countries[state.prov.owner[i]], b);
-  return { labour: lab.factor, dev: de, infra: ie, fert, building: be, tech, occupied: !occ, total: lab.factor * ie * be * tech * occ };
+  return { labour: lab.factor, dev: de, infra: ie, fert, site, building: be, tech, occupied: !occ, total: lab.factor * ie * be * tech * occ };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -144,6 +168,7 @@ export function initEconomy(state, map, rules, scenario) {
     sf: new Float32Array(N).fill(1), va: new Float32Array(N), iw: new Float32Array(N),
     prices: Float64Array.from(X.goods, (g) => g.price), ratio0: new Float64Array(X.G),
     resources: [...X.resources], buildingCount: X.B, // for map modes and save checks
+    goodIds: X.goods.map((g) => g.id), buildingIds: X.buildings.map((b) => b.id), // for remapping saves
   };
   const S = scenario.economy || {};
   for (const [id, rec] of Object.entries(S.buildings || {})) {
@@ -258,7 +283,7 @@ function potentials(state, map, rules) {
       if (!L) continue;
       const Bd = X.buildings[b];
       const m = Bd.fertility ? (fallout[i] ? 0 : farmMult) : Bd.dep >= 0 ? minM[o] : indM[o];
-      pot[o * B + b] += L * bs * buildingEff(Bd, de, fert[i]) * techOutput(tc, b) * m;
+      pot[o * B + b] += L * bs * buildingEff(Bd, de, fert[i], Bd.site ? siteMap(map, Bd.site)[i] : 1) * techOutput(tc, b) * m;
     }
   }
   return { pot, base };
@@ -485,7 +510,7 @@ export function industryMonth(state, map, rules, opts = {}) {
         const L = ec.bld[off + b];
         if (!L) continue;
         const Bd = X.buildings[b];
-        const p = L * base[i] * buildingEff(Bd, de, fert[i]) * (bmC[o] ? bmC[o][b] : 1);
+        const p = L * base[i] * buildingEff(Bd, de, fert[i], Bd.site ? siteMap(map, Bd.site)[i] : 1) * (bmC[o] ? bmC[o][b] : 1);
         const f = fac[o * B + b];
         va += p * f * net[o * B + b];
         potV[o] += p * Math.max(0, net[o * B + b]);

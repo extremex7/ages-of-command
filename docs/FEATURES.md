@@ -52,9 +52,9 @@ See [ECONOMY.md](ECONOMY.md) for every formula.
 | Taxation, budget, debt, tariffs | ✅ | Tariff revenue in the ledger; tariff slider |
 | Population growth tied to food | ✅ | Hunger slows or reverses growth |
 | Development growth | ✅ | Driven by living standard and civil spending |
-| 14 goods: food, timber, coal, oil, iron, uranium, rare earths, steel, energy, fuel, consumer goods, electronics, machinery, munitions | ✅ | Data-driven (`goods.json`) |
+| 15 goods: food, timber, coal, oil, natural gas, iron, uranium, rare earths, steel, energy, fuel, consumer goods, electronics, machinery, munitions | ✅ | Data-driven (`goods.json`) |
 | Resource deposits per province | ✅ | Sized from real production shares; resources map mode |
-| 15 building types with inputs, outputs, workforce, deposits, farmland | ✅ | Data-driven (`buildings.json`) |
+| 20 building types with inputs, outputs, workforce, deposits, farmland, sun and wind | ✅ | Data-driven (`buildings.json`) |
 | National stockpiles and shortages | ✅ | Shortages hit GDP, stability, unemployment, prices, armies |
 | Workforce and unemployment | ✅ | Industrial workforce per province; idle workers counted |
 | Infrastructure | ✅ | 0–10 per province; building efficiency and movement speed |
@@ -66,7 +66,8 @@ See [ECONOMY.md](ECONOMY.md) for every formula.
 | AI investment | ✅ | Builds against its largest shortfalls (energy first, following input chains), mines spare deposits for world shortages, keeps a small surplus to invest; logs reasons |
 | Economic reports and calculation tooltips | ✅ | Indicators, budget, stability drivers, 24-month charts, per-good breakdown |
 | Trade agreements, tariffs per partner, AI sanctions | ✅ | Added in Milestone 4: trade treaties and economic blocs waive tariffs; AI embargoes |
-| Gas/hydro/renewable power, transport costs, regional markets | ⬜ | Folded into simpler rules (see ECONOMY.md) |
+| Gas, hydro, wind and solar power | ✅ | Gas fields and plants, dams on hydro deposits, wind and solar scaled by site (ECONOMY.md, Power) |
+| Transport costs, regional markets | ⬜ | One world market (see ECONOMY.md) |
 
 ## Milestone 4 — diplomacy and government
 

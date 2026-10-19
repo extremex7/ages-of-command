@@ -188,6 +188,11 @@ Every other month each AI country:
    If the producer's own input is the bottleneck, it builds the input's producer instead.
 4. With nothing missing, improves infrastructure where most of its industry is.
 
+When its budget runs a deficit with little money left, an AI country first raises taxes (to 34%),
+then trims civil spending (to 60%). If it is still in deficit at peace with debt above two months
+of revenue, it retires its costliest unit (army unit, ship or aircraft unit) each AI round until
+the budget balances.
+
 Decisions and reasons appear in the AI tab.
 
 ## Starting economy (`tools/build_economy.mjs`)

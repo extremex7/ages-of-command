@@ -466,7 +466,7 @@ export function nuclearDeterred(state, map, rules, a, defenders) {
 }
 
 function aiStrategic(state, map, rules) {
-  const S = rules.balance.strategic, C = state.countries;
+  const S = rules.balance.strategic, C = state.countries, W = state.strategic;
   const month = Math.floor((state.day - state.startDay) / 30.44);
   for (const c of C) {
     if (!c.alive || (c.idx === state.player && !c.automate)) continue;
@@ -521,7 +521,9 @@ function aiStrategic(state, map, rules) {
       if (kind && s.sats[kind] < want) launchSatellite(state, rules, c.idx, kind);
     }
     // anti-satellite strikes in war
-    if (isAtWar(state, c.idx)) for (const e of enemiesOf(state, c.idx)) if (!canAsat(state, rules, c.idx, e) && rand(state) < 0.3) { asatStrike(state, rules, c.idx, e); break; }
+    // kinetic anti-satellite strikes only while orbit is still fairly clean: debris hurts everyone
+    const asatOk = knowsId(state, rules, c.idx, 'orbital_defense') || W.debris < S.aiAsatDebrisMax;
+    if (asatOk && isAtWar(state, c.idx)) for (const e of enemiesOf(state, c.idx)) if (!canAsat(state, rules, c.idx, e) && rand(state) < 0.3) { asatStrike(state, rules, c.idx, e); break; }
     // space projects for rich countries
     if (!s.project && c.treasury > (c.ledger?.revenue || 0) * 8) {
       for (const kind of ['station', 'colony']) if (!canStartSpace(state, rules, c.idx, kind)) { startSpace(state, rules, c.idx, kind); aiLog(state, c.idx, `Started a space project: ${SPACE_PROJECTS[kind].name.toLowerCase()}.`); break; }

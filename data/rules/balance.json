@@ -108,6 +108,7 @@
     "debrisKinetic": 1,
     "debrisLaser": 0.2,
     "debrisRisk": 0.002,
+    "aiAsatDebrisMax": 4,
     "debrisDecayMonth": 0.004,
     "aiSatGdp": 600,
     "stationCost": 60,

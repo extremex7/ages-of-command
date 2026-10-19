@@ -76,6 +76,25 @@ await sel.selectOption('support');
 const mission = await page.evaluate(() => { const s = window.__client.state; return s.wings.find((x) => x.owner === s.player).mission; });
 check(mission === 'support', `wing mission set from the card (${mission})`);
 await page.screenshot({ path: out + 'm6-02-fleets.png' });
+// amphibious move: an army ordered to Hawaii goes by sea
+const amph = await page.evaluate(() => {
+  const c = window.__client, s = c.state, map = c.game.map;
+  const a = s.armies.find((x) => x.owner === s.player && !x.battle);
+  const p = map.ids.find((i) => map.name[i] === 'Hawaii');
+  c.view.selectedFleets.clear(); c.view.selectedWings.clear(); c.view.selectedArmies.clear(); c.view.selectedArmies.add(a.id);
+  c.renderer.centerOn(map.x[p], map.y[p], 3); c.renderer.draw(s, c.view);
+  const [sx, sy] = c.renderer.worldToScreen(map.x[p], map.y[p]);
+  return { id: a.id, p, sx, sy };
+});
+await page.mouse.click(r0.x + amph.sx, r0.y + amph.sy, { button: 'right' });
+const apath = await page.evaluate((o) => { const s = window.__client.state, map = window.__client.game.map; const a = s.armies.find((x) => x.id === o.id); return { sea: a.path.filter((n) => n >= map.count).length, last: a.path[a.path.length - 1] }; }, amph);
+check(apath.sea > 0 && apath.last === amph.p, `army ordered to Hawaii sails (${apath.sea} sea zones on the route)`);
+await page.evaluate(() => { const c = window.__client; c.renderer.fit(); c.requestFrame(); });
+await page.keyboard.press('5'); await page.waitForTimeout(700); await page.keyboard.press(' ');
+while (await page.locator('.dialog .menu-buttons button').count()) { await page.locator('.dialog .menu-buttons button').first().click(); await page.waitForTimeout(100); }
+const atSea = await page.evaluate((o) => { const a = window.__client.state.armies.find((x) => x.id === o.id); return a ? a.sea : null; }, amph);
+check(atSea != null, `army still exists after sailing a while (at sea: ${atSea >= 0})`);
+await page.screenshot({ path: out + 'm6-02b-amphibious.png' });
 // map modes
 for (const [key, mode] of [['s', 'naval'], ['w', 'supply']]) {
   await page.keyboard.press(key);

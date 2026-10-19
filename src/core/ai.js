@@ -67,11 +67,31 @@ function manageBudget(state, rules, c) {
   if (L.net < 0 && c.treasury < L.revenue * 3) {
     if (c.tax < 0.34) c.tax = Math.min(E.maxTax, c.tax + 0.01);
     else if (c.civilShare > 0.6) c.civilShare -= 0.02;
+    else if (c.treasury < -L.revenue * 2 && !isAtWar(state, c.idx)) demobilise(state, rules, c);
   } else if (c.treasury > L.revenue * 14 && c.tax > 0.12) {
     c.tax -= 0.01;
   } else if (L.net > L.revenue * 0.1 && c.civilShare < 0.85 && !isAtWar(state, c.idx)) {
     c.civilShare += 0.01;
   }
+}
+
+// In peacetime debt with taxes and civil spending already squeezed: retire the costliest unit
+// (an army unit, ship or aircraft unit), one per AI round, until the budget balances.
+function demobilise(state, rules, c) {
+  const U = rules.units;
+  let best = null, bu = 0;
+  for (const list of [state.armies, state.fleets, state.wings]) {
+    for (const x of list) {
+      if (x.owner !== c.idx || x.battle) continue;
+      for (const t in x.units) if (x.units[t] > 0 && U[t].upkeep > bu) { bu = U[t].upkeep; best = [list, x, t]; }
+    }
+  }
+  if (!best) return;
+  const [list, x, t] = best;
+  if (--x.units[t] <= 0) delete x.units[t];
+  if (!Object.keys(x.units).length) list.splice(list.indexOf(x), 1);
+  if (list === state.fleets) state.fleetVer = (state.fleetVer || 0) + 1;
+  aiLog(state, c.idx, `Retired one ${U[t].name} to cut a peacetime deficit (${(-c.ledger.net).toFixed(2)}B a month).`);
 }
 
 function pickUnitType(state, rules, c) {

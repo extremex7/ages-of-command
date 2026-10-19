@@ -227,7 +227,8 @@ strike a day. It targets the first kind the enemy has, in the order warning, rec
 
 **Debris** threatens everyone: each month every satellite in the world is destroyed with chance
 debris × `debrisRisk` (0.002), and debris decays by `debrisDecayMonth` = 0.4% a month. The AI
-fires at an enemy's satellites with 30% chance a month while at war.
+fires at an enemy's satellites with 30% chance a month while at war, but only while debris is
+below `aiAsatDebrisMax` (4) unless it has orbital lasers, so it does not wreck orbit for itself.
 
 ## Space projects (fictional)
 

@@ -52,6 +52,21 @@ test('start: province GDP is calibrated to the scenario and world output covers 
   assert.ok(alive.filter((c) => c.econ.foodSat > 0.95).length / alive.length > 0.9);
 });
 
+test('scarce inputs: mines run on this month\'s power and coal is shared, not grabbed', () => {
+  const g = game({ seed: 'share' }), s = g.state, X = g.rules.econ, k = tagIdx(g, 'DEU'), e = s.countries[k].econ;
+  runDays(g, 1);
+  for (const c of s.countries) if (c.idx !== k) toggleEmbargo(s, k, c.idx);
+  // no energy left over from last month, and only half the coal the country needs
+  e.stock[X.gi.energy] = 0;
+  let coalNeed = 0;
+  for (const p of provOf(g, 'DEU')) for (const b of ['coal_power', 'steel_mill']) coalNeed += s.econ.bld[p * X.B + X.bi[b]];
+  e.stock[X.gi.coal] = 0.5 * (e.need[X.gi.coal] || coalNeed);
+  industryMonth(s, g.map, g.rules);
+  assert.ok(e.prod[X.gi.coal] > 0, 'coal mines got energy from this month\'s power plants');
+  assert.ok(e.prod[X.gi.steel] > 0, 'steel mills got a share of the coal');
+  assert.ok(e.prod[X.gi.energy] > 0, 'power plants got a share of the coal');
+});
+
 test('production chain: without steel, consumer factories stall and output falls', () => {
   const base = game({ seed: 'chain' }), cut = game({ seed: 'chain' });
   const X = base.rules.econ, k = tagIdx(base, 'DEU');

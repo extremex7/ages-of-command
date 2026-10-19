@@ -478,3 +478,21 @@ used is marked (`state.cheated`) and the leaderboard says so.
 
 Checked with `tests/browser/session10.mjs` and 2 new unit tests (prestige ranks, history across
 saving, rising stars); older browser tests now turn the tutorial offer off.
+
+## Session 11: raw-material collapse fix
+
+Reported from a Nepal game in 2058: industry at 15%, no iron, steel or energy reaching the
+factories. A 32-year headless run of Modern World showed world iron output falling from 611 to
+188 units a month and oil from 848 to 219, with mines and wells intact. Cause: mines need a
+little energy, ran before the power plants, and drew only on last month's leftover energy,
+which the population had used up; once energy got tight anywhere, mines stopped, coal ran
+short, power fell further. Fixes (`src/core/industry.js`, `src/core/ai.js`):
+
+- power plants run first each month, so mines use this month's energy;
+- a short input is shared between the buildings that need it in proportion to need (power
+  plants no longer take all the coal from the steel mills);
+- AI countries with unused deposits mine raw materials the world is short of, for export.
+
+Same run after the fix, 2058: iron 715, oil 958, steel 717 (was 195). Energy and coal demand
+still outgrow supply by about 20% by the 2050s; that is AI construction balance, left for later.
+New unit test: scarce inputs are shared and mines run on this month's power.

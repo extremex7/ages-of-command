@@ -506,11 +506,21 @@ function aiBuild(state, map, rules, c) {
     const gap = e.need[g.i] - e.prod[g.i];
     if (gap > 0 && X.producers[g.i].length) gaps.push({ g: g.i, value: gap * prices[g.i] });
   }
+  // raw materials the world is short of (price well above base): countries with unused deposits
+  // mine them for export, since importers without deposits cannot build mines themselves
+  for (const g of X.goods) {
+    const r = prices[g.i] / g.price;
+    if (r < 1.15) continue;
+    const mine = X.producers[g.i].find((b) => X.buildings[b].dep >= 0);
+    if (mine == null || bestSite(state, map, rules, c, mine) < 0) continue;
+    const v = (r - 1) * prices[g.i] * 10, x = gaps.find((y) => y.g === g.i);
+    if (x) x.value += v; else gaps.push({ g: g.i, value: v, world: true });
+  }
   // armies short of munitions come first: it is a military emergency, not a market signal
   if (e.supplyMun < 0.9 && 'munitions' in X.gi) for (const x of gaps) if (x.g === X.gi.munitions) x.value *= 20;
   gaps.sort((a, b) => b.value - a.value);
   let started = 0;
-  for (const { g, value } of gaps.slice(0, 4)) {
+  for (const { g, value, world } of gaps.slice(0, 4)) {
     if (started >= 2) break;
     for (const b of X.producers[g]) {
       const B = X.buildings[b];
@@ -526,7 +536,7 @@ function aiBuild(state, map, rules, c) {
       if (c.treasury - cost.total < reserve) return;
       if (canBuild(state, map, rules, c.idx, site, 'building', bb)) continue;
       startProject(state, map, rules, c.idx, site, 'building', bb);
-      aiLog(state, c.idx, `Building ${X.buildings[bb].name} in ${map.name[site]}${why}: ${X.goods[g].name.toLowerCase()} shortfall worth ${value.toFixed(1)}B/month, cost ${cost.total.toFixed(1)}B.`);
+      aiLog(state, c.idx, `Building ${X.buildings[bb].name} in ${map.name[site]}${why}: ${X.goods[g].name.toLowerCase()} ${world ? 'world shortage, to export' : 'shortfall'} worth ${value.toFixed(1)}B/month, cost ${cost.total.toFixed(1)}B.`);
       started++;
       break;
     }

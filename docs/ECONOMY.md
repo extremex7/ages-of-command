@@ -11,9 +11,9 @@ in B per unit.
 
 On the first day of each month:
 
-1. **Production.** Each building runs at an efficiency set by its province. Buildings run in the
-   order of `buildings.json`, so farms, mines and power plants produce before the factories that
-   consume their output.
+1. **Production.** Each building runs at an efficiency set by its province. Power plants run
+   first, then the rest in the order of `buildings.json`, so mines run on this month's energy and
+   farms and mines produce before the factories that consume their output.
 2. **World market.** Each country sells stock above its target and buys what it lacks.
 3. **Consumption.** Armies take munitions and fuel first; the population consumes the rest.
 4. **Effects.** Satisfaction feeds into GDP, stability, population, development, unemployment,
@@ -86,8 +86,11 @@ Input shortages come on top of this. A building type's national output is scaled
 input:
 
 ```
-output factor = min over inputs (stockpile / input needed)
+output factor = min over inputs (stockpile / input still needed by this and later buildings)
 ```
+
+A short input is shared in proportion to need: when coal covers half of what power plants and
+steel mills together want, both run at half rather than the power plants taking it all.
 
 Every province panel shows this calculation in its tooltips.
 
@@ -186,6 +189,8 @@ Every other month each AI country:
    armies are short of them.
 3. Builds the producer of the top good in the province where a new level would be most efficient.
    If the producer's own input is the bottleneck, it builds the input's producer instead.
+   A country with unused deposits also mines raw materials the world is short of (world price
+   at least 15% above base) for export, since importers without deposits cannot.
 4. With nothing missing, improves infrastructure where most of its industry is.
 
 When its budget runs a deficit with little money left, an AI country first raises taxes (to 34%),

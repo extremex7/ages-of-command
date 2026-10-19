@@ -3,7 +3,8 @@
 // Each country has a national stockpile per good. Once a month, in this order:
 //   1. production: every building runs at an efficiency set by its province (workforce,
 //      infrastructure, development, farmland or deposit) and by the national availability of
-//      its inputs, processed in buildings.json order so upstream output feeds downstream use;
+//      its inputs, processed in buildings.json order (power plants first) so upstream output
+//      feeds downstream use;
 //   2. trade: stock above a country's target is offered to the world market, stock below it is
 //      bought; war and embargoes block a trade route; importers pay their own tariff;
 //   3. consumption: armies first (munitions, fuel), then the population;
@@ -48,7 +49,11 @@ export function compileEconomy(goodsJson, buildingsJson) {
   const bi = Object.fromEntries(buildings.map((b) => [b.id, b.i]));
   // which buildings produce each good (for construction AI and UI)
   const producers = goods.map((g) => buildings.filter((b) => b.out.some(([o]) => o === g.i)).map((b) => b.i));
-  return { goods, gi, buildings, bi, resources, producers, G: goods.length, B: buildings.length, R: resources.length };
+  // production order: power plants first, so mines and factories draw on this month's energy
+  // rather than whatever the population left in the stockpile last month
+  const powers = (b) => 'energy' in gi && b.out.some(([o]) => o === gi.energy);
+  const order = [...buildings.filter(powers), ...buildings.filter((b) => !powers(b))];
+  return { goods, gi, buildings, bi, resources, producers, order, G: goods.length, B: buildings.length, R: resources.length };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -296,15 +301,25 @@ export function industryMonth(state, map, rules, opts = {}) {
     const e = c.econ, st = e.stock, k = c.idx;
     e.prod.fill(0); e.need.fill(0); e.imp.fill(0); e.exp.fill(0);
     const indNeed = new Float64Array(G), indGot = new Float64Array(G);
-    for (const b of X.buildings) {
+    // a short input is shared by every building still to run in proportion to its need, so the
+    // first in line (power plants) cannot take all the coal and leave the steel mills none
+    const rem = new Float64Array(G), inps = new Array(B);
+    for (const b of X.order) {
+      const p = pot[k * B + b.i];
+      if (!p) continue;
+      inps[b.i] = buildingInputs(rules, c, b.i);
+      for (const [g, a] of inps[b.i]) rem[g] += p * a;
+    }
+    for (const b of X.order) {
       const p = pot[k * B + b.i];
       if (!p) continue;
       let f = 1;
-      const inp = buildingInputs(rules, c, b.i);
+      const inp = inps[b.i];
       for (const [g, a] of inp) {
         const req = p * a;
         indNeed[g] += req;
-        if (req > 0) f = Math.min(f, st[g] / req);
+        if (req > 0) f = Math.min(f, st[g] / rem[g]);
+        rem[g] -= req;
       }
       f = Math.max(0, f);
       fac[k * B + b.i] = f;

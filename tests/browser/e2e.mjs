@@ -68,6 +68,7 @@ const after = await page.evaluate((id) => {
 console.log('after run: days advanced', after.day - r.day, 'army at', after.loc, 'target', moved.target, 'tick ms', after.tickMs.toFixed(2), 'base render ms', after.base.baseMs.toFixed(1));
 await page.screenshot({ path: out + '04-after.png' });
 while (await page.locator('.dialog .menu-buttons button').count()) { await page.locator('.dialog .menu-buttons button').first().click(); await page.waitForTimeout(100); }
+await page.evaluate(() => window.__client.setSpeed(0)); // the game resumes after event decisions; these steps need it paused
 // economy: industry tab, build in the capital, economy tab, embargo, economic map modes
 await page.keyboard.press('u');
 await page.waitForTimeout(200);
@@ -182,6 +183,7 @@ await page.screenshot({ path: out + '24-military-1914.png' });
 await page.evaluate(() => { const s = window.__client.state; s.countries[s.player].automate = true; });
 await page.keyboard.press('5'); await page.waitForTimeout(3000); await page.keyboard.press(' ');
 while (await page.locator('.dialog .menu-buttons button').count()) { await page.locator('.dialog .menu-buttons button').first().click(); await page.waitForTimeout(100); }
+await page.evaluate(() => window.__client.setSpeed(0)); // the game resumes after event decisions; these steps need it paused
 await page.keyboard.press('p'); await page.waitForTimeout(300);
 await page.screenshot({ path: out + '25-1914-running.png' });
 console.log('1914 fired', await page.evaluate(() => Object.keys(window.__client.state.fired).join(' ')));

@@ -5,7 +5,9 @@ import { validateScenario } from '../core/rules.js';
 import { formatDate, parseDate } from '../core/calendar.js';
 import { loadSettings, listSlots, readSave, deleteSave, initStorage, isDesktop } from './storage.js';
 import { Client } from './client.js';
-import { settingsForm, applyUiScale, applyWindow, setAppInfo, watchAutoScale, toggleFullscreen, platform } from './settings.js';
+import { icon } from './icons.js';
+import { loadFlagIndex } from './flags.js';
+import { settingsForm, applyUiScale, applyWindow, setAppInfo, watchAutoScale, toggleFullscreen, platform, canExit, exitGame } from './settings.js';
 
 const app = document.getElementById('app');
 const data = { map: null, rules: null, scenarios: [], scenarioCache: new Map(), settings: loadSettings(), timings: {} };
@@ -33,6 +35,7 @@ async function boot() {
       json('data/map/world.json'), json('data/map/seas.json'), json('data/rules/units.json'), json('data/rules/balance.json'),
       json('data/rules/goods.json'), json('data/rules/buildings.json'), json('data/rules/governments.json'),
       json('data/rules/technologies.json'), json('data/events/index.json'), json('data/scenarios/index.json'),
+      loadFlagIndex(),
     ]);
     const events = await Promise.all(evIndex.files.map((f) => json('data/events/' + f)));
     const t1 = performance.now();
@@ -64,9 +67,10 @@ export function mainMenu() {
     h('div.title', 'AGES OF COMMAND'),
     h('div.subtitle', 'A grand strategy sandbox — prototype build'),
     h('div.menu-buttons',
-      h('button.primary', { on: { click: newGameScreen } }, 'New Game'),
-      h('button', { on: { click: loadScreen }, disabled: !listSlots().length }, 'Load Game'),
-      h('button', { on: { click: settingsScreen } }, 'Settings')),
+      h('button.primary', { on: { click: newGameScreen } }, icon('new_game'), 'New Game'),
+      h('button', { on: { click: loadScreen }, disabled: !listSlots().length }, icon('load'), 'Load Game'),
+      h('button', { on: { click: settingsScreen } }, icon('settings'), 'Settings'),
+      canExit() && h('button', { on: { click: exitGame } }, icon('exit'), 'Exit')),
     h('p.note', `Map: ${data.map.ids.length.toLocaleString()} provinces from ${data.map.source}. Loaded in ${Math.round(data.timings.boot)} ms.`))));
 }
 

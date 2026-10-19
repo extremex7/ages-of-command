@@ -31,8 +31,8 @@ func nativeWindow(url, profile, iconPath string) bool {
 	ws := &winState{}
 	setWindowControl(func(mode string, width, height int) {
 		w.Dispatch(func() { ws.apply(hwnd, mode, width, height) })
-	})
-	defer setWindowControl(nil)
+	}, func() { w.Dispatch(w.Terminate) })
+	defer setWindowControl(nil, nil)
 	w.Navigate(url)
 	log.Printf("opened a WebView2 window")
 	w.Run()

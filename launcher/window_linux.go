@@ -31,6 +31,15 @@ static int aoc_apply(void *unused) {
 	if (aoc_w > 0 && aoc_h > 0) resize(aoc_win, aoc_w, aoc_h);
 	return 0;
 }
+static int aoc_quit(void *unused) {
+	void (*quit)(void) = (void (*)(void))sym("gtk_main_quit");
+	if (quit) quit();
+	return 0;
+}
+static void aoc_close(void) {
+	unsigned (*idle_add)(int (*)(void *), void *) = (unsigned (*)(int (*)(void *), void *))sym("g_idle_add");
+	if (aoc_win && idle_add) idle_add(aoc_quit, NULL);
+}
 static void aoc_set_window(int mode, int w, int h) {
 	unsigned (*idle_add)(int (*)(void *), void *) = (unsigned (*)(int (*)(void *), void *))sym("g_idle_add");
 	if (!aoc_win || !idle_add) return;
@@ -91,11 +100,11 @@ func nativeWindow(url, profile, iconPath string) bool {
 	setWindowControl(func(mode string, width, height int) {
 		m := map[string]C.int{"windowed": 0, "maximized": 1, "fullscreen": 2}[mode]
 		C.aoc_set_window(m, C.int(width), C.int(height))
-	})
-	defer setWindowControl(nil)
+	}, func() { C.aoc_close() })
+	defer setWindowControl(nil, nil)
 	log.Printf("opening a WebKitGTK window")
 	if C.aoc_window(cu, ct, ci) == 0 {
-		setWindowControl(nil)
+		setWindowControl(nil, nil)
 		log.Printf("GTK or WebKitGTK is not available")
 		return false
 	}

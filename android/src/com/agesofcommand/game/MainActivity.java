@@ -56,7 +56,7 @@ public class MainActivity extends Activity {
         s.setSupportZoom(false);
         s.setBuiltInZoomControls(false);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        web.addJavascriptInterface(new Bridge(new File(getFilesDir(), "store")), "AOCNative");
+        web.addJavascriptInterface(new Bridge(this, new File(getFilesDir(), "store")), "AOCNative");
         web.setWebViewClient(new Assets(getAssets()));
         setContentView(web);
         immersive();
@@ -171,11 +171,21 @@ public class MainActivity extends Activity {
      * thread, so they are synchronized.
      */
     static class Bridge {
+        final Activity activity;
         final File dir;
 
-        Bridge(File dir) {
+        Bridge(Activity activity, File dir) {
+            this.activity = activity;
             this.dir = dir;
             dir.mkdirs();
+        }
+
+        /** The main menu's Exit button. */
+        @JavascriptInterface
+        public void exit() {
+            activity.runOnUiThread(new Runnable() {
+                public void run() { activity.finishAndRemoveTask(); }
+            });
         }
 
         @JavascriptInterface

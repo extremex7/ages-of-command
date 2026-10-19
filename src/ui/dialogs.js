@@ -166,12 +166,13 @@ export function eventDialog(cl, pend) {
   const s = cl.state, R = cl.game.rules;
   const ev = R.events.find((e) => e.id === pend.ev);
   if (!ev) return;
-  cl.setSpeed(0);
+  if (cl.speed) cl.autoPause();
   const left = R.balance.government.eventChoiceDays - (s.day - pend.day);
   const w = open(cl, h('h2', pend.title), h('p', pend.text),
     h('p.muted', `If you do not decide within ${left} days, your advisers choose for you.`),
     h('div.menu-buttons', ev.options.map((o, i) => h('button', { on: { click: () => {
       resolveEvent(s, cl.game.map, R, pend, i);
       w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame();
+      cl.autoResume();
     } } }, h('b', o.text), h('div.muted', { style: { fontSize: '0.85em', whiteSpace: 'normal' } }, describeEffects(R, o.effects || {}, s).join(' · ') || 'No effects')))));
 }

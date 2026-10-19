@@ -17,10 +17,11 @@ import { rebaseWing } from '../core/air.js';
 import { zoneAt, portZonesOf } from '../core/mapdata.js';
 import { computeLedgers } from '../core/economy.js';
 import { isAtWar } from '../core/relations.js';
-import { flagCanvas } from './flags.js';
+import { flagCanvas, setFlagScenario } from './flags.js';
 import { money, signedMoney, people, pct } from './format.js';
 import { writeSave, rotateAutosaves } from './storage.js';
 import { renderPanel, renderProvince, TABS } from './panels.js';
+import { icon } from './icons.js';
 import { saveDialog, peaceDialog, menuDialog, reportDialog, separatePeaceDialog, eventDialog } from './dialogs.js';
 
 export const SPEEDS = [0, 1, 3, 8, 20, 0]; // days per second; 5 = as fast as the frame budget allows
@@ -35,6 +36,7 @@ export class Client {
     this.logSeen = game.state.logSeq || 0;
     this.uiDirty = true; this.lastUi = 0;
     this.index = buildIndex(game.map);
+    setFlagScenario(game.state.scenarioId, game.state.countries);
     this.build();
     this.renderer = new MapRenderer(this.canvas, game.map);
     this.renderer.rules = game.rules;
@@ -100,8 +102,11 @@ export class Client {
   }
 
   renderModes() {
-    mount(this.modesEl, MAP_MODES.map((m) => h('button' + (this.renderer?.mode === m.id || (!this.renderer && m.id === 'political') ? '.on' : ''),
-      { tip: `${m.tip}\nShortcut: ${m.key.toUpperCase()}`, on: { click: () => this.setMapMode(m.id) } }, m.name)));
+    // icon buttons, with the current mode's name after them (tooltips name the others)
+    const cur = this.renderer?.mode || 'political';
+    mount(this.modesEl, MAP_MODES.map((m) => h('button' + (cur === m.id ? '.on' : ''),
+      { tip: `${m.name} map\n${m.tip}\nShortcut: ${m.key.toUpperCase()}`, 'aria-label': m.name, on: { click: () => this.setMapMode(m.id) } }, icon(m.id))),
+    h('span.mode-name', MAP_MODES.find((m) => m.id === cur)?.name || ''));
     const L = MODE_LEGENDS[this.renderer?.mode];
     if (L) {
       this.legendEl.style.display = '';
@@ -374,7 +379,25 @@ export class Client {
   // ------------------------------------------------------------------ simulation control
   setSpeed(n) {
     if (this.mode !== 'play' || this.state.gameOver) return;
+    this.resumeSpeed = 0; // the player chose a speed: no automatic resume
     this.speed = n; this.acc = 0; this.uiDirty = true; this.requestFrame();
+  }
+  // An event that needs a decision pauses the game; once it is decided the game resumes at the
+  // speed it had (unless the player changed the speed meanwhile, or turned this off in Settings).
+  autoPause() {
+    if (!this.speed) return;
+    const was = this.speed;
+    this.setSpeed(0);
+    this.resumeSpeed = was;
+  }
+  autoResume() {
+    const s = this.state;
+    const next = s.pendingEvents.find((p) => p.c === s.player && !p.shown);
+    if (next) { next.shown = true; this.openEvent(next); return; } // decide the next one first
+    if (this.resumeSpeed && this.data.settings.resumeAfterEvents !== false && !this.el.querySelector('.dialog-wrap')) {
+      const n = this.resumeSpeed;
+      this.setSpeed(n);
+    }
   }
   togglePause() {
     if (this.speed) { this.pausedSpeed = this.speed; this.setSpeed(0); } else this.setSpeed(this.pausedSpeed || 2);
@@ -488,7 +511,7 @@ export class Client {
     }
     // a domestic event waits for the player's decision
     const ev = s.pendingEvents.find((p) => p.c === s.player && !p.shown);
-    if (ev && this.mode === 'play') { ev.shown = true; this.openEvent(ev); }
+    if (ev && this.mode === 'play') { ev.shown = true; this.autoPause(); this.openEvent(ev); }
     if (s.gameOver && !this.gameOverShown) {
       this.gameOverShown = true; this.speed = 0;
       this.toast(`Game over: ${s.gameOver.reason}`, true);
@@ -529,7 +552,7 @@ export class Client {
     this.renderTop();
     if (this.mode === 'pick') this.renderPick();
     else {
-      mount(this.tabsEl, TABS.map((t) => h('button' + (this.tab === t.id ? '.on' : ''), { tip: `${t.tip}\nShortcut: ${t.key.toUpperCase()}`, on: { click: () => this.setTab(t.id) } }, t.name)));
+      mount(this.tabsEl, TABS.map((t) => h('button' + (this.tab === t.id ? '.on' : ''), { tip: `${t.tip}\nShortcut: ${t.key.toUpperCase()}`, on: { click: () => this.setTab(t.id) } }, icon(t.id), h('span', t.name))));
       renderPanel(this, this.panelEl);
     }
     renderProvince(this, this.provEl);
@@ -555,19 +578,19 @@ export class Client {
     mount(this.topbar,
       me ? h('div.nation', { on: { click: () => { this.setTab('country'); this.focusCountry(me.idx); } }, tip: 'Your country. Click to centre on the capital (key C).' }, flagCanvas(me), me.name)
         : h('div.nation', h('span.muted', this.mode === 'pick' ? 'Choose a country' : 'Observer')),
-      h('div.row', h('button', { tip: 'Pause / resume (Space)', on: { click: () => this.togglePause() }, disabled: this.mode !== 'play' }, this.speed ? '❚❚' : '▶'),
+      h('div.row', h('button.play', { tip: 'Pause / resume (Space)', 'aria-label': this.speed ? 'Pause' : 'Play', on: { click: () => this.togglePause() }, disabled: this.mode !== 'play' }, icon(this.speed ? 'pause' : 'play')),
         h('div.date', formatDate(s.day), this.speed ? '' : h('div.paused-flag', 'PAUSED')), h('div.speed', speedBtns)),
-      me && h('div.stat', { tip: 'Treasury. Negative means debt, which costs interest and lowers stability.' }, h('b', { className: me.treasury < 0 ? 'bad' : '' }, money(me.treasury)), h('span', 'Treasury')),
-      L && h('div.stat', { tip: ledgerTip }, h('b', { className: L.net < 0 ? 'bad' : 'good' }, signedMoney(L.net)), h('span', 'Monthly')),
-      me && h('div.stat', { tip: 'Stability 0–100: affects tax efficiency. Lowered by high taxes, low public spending, debt, war and occupation.' }, h('b', Math.round(me.stability)), h('span', 'Stability')),
-      me && h('div.stat.opt', { tip: `Available manpower for recruiting and reinforcement. Cap ${people(me.cache.maxManpower)}, regenerates monthly.` }, h('b', people(me.manpower)), h('span', 'Manpower')),
-      me && h('div.stat.opt', { tip: 'Population' }, h('b', people(me.cache.pop)), h('span', 'Population')),
-      me && me.tfx && h('div.stat.opt', { tip: `Era: ${me.tfx.known} technologies known${me.research?.current ? `, researching ${this.game.rules.tech.list[this.game.rules.tech.idx[me.research.current]].name}` : ', no research project'}. Click for the Research tab.`, on: { click: () => this.setTab('research') } }, h('b', eraOf(this.game.rules, me).name), h('span', 'Era')),
-      h('div.stat', { tip: me ? 'Wars you are part of' : 'Wars in the world', className: wars ? 'bad' : '' }, h('b', wars), h('span', 'Wars')),
+      me && h('div.stat', { tip: 'Treasury. Negative means debt, which costs interest and lowers stability.' }, h('b', { className: me.treasury < 0 ? 'bad' : '' }, icon('treasury'), money(me.treasury)), h('span', 'Treasury')),
+      L && h('div.stat', { tip: ledgerTip }, h('b', { className: L.net < 0 ? 'bad' : 'good' }, icon('monthly'), signedMoney(L.net)), h('span', 'Monthly')),
+      me && h('div.stat', { tip: 'Stability 0–100: affects tax efficiency. Lowered by high taxes, low public spending, debt, war and occupation.' }, h('b', icon('stability'), Math.round(me.stability)), h('span', 'Stability')),
+      me && h('div.stat.opt', { tip: `Available manpower for recruiting and reinforcement. Cap ${people(me.cache.maxManpower)}, regenerates monthly.` }, h('b', icon('manpower'), people(me.manpower)), h('span', 'Manpower')),
+      me && h('div.stat.opt', { tip: 'Population' }, h('b', icon('population'), people(me.cache.pop)), h('span', 'Population')),
+      me && me.tfx && h('div.stat.opt', { tip: `Era: ${me.tfx.known} technologies known${me.research?.current ? `, researching ${this.game.rules.tech.list[this.game.rules.tech.idx[me.research.current]].name}` : ', no research project'}. Click for the Research tab.`, on: { click: () => this.setTab('research') } }, h('b', icon('era'), eraOf(this.game.rules, me).name), h('span', 'Era')),
+      h('div.stat' + (wars ? '.bad' : ''), { tip: me ? 'Wars you are part of' : 'Wars in the world' }, h('b', icon('wars'), wars), h('span', 'Wars')),
       h('div.spacer'),
       this.searchBox(),
-      h('button', { tip: 'Save the game (Ctrl+S quick-saves)', on: { click: () => saveDialog(this) }, disabled: this.mode !== 'play' }, 'Save'),
-      h('button', { on: { click: () => menuDialog(this) } }, 'Menu'));
+      h('button', { tip: 'Save the game (Ctrl+S quick-saves)', on: { click: () => saveDialog(this) }, disabled: this.mode !== 'play' }, icon('save'), h('span.lbl', 'Save')),
+      h('button', { on: { click: () => menuDialog(this) } }, icon('menu'), h('span.lbl', 'Menu')));
   }
 
   searchBox() {

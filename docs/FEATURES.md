@@ -175,6 +175,10 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Desktop app and installer | ✅ Native window (WebView2 on Windows, WebKitGTK on Linux) with on-disk saves; Windows installer and portable zip, Linux and macOS packages (launcher/README.md). Not code-signed; the WebView2 window is not yet tried on a real Windows PC; macOS opens a browser window |
 | Display settings | ✅ Window mode and size (desktop app; full screen only in a browser), interface scale with an automatic fit, graphics quality, map resolution, frame rate limit (src/ui/settings.js). Window control is checked on Linux; on Windows it is untested |
 | Android app | 🟨 APK with touch controls (pan, pinch, tap, long-press orders) and saves on the phone (android/README.md). Tested in an emulated touch screen only, not on a phone; the interface is the desktop one made denser |
+| Icons for map modes, tabs, the top bar, buildings and the main menu | ✅ Lucide icons (ISC licence), generated into src/ui/icons.js by tools/build_icons.mjs |
+| Real country flags | ✅ Present-day flags from flag-icons (MIT) for all 196 countries; 52 historical flags drawn for the 1914, 1936 and 1962 scenarios, several simplified (data/flags/index.json lists which). Ancient states of 117 (Rome excepted) and the invented unions of 2085 keep pattern flags, as do Jabal Shammar and Asir in 1914 (no reliable source) |
+| Game resumes after an event decision | ✅ At the speed it ran before; "Stay paused" in Settings keeps the old behaviour |
+| Exit button on the main menu | ✅ Desktop and Android apps (a browser tab cannot close itself, so it is hidden there) |
 | iOS app | ⬜ Postponed; needs a Mac to build |
 | Audio, onboarding tutorial, accessibility pass | ⬜ |
 
@@ -192,12 +196,13 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 - Province population/GDP within a country are spread by a model, not census data.
 - Islands are still linked by "sea lanes" that land armies cross without ships (when enemy
   fleets do not hold them); longer voyages go through sea zones. There are no transport ships.
-- Flags are simplified patterns.
+- Some historical flags are simplified (coats of arms reduced to shapes); present-day flags are
+  used where a country's flag hardly changed (for example the USA's 50 stars in 1914).
 - Low-end measurements come from a cloud container (software rendering, emulated CPU throttling),
   not from real minimum-spec hardware.
 - Historical borders are approximated with modern admin-1 provinces (one owner per province);
   figures are rounded estimates; armies are capped by an upkeep rule rather than taken at full
-  historical size; ancient flags are invented.
+  historical size; ancient states keep invented pattern flags.
 - The war AI makes peace sooner than history did (the 1914 test run ended the Great War in
   1916), and wars outside scripted events are rarer than in history.
 

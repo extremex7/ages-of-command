@@ -79,7 +79,9 @@ programmes, cyber operations, satellites and space.
 
 **Settings** (main menu, or Menu → Settings in a game) apply at once: window mode (windowed,
 maximised, full screen) and window size in the desktop app, interface scale (Auto fits the
-window), graphics quality, map resolution, a frame rate limit, tooltips and autosaves.
+window), graphics quality, map resolution, a frame rate limit, whether the game resumes after an
+event decision (it does by default), tooltips and autosaves. **Exit** on the main menu closes
+the desktop and Android apps.
 
 ## Test
 
@@ -92,6 +94,9 @@ node tools/econ_report.mjs 5        # world market and national indicators over 
 npm start &                         # then, with Playwright available:
 node tests/browser/e2e.mjs          # boots the game, plays, recruits, moves, builds, uses politics, diplomacy and research, saves, reloads, plays 1914
 node tests/browser/m6.mjs           # Milestone 6 interface: navies, air wings, supply, Strategic tab
+node tests/browser/clicks.mjs       # tab and build presses while time runs
+node tests/browser/settings.mjs     # display settings
+node tests/browser/flags.mjs        # every scenario's flags load; the game resumes after an event decision
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -107,6 +112,8 @@ npm run build:map                   # world.json, seas.json, the Modern World sc
 npm run build:seas                  # only data/map/seas.json (sea zones; needs the Natural Earth download)
 npm run build:history               # scenarios from tools/history/*.json, with forces and economy (no downloads needed)
 npm run build:forces                # only the starting navies, air forces and strategic forces from tools/forces/*.csv
+python3 tools/build_flags.py <flag-icons dir> <i18n-iso-countries dir>   # data/flags/ (npm pack both, then unpack)
+node tools/build_icons.mjs <lucide-static dir>                             # src/ui/icons.js
 ```
 
 Province IDs are kept stable by `data/map/province_registry.json` (append-only), so saves keep
@@ -161,7 +168,11 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
   map and starting armies are **model estimates**, labelled as such in-game.
 - Resource shares and industrial specialisations (`tools/resource_table.csv`) are rounded public
   estimates used as balance inputs; deposits and starting industry per province are generated.
-- Flags are simplified patterns, not accurate artwork.
+- Flags: present-day flags from [flag-icons](https://github.com/lipis/flag-icons) (MIT,
+  `data/flags/LICENSE-flag-icons.txt`). Historical flags are drawn by `tools/build_flags.py`;
+  several are simplified, listed under `notes` in `data/flags/index.json`. Ancient states and
+  the invented unions of 2085 have stylised pattern flags.
+- Icons: [Lucide](https://lucide.dev) (ISC licence, `src/ui/LICENSE-lucide.txt`), generated into `src/ui/icons.js`.
 - Historical scenarios: borders are approximated with modern admin-1 provinces; population, GDP
   and army figures are rounded Maddison-style estimates including colonies. Each scenario lists
   its approximations on the New Game screen and in [docs/SCENARIOS.md](docs/SCENARIOS.md).

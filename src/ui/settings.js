@@ -18,6 +18,18 @@ export function platform() {
   return app?.window === 'native' ? 'native' : 'browser';
 }
 
+// Exit: the apps can close themselves; a browser tab cannot be closed by the page.
+export function canExit() { return !!app; }
+export async function exitGame() {
+  if (platform() === 'android') { window.AOCNative.exit(); return; }
+  try { await fetch('/api/quit', { method: 'POST' }); } catch { /* the program is already gone */ }
+  window.close(); // closes the window where the browser allows it
+  // still open (a browser window): the program has stopped
+  setTimeout(() => {
+    document.body.innerHTML = '<div class="screen"><div class="menu-card"><h2>Ages of Command has closed</h2><p class="muted">You can close this window.</p></div></div>';
+  }, 400);
+}
+
 // The interface scale "auto" fits the interface designed for 1366×768 to the window: larger on
 // big screens, smaller (down to 75%) on small ones such as phones.
 export function effectiveUiScale(s) {
@@ -111,6 +123,8 @@ export function settingsForm(s, onApply = () => {}) {
     (v) => change('fpsCap', +v)), 'A limit saves battery and keeps laptops and phones cooler.');
 
   rows.push(h('h4', 'Interface'));
+  field('After an event decision', select(s.resumeAfterEvents === false ? '0' : '1', [['1', 'Resume the game'], ['0', 'Stay paused']],
+    (v) => change('resumeAfterEvents', v === '1')), 'Events that need a decision always pause the game.');
   field('Tooltips', select(s.tooltips ? '1' : '0', [['1', 'Show'], ['0', 'Hide']], (v) => change('tooltips', v === '1')));
   field('Autosave', select(s.autosaveMonths, [[0, 'Off'], [1, 'Monthly'], [3, 'Every 3 months'], [6, 'Every 6 months'], [12, 'Yearly']],
     (v) => change('autosaveMonths', +v)));

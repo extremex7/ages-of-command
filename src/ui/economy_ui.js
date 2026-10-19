@@ -2,6 +2,7 @@
 // read from the simulation; tooltips spell out how it was calculated.
 import { h } from './dom.js';
 import { flagCanvas } from './flags.js';
+import { icon } from './icons.js';
 import { money, signedMoney, people, pct } from './format.js';
 import { computeLedgers } from '../core/economy.js';
 import { provinceGdp, provinceGdpParts } from '../core/state.js';
@@ -142,7 +143,7 @@ export function industryTab(cl) {
     h('p.muted', { tip: `${R.balance.industry.baseConstructionSlots} + ${R.balance.industry.slotsPerTrillionGdp} per trillion of GDP, max ${R.balance.industry.maxConstructionSlots}. Projects beyond that wait in the queue.` },
       mine ? 'Select one of your provinces on the map to build there.' : 'Projects of this country.'),
     queue.length ? queue.map((p, n) => h('div.army-card', { on: { click: () => cl.focusProvince(p.prov) } },
-      h('div.row.spread', h('b', p.kind === 'infra' ? 'Infrastructure' : X.buildings[p.b].name), h('span.muted', map.name[p.prov])),
+      h('div.row.spread', h('b', icon(p.kind === 'infra' ? 'infrastructure' : X.buildings[p.b].id), ' ', p.kind === 'infra' ? 'Infrastructure' : X.buildings[p.b].name), h('span.muted', map.name[p.prov])),
       h('div.row', { style: { gap: '0.4em' } }, h('div', { style: { flex: 1 } }, bar(1 - p.left / p.days, n < slots ? '' : 'var(--line)')),
         h('span.muted', n < slots ? `${p.left}d left` : 'queued'),
         mine && h('button', { tip: `Cancel: refunds ${pct(R.balance.industry.cancelRefund)} of ${money(p.paid)}`, on: { click: (ev) => { ev.stopPropagation(); cancelProject(s, R, p.id); refresh(cl); } } }, '×')))) : h('p.muted', 'Nothing under construction.'),
@@ -184,13 +185,13 @@ export function provinceEconomy(cl, p) {
     out.push(h('h4', 'Buildings'), h('table.t.small', built.map((b) => {
       const f = efficiencyBreakdown(s, map, R, p, b.i);
       const tip = `Efficiency ${pct(f.total)} = workforce ${pct(f.labour)} × infrastructure ${pct(f.infra)} × ${b.fertility ? `farmland ${f.fert.toFixed(2)} × (0.4 + 0.6 × development ${f.dev.toFixed(2)})` : b.dep >= 0 ? `extraction (0.5 + 0.5 × development ${f.dev.toFixed(2)})` : `development ${pct(f.dev)}`}${f.occupied ? ' × 0 (occupied)' : ''}\nNational input shortages reduce this further.`;
-      return h('tr', { tip }, h('td', b.name), h('td.n', 'lvl ' + s.econ.bld[p * X.B + b.i]), h('td.n', { className: f.total < 0.5 ? 'warn' : '' }, pct(f.total)));
+      return h('tr', { tip }, h('td', icon(b.id), ' ', b.name), h('td.n', 'lvl ' + s.econ.bld[p * X.B + b.i]), h('td.n', { className: f.total < 0.5 ? 'warn' : '' }, pct(f.total)));
     })));
   }
   const queued = s.construction.filter((q) => q.prov === p);
   if (queued.length) out.push(h('div.muted', 'Under construction: ' + queued.map((q) => (q.kind === 'infra' ? 'infrastructure' : X.buildings[q.b].name) + ` (${q.left}d)`).join(', ')));
   if (mine) {
-    const opts = [{ kind: 'infra', b: -1, name: 'Infrastructure' }, ...X.buildings.map((b) => ({ kind: 'building', b: b.i, name: b.name }))];
+    const opts = [{ kind: 'infra', b: -1, name: 'Infrastructure', id: 'infrastructure' }, ...X.buildings.map((b) => ({ kind: 'building', b: b.i, name: b.name, id: b.id }))];
     const items = opts.map((o) => {
       const why = canBuild(s, map, R, me, p, o.kind, o.b);
       const cost = projectCost(s, map, R, me, p, o.kind, o.b);
@@ -198,7 +199,7 @@ export function provinceEconomy(cl, p) {
       if (why && !/^Costs/.test(why) && !/queue is full/.test(why)) return null;
       const goods = cost.goods.map(([g, a]) => `${num(a)} ${X.goods[g].name.toLowerCase()}`).join(', ');
       const tip = `${o.name}: ${money(cost.money)}${goods ? ` + ${goods} from your stockpile` : ''}${cost.premium > 0 ? ` (missing goods bought for ${money(cost.premium)})` : ''}, ${cost.days} days.${why ? '\n' + why : ''}`;
-      return h('button', { disabled: !!why, tip, on: { click: () => { const err = startProject(s, map, R, me, p, o.kind, o.b); if (err) cl.toast(err, true); refresh(cl); } } }, `+ ${o.name} ${money(cost.total)}`);
+      return h('button', { disabled: !!why, tip, on: { click: () => { const err = startProject(s, map, R, me, p, o.kind, o.b); if (err) cl.toast(err, true); refresh(cl); } } }, icon(o.id), h('span.bname', o.name), h('span.cost', money(cost.total)));
     }).filter(Boolean);
     out.push(h('h4', 'Build here'), items.length ? h('div.build-grid', items) : h('p.muted', 'Nothing can be built here.'));
   }

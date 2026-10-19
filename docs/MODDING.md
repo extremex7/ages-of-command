@@ -198,7 +198,12 @@ them (saves drop fleets in zones that no longer exist).
   `alliance, defensive, nap, access, guarantee, trade, subject`; for directed types `a` is the
   grantor, guarantor or overlord) and `rivals` (`[tag, rivalTag]`). Invalid treaties are skipped.
   `node tools/build_diplomacy.mjs` writes the Modern World's.
-- Flag `pattern`: `h` (horizontal bands), `v` (vertical), `disc`, `cross`.
+- Flag `pattern`: `h` (horizontal bands), `v` (vertical), `disc`, `cross`. This stylised flag is
+  shown when the country has no flag file.
+- Flag files: `data/flags/index.json` maps each tag to an SVG under `data/flags/` (without
+  `.svg`). `default` applies in every scenario; `scenarios.<id>` overrides it per scenario, and
+  `null` keeps the pattern flag. Flags are drawn at 4:3. To give a new country a real flag, add
+  an SVG (viewBox 640×480 works best) and its tag to the scenario's entry.
 - `autoBudget` sets each country's civil spending so its starting army is affordable.
 - Register the file in `data/scenarios/index.json` to show it in the New Game screen.
 - Dates use astronomical years (`-0499-01-01` = 500 BCE).

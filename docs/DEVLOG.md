@@ -377,3 +377,34 @@ Graphics quality (the existing profiles), map resolution (auto, or 50/75/100% of
 pixels) and a frame rate limit (30, 60 or none) are new. Checked with `tests/browser/settings.mjs`,
 and window modes in the Linux app under Xvfb with a window manager. Not checked: the Windows
 window code (Wine has no WebView2).
+
+## 2026-10-19 — Session 8: icons, real flags, resuming after events, Exit
+
+**Icons.** Map modes, tabs, the top bar (play/pause, statistics, Save, Menu), buildings and build
+buttons, and the main menu use icons from Lucide (ISC licence). `tools/build_icons.mjs` copies
+the 45 icons the game uses into `src/ui/icons.js` (13 KB, inline SVG in the text colour, so
+nothing extra loads). Map mode buttons are icon-only with the current mode's name beside them
+and the full name in each tooltip.
+
+**Real flags.** `tools/build_flags.py` builds `data/flags/`: the 4:3 flags of flag-icons (MIT)
+for the 196 present-day countries, matched by ISO 3166 code, and 52 historical flags it draws
+itself (German Empire, Austria-Hungary, Ottoman Empire, the Soviet Union and its republics,
+Manchukuo, the Kingdom of Laos and so on). `data/flags/index.json` says which file each tag uses,
+per scenario, and lists the simplified historical flags under `notes`. The interface shows the
+pattern flag until the image has loaded, so a missing file never leaves a gap; the files are
+1.3 MB in all. Pattern flags stay, on purpose, for the ancient states of 117 (they had no
+national flags; Rome gets an SPQR vexillum, a modern convention), the invented unions of 2085,
+and Jabal Shammar and Asir in 1914 (no reliable source for theirs). Flags are now 4:3 instead
+of 3:2. `tests/browser/flags.mjs` checks that every scenario's flags load.
+
+**Resume after event decisions.** An event that needs a decision still pauses a running game;
+after the last pending decision the game now runs again at its earlier speed (Aayush found
+staying paused frustrating). Choosing a speed yourself while a dialog is open cancels the
+resume, and Settings → "After an event decision" → "Stay paused" brings back the old behaviour.
+Checked in `tests/browser/flags.mjs`; `e2e.mjs` and `m6.mjs` now pause explicitly after closing
+events because their later steps expect a paused game.
+
+**Exit.** The main menu has an Exit button in the desktop and Android apps: Android closes the
+activity, the desktop app closes its window through a new `POST /api/quit` in the launcher (or
+stops itself when the game runs in a browser window). A browser tab cannot close itself, so the
+button is hidden there.

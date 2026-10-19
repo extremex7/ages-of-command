@@ -37,14 +37,16 @@ const basePort = 47110 // fixed, so the game's address (and anything the browser
 // windowControl changes the native window (mode "windowed", "maximized" or "fullscreen";
 // width and height in pixels for windowed mode, 0 to keep the size). It is set while a native
 // window is open and nil otherwise; the page reaches it through POST /api/window.
+// windowClose closes the native window (the main menu's Exit button, through POST /api/quit).
 var (
 	windowMu      sync.Mutex
 	windowControl func(mode string, width, height int)
+	windowClose   func()
 )
 
-func setWindowControl(f func(mode string, width, height int)) {
+func setWindowControl(f func(mode string, width, height int), close func()) {
 	windowMu.Lock()
-	windowControl = f
+	windowControl, windowClose = f, close
 	windowMu.Unlock()
 }
 
@@ -211,6 +213,23 @@ func (s *server) routes(port int) http.Handler {
 		}
 		windowMu.Unlock()
 		writeJSON(w, map[string]string{"app": appID, "version": version, "dataDir": filepath.Dir(s.storeDir), "window": kind})
+	})
+	mux.HandleFunc("/api/quit", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method", http.StatusMethodNotAllowed)
+			return
+		}
+		windowMu.Lock()
+		closeWindow := windowClose
+		windowMu.Unlock()
+		w.WriteHeader(http.StatusNoContent)
+		if closeWindow != nil {
+			closeWindow() // the program ends when the window has closed
+			return
+		}
+		// a browser window cannot be closed from here: stop serving, the page says so
+		log.Printf("exiting: quit from the game")
+		go func() { time.Sleep(300 * time.Millisecond); os.Exit(0) }()
 	})
 	mux.HandleFunc("/api/window", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

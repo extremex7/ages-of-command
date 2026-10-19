@@ -92,6 +92,7 @@ check(apath.sea > 0 && apath.last === amph.p, `army ordered to Hawaii sails (${a
 await page.evaluate(() => { const c = window.__client; c.renderer.fit(); c.requestFrame(); });
 await page.keyboard.press('5'); await page.waitForTimeout(700); await page.keyboard.press(' ');
 while (await page.locator('.dialog .menu-buttons button').count()) { await page.locator('.dialog .menu-buttons button').first().click(); await page.waitForTimeout(100); }
+await page.evaluate(() => window.__client.setSpeed(0)); // the game resumes after event decisions; these steps need it paused
 const atSea = await page.evaluate((o) => { const a = window.__client.state.armies.find((x) => x.id === o.id); return a ? a.sea : null; }, amph);
 check(atSea != null, `army still exists after sailing a while (at sea: ${atSea >= 0})`);
 await page.screenshot({ path: out + 'm6-02b-amphibious.png' });
@@ -141,6 +142,7 @@ check(still === target.pop, 'cancelling the strike changes nothing');
 await page.evaluate(() => { const s = window.__client.state; s.countries[s.player].automate = true; });
 await page.keyboard.press('5'); await page.waitForTimeout(2500); await page.keyboard.press(' ');
 while (await page.locator('.dialog .menu-buttons button').count()) { await page.locator('.dialog .menu-buttons button').first().click(); await page.waitForTimeout(100); }
+await page.evaluate(() => window.__client.setSpeed(0)); // the game resumes after event decisions; these steps need it paused
 await page.keyboard.press('m'); await page.waitForTimeout(200);
 await page.screenshot({ path: out + 'm6-06-war.png' });
 
@@ -153,6 +155,7 @@ for (const [name, tag, shot] of [['Flashpoint', 'CHN', 'm6-07-flashpoint.png'], 
   await page.evaluate(() => { const s = window.__client.state; s.countries[s.player].automate = true; });
   await page.keyboard.press('5'); await page.waitForTimeout(2000); await page.keyboard.press(' ');
   while (await page.locator('.dialog .menu-buttons button').count()) { await page.locator('.dialog .menu-buttons button').first().click(); await page.waitForTimeout(100); }
+  await page.evaluate(() => window.__client.setSpeed(0)); // the game resumes after event decisions; these steps need it paused
   await page.screenshot({ path: out + shot });
 }
 console.log(errors.length ? 'ERRORS:\n' + errors.join('\n') : 'no errors');

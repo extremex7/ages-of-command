@@ -37,6 +37,7 @@ const wait = (ms) => page.waitForTimeout(ms);
 
 await page.goto(base);
 await page.waitForSelector('text=New Game', { timeout: 20000 });
+await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
 await page.screenshot({ path: out + 'mobile-01-menu.png' });
 await page.tap('text=New Game');
 await page.tap('text=Choose country');

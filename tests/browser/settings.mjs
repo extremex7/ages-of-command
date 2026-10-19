@@ -22,6 +22,7 @@ const scale = () => page.evaluate(() => getComputedStyle(document.documentElemen
 
 await page.goto(base);
 await page.waitForSelector('text=New Game', { timeout: 20000 });
+await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
 check(await scale() === '1', `auto interface scale at 1366×768 is 1 (${await scale()})`);
 await page.setViewportSize({ width: 2560, height: 1440 });
 await page.waitForTimeout(100);
@@ -37,6 +38,7 @@ await field('Map resolution').selectOption('0.5');
 await field('Frame rate limit').selectOption('30');
 await page.reload();
 await page.waitForSelector('text=New Game');
+await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
 const saved = await page.evaluate(() => { const s = window.__aoc3.settings; return [s.uiScale, s.profile, s.resolution, s.fpsCap].join(','); });
 check(saved === '1.3,low,0.5,30', `settings kept after a reload (${saved})`);
 
@@ -55,7 +57,7 @@ await page.waitForTimeout(1000);
 const f1 = await page.evaluate(() => window.__client.perf.frames);
 check(f1 - f0 <= 33, `frame rate limit 30 holds (${f1 - f0} frames in a second)`);
 await page.evaluate(() => window.__client.setSpeed(0));
-await page.click('text=Menu');
+await page.click('.topbar button[aria-label="Menu"]');
 await page.click('.dialog button:has-text("Settings")');
 await page.screenshot({ path: out + 'settings-02-ingame.png' });
 await field('Map resolution').selectOption('1');

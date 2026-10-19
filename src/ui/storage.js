@@ -61,7 +61,7 @@ export function isDesktop() { return !!disk; }
 export function loadSettings() {
   const def = { profile: 'balanced', uiScale: 'auto', resolution: 'auto', fpsCap: 0, windowMode: 'windowed', windowSize: null,
     autosaveMonths: 6, autosaveKeep: 3, tooltips: true, resumeAfterEvents: true,
-    musicVolume: 0.5, sfxVolume: 0.6 };
+    musicVolume: 0.5, sfxVolume: 0.6, cheats: false, tutorial: 'ask' };
   try { return { ...def, ...JSON.parse(get('settings') || '{}') }; } catch { return def; }
 }
 export function saveSettings(s) { set('settings', JSON.stringify(s)); }

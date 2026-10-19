@@ -130,6 +130,12 @@ export function settingsForm(s, onApply = () => {}) {
   field('Sound effects', select(s.sfxVolume ?? 0.6, volumes, (v) => { change('sfxVolume', +v); setVolumes(s); sfx('notify'); }),
     'Clicks, construction, research, events, battles, war and peace.');
 
+  rows.push(h('h4', 'Gameplay'));
+  field('Tutorial', select(s.tutorial ?? 'ask', [['ask', 'Ask when starting a game'], ['on', 'Always show when starting a game'], ['off', 'Off']],
+    (v) => change('tutorial', v)), 'The tutorial can also be opened at any time from Menu → Tutorial.');
+  field('Enable cheats', select(s.cheats ? '1' : '0', [['0', 'Off'], ['1', 'On']], (v) => change('cheats', v === '1')),
+    'Cheats work only in games started while this is on. Open the cheat console with the ` key or the console button in the top bar.');
+
   rows.push(h('h4', 'Interface'));
   field('After an event decision', select(s.resumeAfterEvents === false ? '0' : '1', [['1', 'Resume the game'], ['0', 'Stay paused']],
     (v) => change('resumeAfterEvents', v === '1')), 'Events that need a decision always pause the game.');

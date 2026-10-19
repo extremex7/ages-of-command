@@ -182,6 +182,10 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Technology tree with lines, icons, pan and zoom | ✅ Era columns and field rows, a line from each prerequisite, an icon for each of the 132 technologies; drag, wheel, pinch and buttons to move and zoom; select a technology to see its prerequisite chain and research or queue it (src/ui/techtree.js) |
 | Music that follows the country | ✅ Generated live with the Web Audio API in six moods (main menu, peace, prosperity, unrest, war, crisis), chosen from wars, stability and finances. Synthesised, not recorded music |
 | Sound effects | ✅ Synthesised: clicks, tabs, construction, research, events, offers, war, peace, battles, nuclear strikes. Music and effects volumes in Settings |
+| Hide and show the side panel | ✅ Button on the panel's edge, or Tab |
+| World leaderboard with prestige stars | ✅ Prestige 0–100 from economy, military, technology, population, prosperity, stability and territory (src/core/prestige.js); gold stars for ranks 1–10, silver 11–25, bronze 26–50; rank change over about five years and "rising star" (a climb of at least 5 places and 30% of the old rank); rank history saved with the game |
+| Tutorial | ✅ 28 steps over every part of the screen and how the economy, buildings, government, research, military and diplomacy work, with a strategy guide. Offered on new games (ask, always or off in Settings), "Don't ask again", skip at any time, Menu → Tutorial |
+| Cheats | ✅ Settings → Enable cheats; console with ` or a top-bar button; only in games started while cheats were on (stored in the save). Commands: money, manpower, influence, stability, research, tech, build, annex, war, peace, play |
 | Exit button on the main menu | ✅ Desktop and Android apps (a browser tab cannot close itself, so it is hidden there) |
 | iOS app | ⬜ Postponed; needs a Mac to build |
 | Audio, onboarding tutorial, accessibility pass | ⬜ |

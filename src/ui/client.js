@@ -19,6 +19,9 @@ import { computeLedgers } from '../core/economy.js';
 import { isAtWar } from '../core/relations.js';
 import { flagCanvas, setFlagScenario } from './flags.js';
 import { sfx, setMood, moodFor } from './audio.js';
+import { toggleConsole } from './cheats.js';
+import { leaderboardDialog, starBadge } from './leaderboard.js';
+import { startTutorial, offerTutorial } from './tutorial.js';
 import { money, signedMoney, people, pct } from './format.js';
 import { writeSave, rotateAutosaves } from './storage.js';
 import { renderPanel, renderProvince, TABS } from './panels.js';
@@ -58,6 +61,7 @@ export class Client {
     this.renderer.fit();
     if (game.state.player >= 0) this.focusCountry(game.state.player, false);
     this.bind();
+    this.toggleSidebar(true);
     this.lastMapVersion = game.state.mapVersion || 0;
     this.lastRel = game.state.relVersion || 0;
     this.lastMonth = civilFromDays(game.state.day).m;
@@ -85,6 +89,7 @@ export class Client {
     this.tabsEl = h('div.tabs');
     this.panelEl = h('div.panel');
     this.sidebar = h('div.sidebar', this.tabsEl, this.panelEl);
+    this.sideToggle = h('button.side-toggle', { on: { click: () => this.toggleSidebar() } });
     this.provEl = h('div.prov-panel.hidden');
     this.modesEl = h('div.modes');
     this.legendEl = h('div.legend', { style: { display: 'none' } });
@@ -92,7 +97,7 @@ export class Client {
     this.hoverEl = h('div.hover-info', { style: { display: 'none' } });
     this.bannerEl = h('div.pick-banner', { style: { display: 'none' } });
     this.tooltip = h('div.tooltip', { style: { display: 'none' } });
-    this.el = h('div.game', this.canvas, this.topbar, this.sidebar, this.modesEl, this.legendEl, this.provEl, this.hoverEl, this.bannerEl, this.toastsEl, this.tooltip);
+    this.el = h('div.game', this.canvas, this.topbar, this.sidebar, this.sideToggle, this.modesEl, this.legendEl, this.provEl, this.hoverEl, this.bannerEl, this.toastsEl, this.tooltip);
     mount(this.root, this.el);
     this.renderModes();
     // The interface is rebuilt several times a second while time runs. A rebuild between pointer
@@ -264,6 +269,8 @@ export class Client {
       const d = 80;
       this.renderer.pan(e.key === 'ArrowLeft' ? d : e.key === 'ArrowRight' ? -d : 0, e.key === 'ArrowUp' ? d : e.key === 'ArrowDown' ? -d : 0);
     } else if (e.ctrlKey && k === 's') { e.preventDefault(); this.quickSave(); }
+    else if ((e.key === '`' || e.code === 'Backquote') && this.data.settings.cheats) { e.preventDefault(); toggleConsole(this); }
+    else if (e.key === 'Tab') { e.preventDefault(); this.toggleSidebar(); }
     else if (k === 'h') { this.renderer.fit(); }
     else if (k === 'c' && this.state.player >= 0) this.focusCountry(this.state.player);
     else {
@@ -388,7 +395,16 @@ export class Client {
     this.selectProvince(p);
   }
 
-  setTab(id) { this.tab = id; this.uiDirty = true; this.requestFrame(); }
+  setTab(id) { this.tab = id; if (this.sidebar.classList.contains('hidden')) this.toggleSidebar(); this.uiDirty = true; this.requestFrame(); }
+
+  // hides or shows the side panel (tabs and their contents) to see more of the map
+  toggleSidebar(show = this.sidebar.classList.contains('hidden')) {
+    this.sidebar.classList.toggle('hidden', !show);
+    mount(this.sideToggle, icon(show ? 'collapse' : 'expand'));
+    this.sideToggle.dataset.tip = (show ? 'Hide the side panel to see more of the map' : 'Show the side panel') + ' (Tab)';
+    this.sideToggle.setAttribute('aria-label', show ? 'Hide the side panel' : 'Show the side panel');
+    this.requestFrame();
+  }
 
   // ------------------------------------------------------------------ simulation control
   setSpeed(n) {
@@ -418,7 +434,7 @@ export class Client {
   }
 
   startPlaying(countryIdx) {
-    const s = this.state;
+    const s = this.state, newGame = this.mode === 'pick';
     s.player = countryIdx;
     this.mode = 'play';
     this.bannerEl.style.display = 'none';
@@ -430,6 +446,8 @@ export class Client {
     computeLedgers(s, this.game.map, this.game.rules);
     this.uiDirty = true;
     this.toast(countryIdx >= 0 ? `You lead ${s.countries[countryIdx].name}. Press Space to start time.` : 'Observer mode: the AI runs every country. Press Space to start time.');
+    // a new game: offer the tutorial once the screen has been drawn
+    if (newGame && countryIdx >= 0) setTimeout(() => offerTutorial(this), 300);
   }
 
   // a setting changed in the settings dialog
@@ -602,6 +620,7 @@ export class Client {
     mount(this.topbar,
       me ? h('div.nation', { on: { click: () => { this.setTab('country'); this.focusCountry(me.idx); } }, tip: 'Your country. Click to centre on the capital (key C).' }, flagCanvas(me), me.name)
         : h('div.nation', h('span.muted', this.mode === 'pick' ? 'Choose a country' : 'Observer')),
+      me && s.prestige?.rank?.[me.idx] && h('button.rank-btn', { tip: 'Your world rank by prestige. Click for the leaderboard.', on: { click: () => leaderboardDialog(this) } }, starBadge(s.prestige.rank[me.idx], true)),
       h('div.row', h('button.play', { tip: 'Pause / resume (Space)', 'aria-label': this.speed ? 'Pause' : 'Play', on: { click: () => this.togglePause() }, disabled: this.mode !== 'play' }, icon(this.speed ? 'pause' : 'play')),
         h('div.date', formatDate(s.day), this.speed ? '' : h('div.paused-flag', 'PAUSED')), h('div.speed', speedBtns)),
       me && h('div.stat', { tip: 'Treasury. Negative means debt, which costs interest and lowers stability.' }, h('b', { className: me.treasury < 0 ? 'bad' : '' }, icon('treasury'), money(me.treasury)), h('span', 'Treasury')),
@@ -612,12 +631,14 @@ export class Client {
       me && h('div.stat', { tip: this.influenceTip(me), on: { click: () => this.setTab('diplomacy') } }, h('b', icon('influence'), Math.floor(me.influence ?? 0)), h('span', 'Influence')),
       me && me.research && h('div.stat', { tip: this.researchTip(me), on: { click: () => this.setTab('research') } },
         h('b', { className: me.research.current ? '' : 'warn' }, icon('research_points'), '+' + researchPoints(s, this.game.rules, me).toFixed(1)), h('span', 'Research')),
-      me && me.tfx && h('div.stat.opt', { tip: `Era: ${me.tfx.known} technologies known${me.research?.current ? `, researching ${this.game.rules.tech.list[this.game.rules.tech.idx[me.research.current]].name}` : ', no research project'}. Click for the Research tab.`, on: { click: () => this.setTab('research') } }, h('b', icon('era'), eraOf(this.game.rules, me).name), h('span', 'Era')),
+      me && me.tfx && h('div.stat.opt.wide-only', { tip: `Era: ${me.tfx.known} technologies known${me.research?.current ? `, researching ${this.game.rules.tech.list[this.game.rules.tech.idx[me.research.current]].name}` : ', no research project'}. Click for the Research tab.`, on: { click: () => this.setTab('research') } }, h('b', icon('era'), eraOf(this.game.rules, me).name), h('span', 'Era')),
       h('div.stat' + (wars ? '.bad' : ''), { tip: me ? 'Wars you are part of' : 'Wars in the world' }, h('b', icon('wars'), wars), h('span', 'Wars')),
       h('div.spacer'),
       this.searchBox(),
-      h('button', { tip: 'Save the game (Ctrl+S quick-saves)', on: { click: () => saveDialog(this) }, disabled: this.mode !== 'play' }, icon('save'), h('span.lbl', 'Save')),
-      h('button', { on: { click: () => menuDialog(this) } }, icon('menu'), h('span.lbl', 'Menu')));
+      h('button.icon-btn', { tip: 'World leaderboard: every country ranked by prestige', 'aria-label': 'Leaderboard', on: { click: () => leaderboardDialog(this) } }, icon('leaderboard')),
+      this.data.settings.cheats && h('button.icon-btn', { tip: 'Cheat console (`)', 'aria-label': 'Cheat console', on: { click: () => toggleConsole(this) } }, icon('console')),
+      h('button', { tip: 'Save the game (Ctrl+S quick-saves)', 'aria-label': 'Save', on: { click: () => saveDialog(this) }, disabled: this.mode !== 'play' }, icon('save'), h('span.lbl', 'Save')),
+      h('button', { tip: 'Menu: settings, controls, tutorial, save and exit', 'aria-label': 'Menu', on: { click: () => menuDialog(this) } }, icon('menu'), h('span.lbl', 'Menu')));
   }
 
   influenceTip(c) {
@@ -698,6 +719,8 @@ export class Client {
   openPeace(war) { peaceDialog(this, war); }
   openSeparatePeace(war) { separatePeaceDialog(this, war); }
   openEvent(p) { sfx('event'); eventDialog(this, p); }
+
+  startTutorial(from = 0) { return startTutorial(this, from); }
 
   // background music follows the player's country (the AI-run world in observer mode)
   updateMood() {

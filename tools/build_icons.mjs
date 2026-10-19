@@ -23,6 +23,8 @@ export const ICONS = {
   army: 'shield', fleet: 'ship', wing: 'plane', events: 'bell', close: 'x',
   influence: 'megaphone', research_points: 'flask-conical', tech_tree: 'network', zoom_in: 'zoom-in', zoom_out: 'zoom-out', fit: 'maximize',
   music: 'music', sound: 'volume-2', mute: 'volume-x',
+  collapse: 'panel-left-close', expand: 'panel-left-open', leaderboard: 'trophy', star: 'star', rising: 'rocket', console: 'terminal',
+  help: 'circle-help', tip: 'lightbulb', next: 'chevron-right', prev: 'chevron-left', up: 'arrow-up', down: 'arrow-down', same: 'minus',
 };
 
 // technologies (tech_<id>); a technology missing here uses its field's icon (field_<field>)

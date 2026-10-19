@@ -29,6 +29,7 @@ export function menuDialog(cl) {
       h('button', { disabled: cl.mode !== 'play', on: { click: () => saveDialog(cl) } }, 'Save game'),
       h('button', { on: { click: () => settingsDialog(cl) } }, 'Settings'),
       h('button', { on: { click: () => helpDialog(cl) } }, 'Controls'),
+      h('button', { disabled: cl.mode !== 'play', on: { click: () => { w.remove(); cl.startTutorial(); } } }, 'Tutorial'),
       h('button.danger', { on: { click: () => { w.remove(); cl.opts.onExit(); } } }, 'Exit to main menu')));
 }
 
@@ -63,7 +64,7 @@ export function settingsDialog(cl) {
 
 function helpDialog(cl) {
   const rows = [['Left click', 'Select province / army (Shift adds armies)'], ['Right click', 'Move selected armies'], ['Drag / arrows', 'Pan map'], ['Wheel / + −', 'Zoom'],
-    ['Space', 'Pause / resume'], ['1–5', 'Game speed'], ['P T O V G X K F R Y J Q', 'Map modes'], ['N B E U A M D L I', 'Sidebar tabs'], ['C / H', 'Centre on capital / whole world'], ['Ctrl+S', 'Quick save'], ['F11', 'Full screen on / off'], ['Esc', 'Clear selection / close dialog'],
+    ['Space', 'Pause / resume'], ['1–5', 'Game speed'], ['P T O V G X K F R Y J Q', 'Map modes'], ['N B E U A M D L I', 'Sidebar tabs'], ['C / H', 'Centre on capital / whole world'], ['Tab', 'Hide / show the side panel'], ['`', 'Cheat console (when cheats are enabled)'], ['Ctrl+S', 'Quick save'], ['F11', 'Full screen on / off'], ['Esc', 'Clear selection / close dialog'],
     ['Touch', 'Drag to pan, pinch to zoom, tap to select, press and hold to order']];
   open(cl, h('h2', 'Controls'), h('table.t', rows.map(([k, v]) => h('tr', h('td', h('b', k)), h('td', v)))));
 }

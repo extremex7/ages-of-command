@@ -23,6 +23,7 @@ const scenarios = ['Modern World', 'Height of Rome', 'The Great War', 'The Gathe
 for (const name of scenarios) {
   await page.goto(base);
   await page.waitForSelector('text=New Game', { timeout: 20000 });
+  await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
   await page.click('text=New Game');
   await page.locator('.list .item', { hasText: name }).first().click();
   await page.click('text=Choose country');
@@ -51,6 +52,7 @@ for (const name of scenarios) {
 // Event decisions: pause, then resume at the speed the game was running at.
 await page.goto(base);
 await page.waitForSelector('text=New Game', { timeout: 20000 });
+await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
 await page.click('text=New Game');
 await page.click('text=Choose country');
 await page.waitForSelector('.pick-banner');

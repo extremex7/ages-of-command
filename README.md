@@ -75,18 +75,19 @@ programmes, cyber operations, satellites and space.
 | `N B E U A M Z D L I` | Tabs: nation, government, economy, industry, research, military, strategic, diplomacy, events, AI/performance |
 | `C` · `H` | Centre on your capital · show whole world |
 | `Ctrl+S` | Quick save · `Esc` clears selection / closes dialogs · `F11` full screen |
+| `Tab` · `` ` `` | Hide or show the side panel · cheat console (only when cheats are enabled) |
 | Touch | Drag to pan, pinch to zoom, tap to select, press and hold to order |
 
 **Settings** (main menu, or Menu → Settings in a game) apply at once: window mode (windowed,
 maximised, full screen) and window size in the desktop app, interface scale (Auto fits the
 window), graphics quality, map resolution, a frame rate limit, whether the game resumes after an
-event decision (it does by default), music and sound effect volumes, tooltips and autosaves. **Exit** on the main menu closes
+event decision (it does by default), music and sound effect volumes, the tutorial (ask, always or off), cheats, tooltips and autosaves. **Exit** on the main menu closes
 the desktop and Android apps.
 
 ## Test
 
 ```bash
-npm test                            # 118 unit/integration tests of the simulation (node:test)
+npm test                            # 120 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -98,6 +99,7 @@ node tests/browser/clicks.mjs       # tab and build presses while time runs
 node tests/browser/settings.mjs     # display settings
 node tests/browser/flags.mjs        # every scenario's flags load; the game resumes after an event decision
 node tests/browser/techtree.mjs     # top-bar points, technology tree (pan, zoom, pinch, queue), music moods and sound settings
+node tests/browser/session10.mjs    # side panel toggle, leaderboard, tutorial, cheats
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```

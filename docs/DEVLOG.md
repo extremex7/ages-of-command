@@ -440,3 +440,41 @@ simple, and recorded tracks would sound better.
 Checked with `tests/browser/techtree.mjs` (top bar, tree lines and icons, drag, wheel, synthetic
 two-finger pinch, select and queue, every mood renders, mood follows war and stability, Sound
 settings).
+
+## 2026-10-19 — Session 10: side panel toggle, leaderboard, tutorial, cheats
+
+**Side panel.** A button on the panel's edge (or Tab) hides the tabs and their contents to show
+more of the map; opening any tab brings the panel back.
+
+**Leaderboard** (`src/core/prestige.js`, `src/ui/leaderboard.js`). Every country gets a prestige
+score (0–100): economy 30%, military power 20%, technology 15%, population, prosperity (GDP per
+person) and stability 10% each, territory 5%, each as a share of the world's best (square roots
+for the size-driven parts). It is recomputed monthly; the ranking is saved each January for the
+last 10 years. Stars: gold for ranks 1–10, silver 11–25, bronze 26–50. The leaderboard shows the
+change in rank since about five years ago (or the oldest January kept, at least a year old) and
+marks a **rising star** after a climb of at least 5 places and 30% of the old rank (100th → 70th
+or better, 12th → 7th). Filters: all, star countries, rising stars, around you. Your star and rank
+sit beside your name in the top bar, and you are told when you earn or lose a star. Modern World
+at the start: USA, China, India, Russia, Japan, Germany, UK, France, Canada, Australia hold gold.
+Saves from before this session start their rank history when loaded. The top bar was tightened
+to fit (Save and Menu show icons only below 1600 px; Era hides below 1440 px).
+
+**Tutorial** (`src/ui/tutorial.js`). 28 steps in 9 chapters, each pointing at the part of the
+screen it explains (the rest is dimmed): goal and prestige, every top-bar figure, the map, map
+modes and the side panel, a province, each tab, how the economy works, a table of all 15
+buildings (production and inputs read from the rules) with what each is for, infrastructure,
+research and the tree, armies, navies and air, strategic weapons, diplomacy, events, and a
+"how to make your country the best" guide. A new game asks first (Start / Not now / Don't ask
+again); Settings → Gameplay → Tutorial: ask, always or off; Menu → Tutorial any time; Skip at any
+step; a chapter list jumps around.
+
+**Cheats** (`src/ui/cheats.js`). Settings → Gameplay → Enable cheats. A game records whether
+cheats were on when it started (`state.settings.cheats`, saved with it); only such games accept
+cheats, so turning them on never affects a game already in progress. The console opens with
+the `` ` `` key or the top-bar console button and has history (↑/↓). Commands: money, manpower,
+influence, stability, research (finish the project), tech (a name, "era" or "all"), build (finish
+construction), annex, war, peace, play (switch country), help, clear. A game in which a cheat was
+used is marked (`state.cheated`) and the leaderboard says so.
+
+Checked with `tests/browser/session10.mjs` and 2 new unit tests (prestige ranks, history across
+saving, rising stars); older browser tests now turn the tutorial offer off.

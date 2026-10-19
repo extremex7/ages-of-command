@@ -17,6 +17,7 @@ import { processFleets, detectNavalBattles, resolveNavalBattles, navalTrade } fr
 import { processWings, strategicBombing } from './air.js';
 import { dailySupply, monthlyDepots } from './supply.js';
 import { dailyStrategic, monthlyStrategic } from './strategic.js';
+import { monthlyPrestige } from './prestige.js';
 
 export function tick(game) {
   const { state, map, rules } = game;
@@ -56,6 +57,7 @@ export function tick(game) {
     aiPeace(state, map, rules, warScores);
     aiEconomy(state, map, rules);
     refreshCountryCache(state, map, rules);
+    monthlyPrestige(state, civilFromDays(state.day).m);
   }
   const t3 = typeof performance !== 'undefined' ? performance.now() : 0;
   state.stats.ticks++;

@@ -11,6 +11,7 @@ import { initDiplomacy } from './diplomacy.js';
 import { compileTech, initTechnology } from './technology.js';
 import { declareWar, joinWar } from './war.js';
 import { initStrategic } from './strategic.js';
+import { computePrestige } from './prestige.js';
 
 // governments: data/rules/governments.json; events: list of data/events/*.json files;
 // technologies: data/rules/technologies.json
@@ -39,6 +40,7 @@ export function newGame({ map, scenario, rules, playerTag = null, seed, settings
   for (const c of state.countries) c.manpower = Math.min(c.manpower, c.cache.maxManpower);
   if (scenario.autoBudget) autoBalanceBudgets(state, map, rules);
   else computeLedgers(state, map, rules);
+  computePrestige(state);
   return { state, map, rules, scenario };
 }
 
@@ -62,6 +64,8 @@ export function loadGame(text, { map, rules, scenario }) {
   const state = deserialize(text, map, rules, scenario);
   // ledgers are part of the save (the AI reads them); only rebuild if missing
   if (state.countries.some((c) => c.alive && !c.ledger)) computeLedgers(state, map, rules);
+  // saves from before the leaderboard: start its history now
+  if (!state.prestige) computePrestige(state);
   return { state, map, rules, scenario };
 }
 

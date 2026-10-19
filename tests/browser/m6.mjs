@@ -21,6 +21,7 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + 
 async function start(scenario, tag) {
   await page.goto(base);
   await page.waitForSelector('text=New Game', { timeout: 20000 });
+  await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
   await page.click('text=New Game');
   if (scenario) await page.click(`.list .item:has-text("${scenario}")`);
   await page.waitForTimeout(150);

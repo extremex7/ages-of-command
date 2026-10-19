@@ -18,6 +18,7 @@ for (const profile of ['low', 'balanced', 'high']) {
   const t0 = Date.now();
   await page.goto(base);
   await page.waitForSelector('text=New Game');
+  await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
   const boot = Date.now() - t0;
   const menuHeap = await page.evaluate(() => performance.memory.usedJSHeapSize / 1048576);
   await page.click('text=New Game');

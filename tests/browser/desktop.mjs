@@ -18,6 +18,7 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + 
 
 await page.goto(base);
 await page.waitForSelector('text=New Game', { timeout: 20000 });
+await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
 const info = await page.evaluate(() => fetch('/api/info').then((r) => r.json()));
 check(info.app === 'ages-of-command', `launcher answers /api/info (version ${info.version})`);
 await page.click('text=New Game');
@@ -36,6 +37,7 @@ if (dataDir) {
 }
 await page.goto(base);
 await page.waitForSelector('text=New Game', { timeout: 20000 });
+await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
 await page.click('text=Load Game');
 await page.waitForTimeout(300);
 const listed = await page.evaluate(() => document.body.textContent.includes('quicksave'));

@@ -118,7 +118,7 @@ function newGameScreen() {
         const sc = await getScenario(sel);
         const game = newGame({ map: data.map, scenario: sc, rules: data.rules, playerTag: null,
           seed: opts.seed || String(Math.floor(Math.random() * 1e9)),
-          settings: { difficulty: opts.difficulty, aiAggression: opts.aiAggression, historicalEvents: opts.historicalEvents, eventRate: opts.eventRate, autosaveMonths: data.settings.autosaveMonths, autosaveKeep: data.settings.autosaveKeep } });
+          settings: { difficulty: opts.difficulty, aiAggression: opts.aiAggression, historicalEvents: opts.historicalEvents, eventRate: opts.eventRate, autosaveMonths: data.settings.autosaveMonths, autosaveKeep: data.settings.autosaveKeep, cheats: !!data.settings.cheats } });
         startClient(game, 'pick');
       } } }, 'Choose country →')))));
 }

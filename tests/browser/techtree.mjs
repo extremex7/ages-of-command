@@ -14,6 +14,7 @@ const check = (ok, what) => { console.log(ok ? 'ok  ' : 'FAIL', what); if (!ok) 
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 await page.goto(base);
 await page.waitForSelector('text=New Game', { timeout: 20000 });
+await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
 await page.click('text=New Game');
 await page.click('text=Choose country');
 await page.waitForSelector('.pick-banner');

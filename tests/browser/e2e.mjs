@@ -18,6 +18,7 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + 
 const t0 = Date.now();
 await page.goto(base);
 await page.waitForSelector('text=New Game', { timeout: 20000 });
+await page.evaluate(() => { window.__aoc3.settings.tutorial = 'off'; }); // no tutorial offer in tests
 const bootMs = Date.now() - t0;
 await page.screenshot({ path: out + '01-menu.png' });
 await page.click('text=New Game');
@@ -158,7 +159,7 @@ await page.keyboard.press('Control+s');
 await page.waitForTimeout(200);
 const saved = await page.evaluate(() => localStorage.getItem('aoc3.save.quicksave')?.length || 0);
 console.log('quicksave bytes', saved);
-await page.click('text=Menu');
+await page.click('.topbar button[aria-label="Menu"]');
 await page.click('text=Exit to main menu');
 await page.click('text=Load Game');
 await page.click('.list .item >> text=Load');
@@ -167,7 +168,7 @@ const loaded = await page.evaluate(() => ({ day: window.__client.state.day, play
 console.log('loaded', loaded, 'matches saved day', loaded.day === after.day);
 await page.screenshot({ path: out + '06-loaded.png' });
 // a historical scenario: 1914, play as Germany, check era units and run a month
-await page.click('text=Menu');
+await page.click('.topbar button[aria-label="Menu"]');
 await page.click('text=Exit to main menu');
 await page.click('text=New Game');
 await page.click('.list .item:has-text("Great War")');

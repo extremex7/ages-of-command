@@ -24,6 +24,10 @@ import { monthlyCommanders } from './commanders.js';
 import { dailyPlans } from './plans.js';
 import { monthlyEspionage } from './espionage.js';
 import { monthlyCouncil } from './council.js';
+import { dailyCapitulation } from './capitulation.js';
+import { dailyColonies, aiColonies } from './colonies.js';
+import { monthlyExperience } from './experience.js';
+import { monthlyVictory } from './victory.js';
 
 export function tick(game) {
   const { state, map, rules } = game;
@@ -41,9 +45,11 @@ export function tick(game) {
   resolveBattles(state, map, rules);
   resolveNavalBattles(state, map, rules);
   processSieges(state, map, rules);
+  dailyCapitulation(state, map, rules);
   dailyRecovery(state, rules);
   dailyStrategic(state, map, rules);
   processConstruction(state, map, rules);
+  dailyColonies(state, map, rules);
   dailyEvents(state, map, rules);
   const t1 = typeof performance !== 'undefined' ? performance.now() : 0;
   aiTick(state, map, rules);
@@ -58,6 +64,7 @@ export function tick(game) {
     monthlyDepots(state, map, rules);
     if (state.tech) monthlyResearch(state, map, rules);
     monthlyMilitary(state, map, rules);
+    monthlyExperience(state, rules);
     monthlyCommanders(state, map, rules);
     const warScores = currentWarScores(state, map, rules);
     monthlyGovernment(state, map, rules, warScores);
@@ -67,9 +74,11 @@ export function tick(game) {
     monthlyCouncil(state, map, rules);
     aiPeace(state, map, rules, warScores);
     aiEconomy(state, map, rules);
+    aiColonies(state, map, rules);
     refreshCountryCache(state, map, rules);
     monthlyPrestige(state, civilFromDays(state.day).m);
     monthlyRecord(state, rules, civilFromDays(state.day).m);
+    monthlyVictory(state, map, rules);
   }
   const t3 = typeof performance !== 'undefined' ? performance.now() : 0;
   state.stats.ticks++;

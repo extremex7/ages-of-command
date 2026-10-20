@@ -421,5 +421,23 @@
     "sanctionYears": 5, "sanctionOpinion": 10, "ceasefireDays": 365, "dmzYears": 10,
     "sanctionGoods": { "arms": ["munitions", "machinery", "electronics"], "energy": ["coal", "oil", "gas", "fuel", "uranium"] },
     "ai": { "everyDays": 90, "chance": 0.5, "ceasefireAfterDays": 540, "pariahReputation": -60 }
+  },
+  "experience": {
+    "_doc": "Army and fleet experience 0..cap: gained per battle (win or loss) plus perDay per day fought (up to maxDays); damage x (1 + exp x bonus). Diluted by recruits, reinforcements, repairs and merges. levels: [minimum, name] for the army card. expertise: the country's military expertise 0..cap (damage x (1 + expertise)), from battles and won wars (warWon + warWonPerYear per year of war, up to 4 years), fading by peaceDecay a month in peace. See docs/MILITARY.md.",
+    "cap": 1, "bonus": 0.25, "win": 0.06, "loss": 0.025, "perDay": 0.004, "maxDays": 20,
+    "levels": [[0.8, "Elite"], [0.55, "Veteran"], [0.3, "Regular"], [0.1, "Trained"], [0, "Green"]],
+    "expertise": { "cap": 0.1, "battleWon": 0.0015, "battleLost": 0.0005, "warWon": 0.025, "warWonPerYear": 0.01, "warLost": 0.005, "peaceDecay": 0.03 }
+  },
+  "capitulation": {
+    "_doc": "A country whose own provinces are held by its enemies at the share `occupied` or more, with its capital, capitulates once its war is minDays old (New Game can change the share or turn it off). Terms: a war-score budget of at least minScore, at most maxLandShare of each loser's land by value. See docs/MILITARY.md.",
+    "occupied": 0.6, "minDays": 30, "minScore": 60, "maxLandShare": 0.5
+  },
+  "colonisation": {
+    "_doc": "Colonist projects on unowned land. cost (B) x province size x price level (x seaCost by sea); days (x seaDays by sea, +5% per sea zone); settlers leave a province with at least sourcePop x settlers people; chance = chance + landBonus (by land) + terrain - hopPenalty per sea zone, 0.2..0.95. At most maxActive + perEra x era at a time. seaReach: [technology, sea zones] the reach of a country's ports. The AI looks every aiEveryMonths months and keeps aiReserveMonths of revenue. See docs/ECONOMY.md.",
+    "cost": 0.4, "seaCost": 1.5, "days": 270, "seaDays": 1.5, "settlers": 5000, "sourcePop": 4, "chance": 0.7, "landBonus": 0.15, "hopPenalty": 0.03,
+    "terrain": { "plains": 0, "hills": -0.05, "mountains": -0.15, "forest": -0.05, "desert": -0.2, "tundra": -0.2 },
+    "maxActive": 2, "perEra": 0.25, "devShare": 0.5, "refund": 0.5,
+    "seaReach": [["sailing", 1], ["magnetic_compass", 2], ["ocean_navigation", 6], ["steamships", 12]],
+    "aiEveryMonths": 4, "aiReserveMonths": 1
   }
 }

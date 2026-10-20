@@ -12,6 +12,7 @@ import { portZonesOf } from './mapdata.js';
 import { rand, randRange } from './rng.js';
 import { civilFromDays } from './calendar.js';
 import { bump as recordBump } from './record.js';
+import { battleExperience as forceExperience, expMult, expertiseMult, dilute } from './experience.js';
 
 export const SUB_ROLES = new Set(['sub', 'nsub', 'ssbn']);
 
@@ -191,6 +192,7 @@ export function mergeFleets(state, ids) {
   let n0 = shipCount(base);
   for (const f of list.slice(1)) {
     const n1 = shipCount(f);
+    base.exp = ((base.exp || 0) * base.str * n0 + (f.exp || 0) * f.str * n1) / Math.max(1e-9, base.str * n0 + f.str * n1);
     base.str = (base.str * n0 + f.str * n1) / (n0 + n1);
     base.org = (base.org * n0 + f.org * n1) / (n0 + n1);
     for (const t in f.units) base.units[t] = (base.units[t] || 0) + f.units[t];
@@ -225,6 +227,7 @@ export function commissionShip(state, map, rules, owner, prov, type) {
   let f = state.fleets.find((x) => x.owner === owner && x.port === prov && !x.path.length && !x.battle);
   if (f) {
     const n = shipCount(f);
+    dilute(f, f.str * n, f.str * n + 1); // a new crew has no experience
     f.str = (f.str * n + 1) / (n + 1);
     f.org = (f.org * n + 0.6) / (n + 1);
     f.units[type] = (f.units[type] || 0) + 1;
@@ -272,7 +275,7 @@ export function processFleets(state, map, rules) {
       f.dock = -1;
     }
     // repairs in port, organisation recovers (slowly at sea)
-    if (f.port >= 0) { f.str = Math.min(1, f.str + N.repairDay); f.org = Math.min(1, f.org + N.orgRecoveryDay); }
+    if (f.port >= 0) { const s0 = f.str; f.str = Math.min(1, f.str + N.repairDay); dilute(f, s0, f.str); f.org = Math.min(1, f.org + N.orgRecoveryDay); }
     else f.org = Math.min(1, f.org + N.orgRecoveryDay * 0.4);
   }
 }
@@ -352,7 +355,7 @@ export function navalSide(state, rules, ids, enemyIds) {
     const c = state.countries[f.owner];
     const tech = c.tfx?.mult.combat ?? 1;
     const mun = c.econ ? 0.6 + 0.4 * c.econ.supplyMun : 1;
-    const of = (0.35 + 0.65 * f.org) * (1 + f.exp * 0.25) * tech * mun * f.str;
+    const of = (0.35 + 0.65 * f.org) * expMult(rules, f) * expertiseMult(c) * tech * mun * f.str;
     for (const t in f.units) {
       const n = f.units[t], u = U[t];
       if (!n) continue;
@@ -423,7 +426,9 @@ function endNavalBattle(state, map, rules, b, winner) {
   state.navalBattles.splice(state.navalBattles.indexOf(b), 1);
   const win = (winner === 'att' ? b.att : b.def).map((id) => fleetById(state, id)).filter(Boolean);
   const lose = (winner === 'att' ? b.def : b.att).map((id) => fleetById(state, id)).filter(Boolean);
-  for (const f of win) { f.battle = 0; f.exp = Math.min(1, f.exp + 0.05); }
+  for (const f of win) f.battle = 0;
+  forceExperience(state, rules, win, true, b.days);
+  forceExperience(state, rules, lose, false, b.days);
   for (const f of lose) {
     f.battle = 0;
     const home = nearestPort(state, map, f.owner, f.zone);

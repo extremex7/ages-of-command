@@ -89,5 +89,5 @@ export function governmentTab(cl) {
       }))),
     h('h3', { style: { marginTop: '0.8em' } }, 'Active modifiers'),
     g.mods.length ? h('table.t.small', g.mods.map((m) => h('tr', h('td', { tip: effectsText(R, m.effects) }, m.name), h('td.muted', `until ${formatDate(m.until)}`)))) : h('p.muted', 'None.'),
-    mine && s.pendingEvents.length > 0 && h('div', { style: { marginTop: '0.8em' } }, s.pendingEvents.map((p) => h('button.primary', { on: { click: () => cl.openEvent(p) } }, `Decide: ${p.title}`))));
+    mine && s.pendingEvents.some((p) => p.c === k) && h('div', { style: { marginTop: '0.8em' } }, s.pendingEvents.filter((p) => p.c === k).map((p) => h('button.primary', { on: { click: () => cl.openEvent(p) } }, `Decide: ${p.title}`))));
 }

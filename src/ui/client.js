@@ -30,6 +30,8 @@ import { icon } from './icons.js';
 import { renderEditor, editorClick } from './editor.js';
 import { summaryDialog } from './summary.js';
 import { startRecord } from '../core/record.js';
+import { showStage, hotseatTicked, hotseatAfterTicks, timeBlocked, hotseatTop, switchPlayer, hotseatMove, renderHotseatPick } from './hotseat_ui.js';
+import { humansLabel } from '../core/hotseat.js';
 import { saveDialog, peaceDialog, menuDialog, reportDialog, separatePeaceDialog, eventDialog, civilWarDialog } from './dialogs.js';
 
 export const SPEEDS = [0, 1, 3, 8, 20, 0]; // days per second; 5 = as fast as the frame budget allows
@@ -74,6 +76,7 @@ export class Client {
     this.frameReq = 0;
     this.perf = { frames: 0, frameTimes: [], tickMs: 0, ticks: 0 };
     this.requestFrame();
+    if (game.state.hotseat && this.mode === 'play') showStage(this); // a loaded hotseat game opens on its handover screen
   }
 
   get state() { return this.game.state; }
@@ -271,6 +274,7 @@ export class Client {
     const k = e.key.toLowerCase();
     const kbd = this.data.settings.keyboardMode;
     if (e.key === ' ') { e.preventDefault(); this.togglePause(); }
+    else if (e.key === 'F2' && this.state.hotseat) { e.preventDefault(); switchPlayer(this); }
     else if (e.key === 'Enter') { if (e.shiftKey) this.rightClick(this.renderer.vw / 2, this.renderer.vh / 2); else this.click(this.renderer.vw / 2, this.renderer.vh / 2, false); }
     else if (e.key === '[' || e.key === ']') this.cycleForces(e.key === ']' ? 1 : -1);
     else if (e.key === '\\') this.toggleSidebar();
@@ -454,6 +458,8 @@ export class Client {
   // ------------------------------------------------------------------ simulation control
   setSpeed(n) {
     if (this.mode !== 'play' || this.state.gameOver) return;
+    const no = n ? timeBlocked(this) : null; // hotseat: time runs only between turns
+    if (no) { this.toast(no); return; }
     this.resumeSpeed = 0; // the player chose a speed: no automatic resume
     this.speed = n; this.acc = 0; this.uiDirty = true; this.requestFrame();
   }
@@ -480,6 +486,7 @@ export class Client {
 
   startPlaying(countryIdx) {
     const s = this.state, newGame = this.mode === 'pick';
+    if (s.hotseat && this.mode === 'play') return hotseatMove(this, countryIdx);
     s.player = countryIdx;
     if (countryIdx >= 0 && s.record?.k !== countryIdx) startRecord(s);
     this.mode = 'play';
@@ -524,10 +531,10 @@ export class Client {
       const t0 = performance.now();
       const budget = this.data.settings.profile === 'low' ? 10 : 14;
       if (this.speed === 5) {
-        while (performance.now() - t0 < budget) { this.doTick(); ticked++; }
+        while (this.speed && performance.now() - t0 < budget) { this.doTick(); ticked++; }
       } else {
         this.acc += dt * SPEEDS[this.speed];
-        while (this.acc >= 1 && performance.now() - t0 < budget) { this.acc -= 1; this.doTick(); ticked++; }
+        while (this.speed && this.acc >= 1 && performance.now() - t0 < budget) { this.acc -= 1; this.doTick(); ticked++; }
         if (this.acc > 3) this.acc = 3; // drop backlog rather than spiral
       }
       if (ticked) {
@@ -569,10 +576,12 @@ export class Client {
       if (every > 0 && this.mode === 'play' && (m - 1) % every === 0 && m !== this.lastMonth) this.autosave();
       this.lastMonth = m;
     } else if ((this.renderer.mode === 'military' || this.renderer.mode === 'naval' || this.renderer.mode === 'supply') && this.state.day % 5 === 0) this.renderer.invalidate();
+    if (this.state.hotseat) hotseatTicked(this);
   }
 
   afterTicks() {
     const s = this.state;
+    if (s.hotseat) return hotseatAfterTicks(this);
     this.uiDirty = true;
     // toasts for important new notifications concerning the player
     let sound = null, rank = 0;
@@ -613,7 +622,12 @@ export class Client {
       this.toast(`Game over: ${s.gameOver.reason}`, true);
       if (s.record) summaryDialog(this, { ended: true });
     }
-    // drop selections of armies that no longer exist
+    this.dropGone();
+  }
+
+  // drop selections of armies, fleets and wings that no longer exist
+  dropGone() {
+    const s = this.state;
     for (const id of [...this.view.selectedArmies]) if (!s.armies.some((a) => a.id === id)) this.view.selectedArmies.delete(id);
     for (const id of [...this.view.selectedFleets]) if (!s.fleets.some((f) => f.id === id)) this.view.selectedFleets.delete(id);
     for (const id of [...this.view.selectedWings]) if (!s.wings.some((w) => w.id === id)) this.view.selectedWings.delete(id);
@@ -629,7 +643,7 @@ export class Client {
 
   slotInfo() {
     const s = this.state;
-    return { savedAt: Date.now(), date: formatDate(s.day), country: s.player >= 0 ? s.countries[s.player].name : 'Observer', scenario: s.scenarioName };
+    return { savedAt: Date.now(), date: formatDate(s.day), country: s.hotseat ? 'Hotseat: ' + humansLabel(s) : s.player >= 0 ? s.countries[s.player].name : 'Observer', scenario: s.scenarioName };
   }
 
   async quickSave() {
@@ -691,6 +705,7 @@ export class Client {
       me && s.prestige?.rank?.[me.idx] && h('button.rank-btn', { tip: 'Your world rank by prestige. Click for the leaderboard.', on: { click: () => leaderboardDialog(this) } }, starBadge(s.prestige.rank[me.idx], true)),
       h('div.row', h('button.play', { tip: 'Pause / resume (Space)', 'aria-label': this.speed ? 'Pause' : 'Play', on: { click: () => this.togglePause() }, disabled: this.mode !== 'play' }, icon(this.speed ? 'pause' : 'play')),
         h('div.date', formatDate(s.day), this.speed ? '' : h('div.paused-flag', 'PAUSED')), h('div.speed', speedBtns)),
+      hotseatTop(this),
       me && h('div.stat', { tip: 'Treasury. Negative means debt, which costs interest and lowers stability.' }, h('b', { className: me.treasury < 0 ? 'bad' : '' }, icon('treasury'), money(me.treasury)), h('span', 'Treasury')),
       L && h('div.stat', { tip: ledgerTip }, h('b', { className: L.net < 0 ? 'bad' : 'good' }, icon('monthly'), signedMoney(L.net)), h('span', 'Monthly')),
       me && h('div.stat', { tip: 'Stability 0–100: affects tax efficiency. Lowered by high taxes, low public spending, debt, war and occupation.' }, h('b', icon('stability'), Math.round(me.stability)), h('span', 'Stability')),
@@ -757,7 +772,8 @@ export class Client {
     const s = this.state, C = s.countries;
     const sel = this.view.selectedCountry;
     this.bannerEl.style.display = '';
-    if (sel >= 0) {
+    if (this.opts.hotseat) renderHotseatPick(this); // each player in turn picks a country
+    else if (sel >= 0) {
       const c = C[sel];
       mount(this.bannerEl, flagCanvas(c, true), h('div', h('b', c.name), h('div.muted', `${people(c.cache.pop)} people · GDP ${money(c.cache.gdp)}/yr · ${c.cache.provinces} provinces`)),
         h('button.primary', { on: { click: () => this.startPlaying(sel) } }, `Play as ${c.name}`),
@@ -767,7 +783,7 @@ export class Client {
         h('button', { on: { click: () => this.startPlaying(-1) }, tip: 'Watch the AI play every country.' }, 'Observe'),
         h('button', { on: { click: () => this.opts.onExit() } }, 'Back'));
     }
-    mount(this.tabsEl, h('button.on', 'Choose your country'));
+    mount(this.tabsEl, h('button.on', this.opts.hotseat ? 'Choose the countries' : 'Choose your country'));
     if (!this._pickList) {
       const q = h('input', { placeholder: 'Filter…', style: { width: '100%', marginBottom: '0.5em' }, on: { input: () => draw() } });
       const box = h('div');

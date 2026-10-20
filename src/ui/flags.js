@@ -17,7 +17,7 @@ export function loadFlagIndex() {
 // Called when a game starts; starts loading that scenario's flags in the background.
 export function setFlagScenario(id, countries = []) {
   scenario = id;
-  for (const c of countries) { const f = flagFile(c.tag); if (f) image(f); }
+  for (const c of countries) { const f = fileOf(c); if (f) image(f); }
 }
 
 function flagFile(tag) {
@@ -45,11 +45,15 @@ function paint(c, img) {
   g.drawImage(img, 0, 0, c.width, c.height);
 }
 
+// A formed nation (docs/NATIONS.md) flies the flag chosen when it formed: country.flagId, a file
+// or null for its drawn pattern.
+const fileOf = (country) => (country.flagId !== undefined ? country.flagId : flagFile(country.tag));
+
 export function flagCanvas(country, big = false) {
   const c = document.createElement('canvas');
   c.className = big ? 'flag big' : 'flag';
   c.width = (big ? BW : W) * SHARP; c.height = (big ? BH : H) * SHARP;
-  const file = flagFile(country.tag);
+  const file = fileOf(country);
   const e = file && image(file);
   if (e && e.ready) { paint(c, e.img); return c; }
   // the pattern flag shows until the real one has loaded (or for good, when there is none)
@@ -59,7 +63,8 @@ export function flagCanvas(country, big = false) {
 }
 
 function patternFlag(country) {
-  const cached = patterns.get(country.tag);
+  const key = country.tag + (country.formed ? '|' + country.formed.join() : '');
+  const cached = patterns.get(key);
   if (cached) return cached;
   const c = document.createElement('canvas');
   const w = BW * SHARP, hh = BH * SHARP;
@@ -75,7 +80,7 @@ function patternFlag(country) {
     g.fillStyle = cols[1] || '#fff'; g.fillRect(w * 0.3, 0, w * 0.16, hh); g.fillRect(0, hh * 0.4, w, hh * 0.2);
     if (cols[2]) { g.fillStyle = cols[2]; g.fillRect(w * 0.34, 0, w * 0.08, hh); g.fillRect(0, hh * 0.45, w, hh * 0.1); }
   }
-  patterns.set(country.tag, c);
+  patterns.set(key, c);
   return c;
 }
 

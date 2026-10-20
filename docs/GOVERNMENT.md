@@ -29,6 +29,10 @@ The effects of the type, policies and active modifiers are combined into `govt.f
 recomputed on load, never saved): tax efficiency (clamped 0.6–1.3 overall), manpower, construction
 cost, coup risk, stability, legitimacy, liberty and per-faction approval.
 
+Advisors (treasurer, marshal, chancellor, scientist, chief minister) sit in 2 to 4 seats set by
+the government type, and national traits add to the government's tax efficiency, stability,
+legitimacy, manpower and construction cost: see [NATIONS.md](NATIONS.md).
+
 ## Factions
 
 Seven factions: liberals, conservatives, socialists, nationalists, business, military, clergy.

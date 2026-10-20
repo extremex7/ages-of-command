@@ -1,0 +1,58 @@
+{
+  "_doc": "Tuning for formable nations, national traits' companions (advisors) and missions. See docs/NATIONS.md. Effect names are the same as in traits.json.",
+  "forming": {
+    "minStability": 25,
+    "stability": 10,
+    "legitimacy": 10,
+    "claims": true,
+    "_aiChance": "monthly chance that an eligible AI country forms the nation",
+    "aiChance": 0.5
+  },
+  "prestige": {
+    "_doc": "Prestige bonus points (from forming nations and missions) are added to the 0-100 prestige score, at most 15 (BONUS_CAP in prestige.js); they fade by `decayMonth` of their value each month.",
+    "decayMonth": 0.012
+  },
+  "advisors": {
+    "types": {
+      "economy": { "name": "Treasurer", "text": "Runs the treasury and the customs service.", "perSkill": { "tax": 0.01, "trade": 0.006 } },
+      "military": { "name": "Marshal", "text": "Trains the officer corps and plans for war.", "perSkill": { "combat": 0.012, "manpower": 0.02 } },
+      "diplomacy": { "name": "Chancellor", "text": "Leads the diplomatic service.", "perSkill": { "influence": 0.25, "legitimacy": 1 } },
+      "science": { "name": "Natural philosopher", "eraNames": { "industrial": "Chief scientist" }, "text": "Directs the academies and laboratories.", "perSkill": { "research": 0.025 } },
+      "administration": { "name": "Chief minister", "text": "Keeps the administration honest and the provinces calm.", "perSkill": { "stability": 0.6, "construction": -0.015 } }
+    },
+    "_slots": "advisor seats by government type (one advisor of each kind at most)",
+    "slots": { "republic": 3, "federal_republic": 4, "parliamentary": 4, "const_monarchy": 3, "abs_monarchy": 3, "one_party": 4, "military": 2, "theocracy": 3 },
+    "defaultSlots": 3,
+    "_salary": "monthly salary = (salaryBase + revenue x salaryRevenueShare) x skill, in billions; hiring costs hireMonths of salary",
+    "salaryBase": 0.002,
+    "salaryRevenueShare": 0.0025,
+    "hireMonths": 6,
+    "maxSkill": 5,
+    "poolSize": 6,
+    "_pool": "candidates change every poolMonths months; the pool is drawn from the game seed, the country and the period, so looking at it never changes the game",
+    "poolMonths": 12,
+    "minAge": 28,
+    "maxAge": 62,
+    "retireMin": 62,
+    "retireMax": 76,
+    "_death": "monthly chance of death = deathBase x e^((age - 50) / deathScale)",
+    "deathBase": 0.0007,
+    "deathScale": 9,
+    "promoteChanceYear": 0.15,
+    "aiReserveMonths": 2
+  },
+  "missions": {
+    "count": 3,
+    "repeatMonths": 18,
+    "gdp": { "growth": [1.15, 1.3], "years": 8, "reward": { "prestige": 2, "moneyMonths": 3 } },
+    "claim": { "years": 10, "reward": { "prestige": 2, "stability": 5 } },
+    "form": { "years": 25, "minShare": 0.35, "reward": { "prestige": 3, "moneyMonths": 6 } },
+    "ally": { "years": 6, "minOpinion": 25, "reward": { "prestige": 1, "stability": 3, "influence": 15 } },
+    "era": { "years": 30, "reward": { "prestige": 3, "moneyMonths": 4 } },
+    "rival": { "years": 12, "reward": { "prestige": 4, "claims": true } },
+    "stability": { "below": 45, "target": 60, "years": 5, "reward": { "legitimacy": 6, "moneyMonths": 2 } },
+    "debt": { "years": 6, "reward": { "stability": 4, "prestige": 1 } },
+    "independence": { "years": 30, "reward": { "prestige": 5, "stability": 10 } },
+    "aiMotive": 0.25
+  }
+}

@@ -23,6 +23,7 @@ import { commandSection, generalLine } from './command_ui.js';
 import { leavePlans } from '../core/plans.js';
 import { intelSection } from './intel_ui.js';
 import { sanctionsRow } from './council_ui.js';
+import { traitsSection, decisionsSection, missionsSection } from './nation_ui.js';
 
 export const TABS = [
   { id: 'country', name: 'Nation', key: 'n', tip: 'Overview of the selected country, or yours, and your relations with it.' },
@@ -84,6 +85,9 @@ function countryTab(cl) {
       'Organisations', allies.length ? allies.map((a) => a.name).join(', ') : 'None',
       'At war', wars.length ? wars.map((w) => w.name).join(', ') : 'No'),
     h('div', { tip: 'Stability' }, bar(c.stability / 100, c.stability < 35 ? 'var(--bad)' : '')),
+    traitsSection(cl, k),
+    c.alive && decisionsSection(cl, k),
+    c.alive && missionsSection(cl, k),
     !mine && s.player >= 0 && c.alive && h('div.row', { style: { marginTop: '0.8em' } },
       h('button.danger', { disabled: !!why, tip: why || `Declare war on ${c.name}`, on: { click: () => declareDialog(cl, k) } }, 'Declare war…'),
       h('button', { on: { click: () => { cl.renderer.mode = 'diplomacy'; cl.renderer.focus = k; cl.renderer.invalidate(); cl.renderModes(); } } }, 'Show relations'),

@@ -5,6 +5,7 @@ import { log, aiLog } from './state.js';
 import { isAtWar } from './relations.js';
 import { rand } from './rng.js';
 import { civilFromDays } from './calendar.js';
+import { nationalFx } from './natfx.js';
 
 const MULT = ['manpower', 'construction', 'coupRisk'];
 const ADD = ['taxEff', 'stability', 'legitimacy', 'liberty'];
@@ -126,6 +127,10 @@ export function govEffects(rules, c) {
     fx.faith += opt.faith || 0;
   }
   for (const m of g.mods) apply(m.effects);
+  // national traits and advisors (docs/NATIONS.md)
+  const n = nationalFx(rules, c);
+  fx.taxEff += n.tax; fx.stability += n.stability; fx.legitimacy += n.legitimacy;
+  fx.manpower *= 1 + n.manpower; fx.construction *= 1 + n.construction;
   fx.liberty = Math.max(0, Math.min(1, fx.liberty));
   return fx;
 }

@@ -29,7 +29,9 @@ test('the modern world knows everything up to 2020, so tech multipliers are neut
   const { state: s, rules: r } = g;
   const usa = s.countries[tagIdx(g, 'USA')];
   for (const t of r.tech.list) assert.equal(knows(s, usa.idx, t.i), !t.fictional && t.year <= 2026, t.id);
-  for (const [k, v] of Object.entries(usa.tfx.mult)) assert.ok(Math.abs(v - 1) < 0.02, `${k} ${v}`);
+  // national traits (docs/NATIONS.md) are folded into the same multipliers: take them out
+  const NAT = { research: 'research', combat: 'combat', farm: 'farm', popGrowth: 'growth', movement: 'movement', siege: 'siege' };
+  for (const [k, v] of Object.entries(usa.tfx.mult)) { const t = v / (1 + (NAT[k] ? usa.tfx.nat[NAT[k]] : 0)); assert.ok(Math.abs(t - 1) < 0.02, `${k} ${t}`); }
   assert.equal(r.tech.eras[usa.tfx.era].id, 'information');
 });
 

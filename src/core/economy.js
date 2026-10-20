@@ -7,6 +7,7 @@ import { govStabilityParts } from './government.js';
 import { transferShares } from './diplomacy.js';
 import { strategicUpkeep } from './strategic.js';
 import { intelUpkeep } from './espionage.js';
+import { advisorUpkeep } from './natfx.js';
 
 export function militaryUpkeep(state, c, rules, all = null) {
   if (all) return all[c.idx] * c.cache.priceLevel;
@@ -69,19 +70,22 @@ export function computeLedgers(state, map, rules) {
     const eff = taxEfficiency(c, rules);
     const taxRevenue = taxRev[k];
     const tariffs = c.econ ? c.econ.tariffRev : 0;
-    const revenue = taxRevenue + requisition[k] + tariffs + Math.max(0, transfer[k]);
+    // national trade bonus: a share of the month's export value (docs/NATIONS.md)
+    const trade = c.econ ? (c.econ.expValue || 0) * (c.tfx?.nat?.trade || 0) : 0;
+    const revenue = taxRevenue + requisition[k] + tariffs + trade + Math.max(0, transfer[k]);
     const civil = taxRevenue * c.civilShare;
     const research = Math.max(0, taxRevenue) * (c.research?.share ?? 0);
     const military = militaryUpkeep(state, c, rules, ups);
     const strategic = strategicUpkeep(c, rules);
     const intel = intelUpkeep(state, rules, c);
     const interest = c.treasury < 0 ? (-c.treasury * E.debtInterestYear) / 12 : 0;
+    const advisors = advisorUpkeep(rules, c, revenue);
     const paid = Math.max(0, -transfer[k]);
     c.ledger = {
       gdpMonth: gdpOwned[k], gdpLost: gdpOwned[k] - gdpControlled[k], efficiency: eff,
-      taxRevenue, requisition: requisition[k], tariffs, transfersIn: Math.max(0, transfer[k]), transfersOut: paid, revenue, civil, research, military, strategic, intel, interest,
+      taxRevenue, requisition: requisition[k], tariffs, trade, advisors, transfersIn: Math.max(0, transfer[k]), transfersOut: paid, revenue, civil, research, military, strategic, intel, interest,
       construction: c.econ ? c.econ.spentConstruction || 0 : 0,
-      net: revenue - civil - research - military - strategic - intel - interest - paid,
+      net: revenue - civil - research - military - strategic - intel - interest - advisors - paid,
     };
   }
 }

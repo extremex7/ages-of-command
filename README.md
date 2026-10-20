@@ -54,8 +54,9 @@ Orbital Age 2085), then **Choose country**, click a country
 and **Play as …**.
 Press **Space** to start time. To build, select one of your provinces and use **Build here** in
 the province panel; the **Industry** tab shows your goods, trade and construction queue.
-Select another country to see your relations with it and propose treaties; the **Government**
-tab shows your factions, elections and policies; the **Research** tab sets research spending,
+Select another country to see your relations with it and propose treaties; the **Nation** tab
+also shows your national traits, the nations you can form and your objectives; the **Government**
+tab shows your factions, elections, policies and advisors; the **Research** tab sets research spending,
 the current project and queue, and opens the technology tree. In the **Military** tab, switch
 between Army, Navy and Air to build warships and aircraft; the **Strategic** tab handles nuclear
 programmes, cyber operations, satellites and space.
@@ -93,7 +94,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 156 unit/integration tests of the simulation (node:test)
+npm test                            # 166 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -110,6 +111,7 @@ node tests/browser/features2.mjs    # generals, battle plans, the civil-war choi
 node tests/browser/editor.mjs       # scenario editor: paint a new country, save, play, reload
 node tests/browser/access.mjs       # colour-blind colours, text size, keyboard-only play
 node tests/browser/summary.mjs      # achievements and the game summary
+node tests/browser/nations.mjs      # traits, forming a nation, objectives and advisors
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -145,7 +147,8 @@ src/ui/                    menus, HUD, panels, dialogs, save slots (browser stor
 launcher/                  desktop launcher (Go; native window), Windows installer script, icon
 android/                   Android app (one Java activity around the system WebView)
 data/map/                  generated world map (2,358 provinces), sea zones (seas.json) + stable id registry
-data/rules/                units.json, balance.json, goods.json, buildings.json, governments.json, technologies.json — editable game rules
+data/rules/                units.json, balance.json, goods.json, buildings.json, governments.json, technologies.json,
+                           formables.json, traits.json, nations.json — editable game rules
 data/events/               domestic, world, historical, strategic and future-scenario events + index.json
 data/scenarios/            scenario files + index.json
 tools/                     map/seas/scenario/economy pipeline, history/ scenario definitions + build_history.mjs,
@@ -169,6 +172,7 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 - [docs/ESPIONAGE.md](docs/ESPIONAGE.md) — spy networks, stealing technology, sabotage, coups and puppets
 - [docs/STRATEGIC.md](docs/STRATEGIC.md) — nuclear weapons and deterrence, cyber, satellites, space
 - [docs/ACHIEVEMENTS.md](docs/ACHIEVEMENTS.md) — achievements and the game summary
+- [docs/NATIONS.md](docs/NATIONS.md) — formable nations, national traits, advisors and missions
 - [docs/FEATURES.md](docs/FEATURES.md) — implemented / partial / planned checklist and the continuation plan
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — measured numbers and how to reproduce them
 - [docs/MODDING.md](docs/MODDING.md) — data formats for units, balance, goods, buildings, governments, events, sea zones, forces and scenarios

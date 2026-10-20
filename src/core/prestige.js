@@ -11,6 +11,8 @@
 //   prosperity 10% √(GDP per person ÷ highest)
 //   stability  10% stability ÷ 100
 //   territory   5% √(provinces ÷ most provinces)
+// plus a prestige bonus (forming a nation, completing missions; at most 15 points, fading;
+// c.prestigeBonus, see docs/NATIONS.md).
 
 import { log } from './state.js';
 
@@ -18,6 +20,7 @@ export const PRESTIGE_WEIGHTS = { economy: 0.3, military: 0.2, technology: 0.15,
 // star tiers by rank
 export const STARS = [{ id: 'gold', name: 'Gold star', upTo: 10 }, { id: 'silver', name: 'Silver star', upTo: 25 }, { id: 'bronze', name: 'Bronze star', upTo: 50 }];
 const HISTORY_YEARS = 10, RISING_YEARS = 5;
+export const BONUS_CAP = 15;
 
 function power(c) { return (c.cache?.armyPower || 0) + (c.cache?.navyPower || 0) + (c.cache?.airPower || 0); }
 
@@ -40,7 +43,8 @@ export function prestigeParts(state) {
 
 export function computePrestige(state) {
   const parts = prestigeParts(state);
-  const score = parts.map((p) => (p ? Math.round(1000 * Object.entries(PRESTIGE_WEIGHTS).reduce((s, [k, w]) => s + w * p[k], 0)) / 10 : 0));
+  const bonus = (k) => Math.min(BONUS_CAP, Math.max(0, state.countries[k].prestigeBonus || 0));
+  const score = parts.map((p, k) => (p ? Math.min(100, Math.round(1000 * Object.entries(PRESTIGE_WEIGHTS).reduce((s, [x, w]) => s + w * p[x], 0) + 10 * bonus(k)) / 10) : 0));
   const order = state.countries.map((c) => c.idx).filter((k) => parts[k]).sort((a, b) => score[b] - score[a] || a - b);
   const rank = new Array(state.countries.length).fill(0);
   order.forEach((k, i) => { rank[k] = i + 1; });

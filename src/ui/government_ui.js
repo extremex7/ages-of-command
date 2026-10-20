@@ -5,6 +5,7 @@ import { pct } from './format.js';
 import { formatDate } from '../core/calendar.js';
 import { refreshCountryCache } from '../core/state.js';
 import { computeLedgers } from '../core/economy.js';
+import { advisorsSection } from './nation_ui.js';
 import {
   govType, factionTargets, coupChance, revolutionChance, disgruntled, canSetPolicy, setPolicy, canReform, reformGovernment, monthsToElection,
 } from '../core/government.js';
@@ -87,6 +88,7 @@ export function governmentTab(cl) {
         return h('button', { disabled: !!why, tip: `${N.name} (${P.families[N.family].name.toLowerCase()})\nStability ${sg(N.stability)}, legitimacy ${N.legitimacy}, tax efficiency ×${N.taxEff}, manpower ×${N.manpower}, liberty ${N.liberty}` + (N.electionYears ? `, elections every ${N.electionYears} years` : ', no elections') + (why ? `\n\n${why}` : ''),
           on: { click: () => { const e = reformGovernment(s, R, k, to); if (e) cl.toast(e, true); refresh(); } } }, N.name);
       }))),
+    advisorsSection(cl, k),
     h('h3', { style: { marginTop: '0.8em' } }, 'Active modifiers'),
     g.mods.length ? h('table.t.small', g.mods.map((m) => h('tr', h('td', { tip: effectsText(R, m.effects) }, m.name), h('td.muted', `until ${formatDate(m.until)}`)))) : h('p.muted', 'None.'),
     mine && s.pendingEvents.length > 0 && h('div', { style: { marginTop: '0.8em' } }, s.pendingEvents.map((p) => h('button.primary', { on: { click: () => cl.openEvent(p) } }, `Decide: ${p.title}`))));

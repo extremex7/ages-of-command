@@ -12,15 +12,19 @@ import { compileTech, initTechnology } from './technology.js';
 import { declareWar, joinWar } from './war.js';
 import { initStrategic } from './strategic.js';
 import { computePrestige } from './prestige.js';
+import { compileNations, initNations } from './nations.js';
 
 // governments: data/rules/governments.json; events: list of data/events/*.json files;
-// technologies: data/rules/technologies.json
-export function makeRules(units, balance, goods, buildings, governments, events = [], technologies = null) {
+// technologies: data/rules/technologies.json; nations: { formables, traits, config } from
+// data/rules/formables.json, traits.json and nations.json (optional: without it there are no
+// traits, formable nations, advisors or missions)
+export function makeRules(units, balance, goods, buildings, governments, events = [], technologies = null, nations = null) {
   const politics = compilePolitics(governments);
   const rules = { units: {}, balance, econ: compileEconomy(goods, buildings), politics, events: compileEvents(events, politics) };
   for (const [k, v] of Object.entries(units)) if (!k.startsWith('_')) rules.units[k] = v;
   validateRules(rules);
   rules.tech = compileTech(technologies || { eras: [{ id: 'modern', name: 'Modern' }], fields: {}, techs: {} }, rules);
+  rules.nations = nations ? compileNations(nations, rules) : null;
   return rules;
 }
 
@@ -35,6 +39,7 @@ export function newGame({ map, scenario, rules, playerTag = null, seed, settings
   initEconomy(state, map, rules, scenario);
   initGovernment(state, map, rules);
   initDiplomacy(state, map, rules, scenario);
+  initNations(state, map, rules);
   refreshCountryCache(state, map, rules);
   startScenarioWars(state, map, rules, scenario);
   for (const c of state.countries) c.manpower = Math.min(c.manpower, c.cache.maxManpower);
@@ -67,6 +72,8 @@ export function loadGame(text, { map, rules, scenario }) {
   if (state.countries.some((c) => c.alive && !c.ledger)) computeLedgers(state, map, rules);
   // saves from before the leaderboard: start its history now
   if (!state.prestige) computePrestige(state);
+  // saves from before national traits get them now (docs/NATIONS.md)
+  initNations(state, map, rules);
   return { state, map, rules, scenario };
 }
 

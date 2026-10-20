@@ -628,3 +628,17 @@ all, so factories stopped for want of timber. Treasuries were too small to build
 farms. The builder now gives a country one level where the most was planned when a tenth of a
 level or more is left over, and every history scenario was rebuilt. After two years of AI play
 average stability is now 56 to 60 in every start (1444 58, Rome 58, 1815 57, 1861 58, 1914 57).
+
+## Session 23: hotseat multiplayer
+
+Two to eight players at one computer (ARCHITECTURE.md, Multiplayer). By default they take turns:
+each plans with time paused behind a handover screen that hides the previous player's view, and
+after the last one the game runs for a week, a month or until the next event; or they share the
+screen and switch country with F2 while time runs. Everything that meant "the player" now means
+"a human country": about seventy checks of `state.player` in the simulation became
+`isHuman`/`humanControls`, and the player-only log lines became `logFor`, so each player gets
+their own news, events, proposals and battle reports. Events and offers wait for their player
+instead of expiring during a long round. Peace between two players is an offer the other answers
+in their turn. Each player has their own summary; hotseat games earn no achievements, since the
+device's list belongs to one person. Single-player games and saves are unchanged (no save version
+change: `state.hotseat` is optional). 8 unit tests and a browser check.

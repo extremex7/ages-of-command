@@ -74,7 +74,7 @@ export function settingsDialog(cl) {
 function helpDialog(cl) {
   const rows = [['Left click', 'Select province / army (Shift adds armies)'], ['Right click', 'Move selected armies'], ['Drag / arrows', 'Pan map'], ['Wheel / + −', 'Zoom'],
     ['Space', 'Pause / resume'], ['1–5', 'Game speed'], ['P T O V G X K F R Y J Q', 'Map modes'], ['N B E U A M D L I', 'Sidebar tabs'], ['C / H', 'Centre on capital / whole world'], ['Tab or \\', 'Hide / show the side panel (with keyboard-only play on, Tab moves between buttons and \\ hides the panel)'],
-    ['Enter / Shift+Enter', 'Select the province under the cross in the middle of the map / send the selected forces there'], ['[ and ]', 'Previous / next of your armies, fleets and air wings'], ['`', 'Cheat console (when cheats are enabled)'], ['Ctrl+S', 'Quick save'], ['F11', 'Full screen on / off'], ['Esc', 'Clear selection / close dialog'],
+    ['Enter / Shift+Enter', 'Select the province under the cross in the middle of the map / send the selected forces there'], ['[ and ]', 'Previous / next of your armies, fleets and air wings'], ['`', 'Cheat console (when cheats are enabled)'], ['Ctrl+S', 'Quick save'], ['F2', 'Hotseat game on a shared screen: the next player takes the controls'], ['F11', 'Full screen on / off'], ['Esc', 'Clear selection / close dialog'],
     ['Touch', 'Drag to pan, pinch to zoom, tap to select, press and hold to order']];
   open(cl, h('h2', 'Controls'), h('table.t', rows.map(([k, v]) => h('tr', h('td', h('b', k)), h('td', v)))));
 }

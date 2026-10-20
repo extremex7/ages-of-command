@@ -174,7 +174,8 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Navies, air forces, nuclear, cyber, space (M6) | ✅ See the Milestone 6 table |
 | Rivers, real terrain/elevation data | ⬜ Terrain is estimated from coarse regions |
 | Map projections other than Miller | ⬜ |
-| Multiplayer | ⬜ Deterministic core is the foundation |
+| Hotseat multiplayer (2 to 8 players at one computer) | ✅ Taking turns (plan in private behind a handover screen, then time runs a week, a month or until the next event) or a shared screen (F2 switches player). Events, offers, notifications, the log and the summary are per player; no AI control of human countries; peace and treaties between two players are answered by the receiver in their turn; saved with the game. No achievements in hotseat games (docs/ARCHITECTURE.md, Multiplayer) |
+| Online multiplayer | ⬜ The deterministic core and validated commands are the foundation; no networking yet |
 | Desktop app and installer | ✅ Native window (WebView2 on Windows, WebKitGTK on Linux) with on-disk saves; Windows installer and portable zip, Linux and macOS packages (launcher/README.md). Not code-signed; the WebView2 window is not yet tried on a real Windows PC; macOS opens a browser window |
 | Display settings | ✅ Window mode and size (desktop app; full screen only in a browser), interface scale with an automatic fit, graphics quality, map resolution, frame rate limit (src/ui/settings.js). Window control is checked on Linux; on Windows it is untested |
 | Android app | 🟨 APK with touch controls (pan, pinch, tap, long-press orders) and saves on the phone (android/README.md). Tested in an emulated touch screen only, not on a phone; the interface is the desktop one made denser |

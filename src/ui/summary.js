@@ -45,10 +45,11 @@ function change(a, b, fmt) {
   return [fmt(a), fmt(b) + tag];
 }
 
-export function summaryDialog(cl, { ended = false } = {}) {
-  const s = cl.state, S = summary(s);
+// k: whose story (a hotseat game has one per player; the player at the screen by default)
+export function summaryDialog(cl, { ended = false, k = cl.state.player } = {}) {
+  const s = cl.state, S = summary(s, k);
   if (!S) return null;
-  const c = s.countries[s.record.k], R = cl.game.rules;
+  const c = s.countries[S.k], R = cl.game.rules;
   const eraName = (i) => R.tech?.eras[i]?.name ?? '–';
   const govName = (g) => R.politics?.types[g]?.name ?? g;
   const rows = [
@@ -80,7 +81,7 @@ export function summaryDialog(cl, { ended = false } = {}) {
       rows.map(([k, a, b]) => h('tr', h('td', k), h('td.n', a), h('td.n', b)))),
     h('ul', deeds.map((d) => h('li', d))),
     h('h4', `Achievements in this game: ${S.achievements.length} of ${S.total}`),
-    S.cheated ? h('p.muted', 'Cheats were used in this game, so it earns no achievements.') : null,
+    s.hotseat ? h('p.muted', 'Hotseat games earn no achievements.') : S.cheated ? h('p.muted', 'Cheats were used in this game, so it earns no achievements.') : null,
     S.achievements.length ? h('div.ach-list', S.achievements.map((a) => achRow(a, formatDate(a.day)))) : h('p.muted', 'None yet. The main menu lists them all.'),
     S.earlier.length ? h('p.muted.small', `Before this, you led ${S.earlier.map((e) => s.countries.find((x) => x.tag === e.tag)?.name ?? e.tag).join(', ')}.`) : null,
     ended && h('div.row', { style: { marginTop: '0.8em' } },

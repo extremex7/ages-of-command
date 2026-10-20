@@ -4,13 +4,16 @@ import { formatDate } from '../core/calendar.js';
 import { saveGame } from '../core/game.js';
 import { listSlots, writeSave, isDesktop } from './storage.js';
 import { warScore, evaluatePeace, makePeace, declareWar, demandCost, provinceValue, warJoiners, warConsequences,
-  evaluateSeparatePeace, makeSeparatePeace, separateScore } from '../core/war.js';
+  evaluateSeparatePeace, makeSeparatePeace, separateScore, validatePeace, validateSeparatePeace } from '../core/war.js';
 import { overlordOf } from '../core/diplomacy.js';
 import { resolveEvent, describeEffects } from '../core/events.js';
 import { people, money } from './format.js';
 import { kvbox } from './panels.js';
 import { settingsForm } from './settings.js';
 import { summaryDialog } from './summary.js';
+import { summary } from '../core/record.js';
+import { humanControls } from '../core/state.js';
+import { offerToHuman, humanOf } from '../core/hotseat.js';
 
 export function openDialog(cl, ...content) { return open(cl, ...content); }
 
@@ -32,7 +35,7 @@ export function menuDialog(cl) {
     h('div.menu-buttons',
       h('button.primary', { on: { click: () => { w.remove(); if (wasSpeed) cl.setSpeed(wasSpeed); } } }, 'Resume'),
       h('button', { disabled: cl.mode !== 'play', on: { click: () => saveDialog(cl) } }, 'Save game'),
-      h('button', { disabled: !cl.state.record, tip: 'How your country has done since you took over, and the achievements earned.', on: { click: () => summaryDialog(cl) } }, 'Summary'),
+      h('button', { disabled: !summary(cl.state), tip: 'How your country has done since you took over, and the achievements earned.', on: { click: () => summaryDialog(cl) } }, 'Summary'),
       h('button', { on: { click: () => settingsDialog(cl) } }, 'Settings'),
       h('button', { on: { click: () => helpDialog(cl) } }, 'Controls'),
       h('button', { disabled: cl.mode !== 'play', on: { click: () => { w.remove(); cl.startTutorial(); } } }, 'Tutorial'),
@@ -71,7 +74,7 @@ export function settingsDialog(cl) {
 function helpDialog(cl) {
   const rows = [['Left click', 'Select province / army (Shift adds armies)'], ['Right click', 'Move selected armies'], ['Drag / arrows', 'Pan map'], ['Wheel / + −', 'Zoom'],
     ['Space', 'Pause / resume'], ['1–5', 'Game speed'], ['P T O V G X K F R Y J Q', 'Map modes'], ['N B E U A M D L I', 'Sidebar tabs'], ['C / H', 'Centre on capital / whole world'], ['Tab or \\', 'Hide / show the side panel (with keyboard-only play on, Tab moves between buttons and \\ hides the panel)'],
-    ['Enter / Shift+Enter', 'Select the province under the cross in the middle of the map / send the selected forces there'], ['[ and ]', 'Previous / next of your armies, fleets and air wings'], ['`', 'Cheat console (when cheats are enabled)'], ['Ctrl+S', 'Quick save'], ['F11', 'Full screen on / off'], ['Esc', 'Clear selection / close dialog'],
+    ['Enter / Shift+Enter', 'Select the province under the cross in the middle of the map / send the selected forces there'], ['[ and ]', 'Previous / next of your armies, fleets and air wings'], ['`', 'Cheat console (when cheats are enabled)'], ['Ctrl+S', 'Quick save'], ['F2', 'Hotseat game on a shared screen: the next player takes the controls'], ['F11', 'Full screen on / off'], ['Esc', 'Clear selection / close dialog'],
     ['Touch', 'Drag to pan, pinch to zoom, tap to select, press and hold to order']];
   open(cl, h('h2', 'Controls'), h('table.t', rows.map(([k, v]) => h('tr', h('td', h('b', k)), h('td', v)))));
 }
@@ -110,9 +113,13 @@ export function peaceDialog(cl, war) {
   const chosen = new Set();
   const extra = { reparations: false, subject: false, independence: false };
   const result = h('div');
+  // a human enemy leader (hotseat) answers in their own turn
+  const human = humanControls(s, other);
+  const send = (terms) => { const err = offerToHuman(s, 'peace', war, me, other, terms); cl.toast(err || `Terms sent: ${humanOf(s, other).name} answers in their turn.`, !!err); };
   const update = () => {
     const terms = { provinces: [...chosen], to: me, ...extra };
     const ev = evaluatePeace(s, map, R, war, me, terms);
+    if (human) { const why = validatePeace(s, map, R, war, me, terms); Object.assign(ev, { accept: !why, reason: why || `${humanOf(s, other).name} decides in their turn (your score covers ${Math.round(ev.score)} of ${Math.round(ev.cost)}).` }); }
     cl.view.highlight = [...chosen];
     cl.requestFrame();
     const any = chosen.size || extra.reparations || extra.subject || extra.independence;
@@ -120,7 +127,7 @@ export function peaceDialog(cl, war) {
       h('p', `War score (yours): `, h('b', Math.round(ev.score)), ` · demands cost: `, h('b', Math.round(ev.cost))),
       h('p', { className: ev.accept ? 'good' : 'bad' }, (C[other].idx === s.player ? '' : `${C[other].name}: `) + ev.reason),
       h('div.row',
-        h('button.primary', { disabled: !ev.accept, on: { click: () => { makePeace(s, map, R, war, me, terms); cl.view.highlight = null; w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame(); } } }, any ? 'Send demands' : 'Offer white peace'),
+        h('button.primary', { disabled: !ev.accept, on: { click: () => { if (human) send(terms); else makePeace(s, map, R, war, me, terms); cl.view.highlight = null; w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame(); } } }, any ? 'Send demands' : 'Offer white peace'),
         h('button', { on: { click: () => { cl.view.highlight = null; w.remove(); cl.requestFrame(); } } }, 'Cancel')));
   };
   const check = (key, label, tip) => h('label.item', { style: { display: 'flex', gap: '0.5em', alignItems: 'center' }, tip },
@@ -154,10 +161,12 @@ export function separatePeaceDialog(cl, war) {
   const update = () => {
     const terms = { provinces: [...chosen] };
     const ev = evaluateSeparatePeace(s, map, R, war, me, terms);
+    const human = humanControls(s, leader); // a human leader (hotseat) answers in their own turn
+    if (human) { const why = validateSeparatePeace(s, map, R, war, me, terms); Object.assign(ev, { accept: !why, reason: why || 'They decide in their turn.' }); }
     cl.view.highlight = [...chosen]; cl.requestFrame();
     mount(result, h('p', { className: ev.accept ? 'good' : 'bad' }, `${C[leader].name}: ${ev.reason}`),
       h('div.row',
-        h('button.primary', { disabled: !ev.accept, on: { click: () => { makeSeparatePeace(s, map, R, war, me, terms); cl.view.highlight = null; w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame(); } } }, 'Make separate peace'),
+        h('button.primary', { disabled: !ev.accept, on: { click: () => { if (human) { const err = offerToHuman(s, 'separate', war, me, leader, terms); cl.toast(err || 'Request sent.', !!err); } else makeSeparatePeace(s, map, R, war, me, terms); cl.view.highlight = null; w.remove(); cl.uiDirty = true; cl.renderer.invalidate(); cl.requestFrame(); } } }, 'Make separate peace'),
         h('button', { on: { click: () => { cl.view.highlight = null; w.remove(); cl.requestFrame(); } } }, 'Cancel')));
   };
   const w = open(cl, h('h2', `Separate peace with ${C[leader].name}`),
@@ -188,7 +197,7 @@ export function eventDialog(cl, pend) {
   const ev = R.events.find((e) => e.id === pend.ev);
   if (!ev) return;
   if (cl.speed) cl.autoPause();
-  const left = R.balance.government.eventChoiceDays - (s.day - pend.day);
+  const left = R.balance.government.eventChoiceDays - (s.day - (pend.seen ?? pend.day));
   const w = open(cl, h('h2', pend.title), h('p', pend.text),
     h('p.muted', `If you do not decide within ${left} days, your advisers choose for you.`),
     h('div.menu-buttons', ev.options.map((o, i) => h('button', { on: { click: () => {

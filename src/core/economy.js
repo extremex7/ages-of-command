@@ -1,6 +1,6 @@
 // Monthly national economy: provincial GDP -> tax revenue -> civil spending, military upkeep,
 // debt interest -> treasury. Every figure is kept in a ledger so the UI can explain it.
-import { provinceGdp, refreshCountryCache, log } from './state.js';
+import { provinceGdp, refreshCountryCache, log, logFor } from './state.js';
 import { isAtWar } from './relations.js';
 import { industryMonth, recordHistory } from './industry.js';
 import { govStabilityParts } from './government.js';
@@ -96,7 +96,7 @@ export function monthlyEconomy(state, map, rules) {
     const L = c.ledger;
     const before = c.treasury;
     c.treasury += L.net;
-    if (before >= 0 && c.treasury < 0 && c.idx === state.player) log(state, 'economy', `${c.name} is now running on debt.`, { important: true });
+    if (before >= 0 && c.treasury < 0) logFor(state, c.idx, 'economy', `${c.name} is now running on debt.`, { important: true });
     // stability drifts toward a target shaped by taxes, public services, debt, war and occupation
     let target = 50 + (c.civilShare - 0.7) * 60 - Math.max(0, c.tax - 0.3) * 100 * E.highTaxStabilityPenalty / 10;
     if (c.treasury < 0) target -= E.negativeTreasuryStabilityPenalty * Math.min(10, -c.treasury / Math.max(1, L.revenue));

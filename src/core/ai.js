@@ -1,7 +1,7 @@
 // Country AI. Each country thinks once every few days, staggered so the work is spread over
 // ticks. Decisions are simple, goal-driven heuristics, and important ones are written to
 // state.aiLog with the reason so they can be inspected in the AI debug panel.
-import { aiLog, unitCount } from './state.js';
+import { aiLog, unitCount, isHuman, humanControls } from './state.js';
 import { atWar, allied, enemiesOf, friendly, isAtWar, canEnter } from './relations.js';
 import { recruit, canRecruit, orderMove, recruitCost, bestUnits, modernizeCost, modernizeArmy } from './military.js';
 import { declareWar, canDeclareWar, warScore, demandCost, evaluatePeace, makePeace, provinceValue, warJoiners, termsCost,
@@ -45,7 +45,7 @@ export function aiTick(state, map, rules) {
   const every = rules.balance.ai.thinkEveryDays;
   for (const c of state.countries) {
     if (!c.alive) continue;
-    if (c.idx === state.player && !c.automate) continue;
+    if (humanControls(state, c.idx)) continue;
     if ((c.idx + state.day) % every !== 0) continue;
     think(state, map, rules, c);
   }
@@ -54,7 +54,7 @@ export function aiTick(state, map, rules) {
 function think(state, map, rules, c) {
   manageBudget(state, rules, c);
   manageRecruitment(state, map, rules, c);
-  if (c.idx !== state.player) considerWar(state, map, rules, c);
+  if (!isHuman(state, c.idx)) considerWar(state, map, rules, c);
   planArmies(state, map, rules, c);
   aiFleets(state, map, rules, c);
   if ((state.day + c.idx) % 28 < rules.balance.ai.thinkEveryDays) { aiWings(state, map, rules, c); aiDepots(state, map, rules, c); }
@@ -348,11 +348,11 @@ export function aiPeace(state, map, rules, warScores = null) {
     for (const side of ['A', 'D']) {
       const leader = side === 'A' ? war.leaderA : war.leaderD;
       const other = side === 'A' ? war.leaderD : war.leaderA;
-      if ((leader === state.player && !state.countries[leader].automate) || !state.wars.includes(war)) continue;
+      if (humanControls(state, leader) || !state.wars.includes(war)) continue;
       const myScore = side === 'A' ? score : -score;
       const terms = peaceTerms(state, map, rules, war, side, leader, other, myScore, months);
       if (!terms) continue;
-      if (other === state.player && !state.countries[other].automate) {
+      if (humanControls(state, other)) {
         if (!state.offers.some((o) => o.war === war.id && o.kind === 'peace')) {
           state.offers.push({ id: state.nextId++, kind: 'peace', war: war.id, from: leader, to: other, terms, day: state.day });
         }
@@ -366,8 +366,8 @@ export function aiPeace(state, map, rules, warScores = null) {
     }
     if (state.wars.includes(war) && months >= 3) aiSeparatePeace(state, map, rules, war);
   }
-  // expire stale offers
-  state.offers = state.offers.filter((o) => state.day - o.day < 30 && (o.war == null || state.wars.some((w) => w.id === o.war)));
+  // expire stale offers (in a hotseat game the 30 days start when the human first sees it, hotseat.js)
+  state.offers = state.offers.filter((o) => (state.hotseat?.mode === 'turns' && o.seen == null ? true : state.day - (o.seen ?? o.day) < 30) && (o.war == null || state.wars.some((w) => w.id === o.war)));
 }
 
 export function describeTerms(state, terms) {
@@ -412,7 +412,7 @@ function peaceTerms(state, map, rules, war, side, leader, other, myScore, months
 function aiSeparatePeace(state, map, rules, war) {
   const C = state.countries;
   for (const c of [...war.attackers, ...war.defenders]) {
-    if (c === war.leaderA || c === war.leaderD || (c === state.player && !C[c].automate)) continue;
+    if (c === war.leaderA || c === war.leaderD || humanControls(state, c)) continue;
     if (!state.wars.includes(war) || !(war.attackers.includes(c) || war.defenders.includes(c))) continue;
     if (overlordOf(state, c) >= 0) continue; // subjects follow their overlord
     const sc = separateScore(state, map, rules, war, c);
@@ -435,7 +435,7 @@ function aiSeparatePeace(state, map, rules, war) {
       if (!ev.accept || give.length >= C[c].cache.provinces) continue;
       terms = { provinces: give };
     }
-    if (enemyLeader === state.player && !C[enemyLeader].automate) {
+    if (humanControls(state, enemyLeader)) {
       if (!state.offers.some((o) => o.kind === 'separate' && o.war === war.id && o.from === c)) {
         state.offers.push({ id: state.nextId++, kind: 'separate', war: war.id, from: c, to: enemyLeader, terms, day: state.day });
       }
@@ -454,7 +454,7 @@ export function aiEconomy(state, map, rules) {
   const month = Math.floor((state.day - state.startDay) / 30.44);
   for (const c of state.countries) {
     if (!c.alive || !c.econ || !c.ledger) continue;
-    if (c.idx === state.player && !c.automate) continue;
+    if (humanControls(state, c.idx)) continue;
     if ((c.idx + month) % 2) continue;
     aiBuild(state, map, rules, c);
   }

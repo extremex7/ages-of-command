@@ -8,6 +8,7 @@ import { editorGame } from './editor.js';
 import { achievementsScreen } from './summary.js';
 import { startEdit, cloneScenario, slug } from '../core/scenario_edit.js';
 import { Client } from './client.js';
+import { hotseatFields } from './hotseat_ui.js';
 import { icon } from './icons.js';
 import { loadFlagIndex } from './flags.js';
 import { setupAudio, setMood } from './audio.js';
@@ -120,7 +121,8 @@ function newGameScreen(pick) {
         h('div.field', h('label', 'AI aggressiveness'), aggr),
         h('div.field', h('label', 'Historical events (dated events of the scenario\'s period; each still needs its conditions)'), hist),
         h('div.field', h('label', 'Random events (disasters, scandals, booms)'), rate),
-        h('div.field', h('label', 'Random seed (same seed + same choices = same game)'), seed))),
+        h('div.field', h('label', 'Random seed (same seed + same choices = same game)'), seed),
+        hotseatFields(opts))),
     h('div.row.spread', { style: { marginTop: '1em' } },
       h('button', { on: { click: mainMenu } }, 'Back'),
       h('button.primary', { on: { click: async () => {
@@ -128,7 +130,7 @@ function newGameScreen(pick) {
         const game = newGame({ map: data.map, scenario: sc, rules: data.rules, playerTag: null,
           seed: opts.seed || String(Math.floor(Math.random() * 1e9)),
           settings: { difficulty: opts.difficulty, aiAggression: opts.aiAggression, historicalEvents: opts.historicalEvents, eventRate: opts.eventRate, autosaveMonths: data.settings.autosaveMonths, autosaveKeep: data.settings.autosaveKeep, cheats: !!data.settings.cheats } });
-        startClient(game, 'pick');
+        startClient(game, 'pick', opts.hs.count > 1 ? opts.hs : null);
       } } }, 'Choose country →')))));
 }
 
@@ -245,9 +247,9 @@ function openEditor(sc) {
 }
 
 let client = null;
-function startClient(game, mode) {
+function startClient(game, mode, hotseat = null) {
   if (client) client.destroy();
-  client = new Client(app, data, game, { mode, onExit: () => { client.destroy(); client = null; mainMenu(); }, onLoad: loadText });
+  client = new Client(app, data, game, { mode, hotseat, onExit: () => { client.destroy(); client = null; mainMenu(); }, onLoad: loadText });
   window.__client = client;
 }
 

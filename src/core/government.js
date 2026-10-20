@@ -1,7 +1,7 @@
 // Government: types, domestic factions, approval, legitimacy, policies, elections, coups and
 // revolutions. Data: data/rules/governments.json and balance.json → government.
 // See docs/GOVERNMENT.md for the formulas.
-import { log, aiLog } from './state.js';
+import { log, aiLog, humanControls, impFor } from './state.js';
 import { isAtWar } from './relations.js';
 import { rand } from './rng.js';
 import { civilFromDays } from './calendar.js';
@@ -239,7 +239,7 @@ export function monthlyGovernment(state, map, rules, warScores) {
     else if (state.day - g.upheavalDay > G.upheavalCooldownDays) {
       if (!tryCoup(state, map, rules, c)) tryRevolution(state, map, rules, c);
     }
-    if (c.idx !== state.player || c.automate) { aiPolicy(state, rules, c, warScores); aiReform(state, rules, c, warScores); }
+    if (!humanControls(state, c.idx)) { aiPolicy(state, rules, c, warScores); aiReform(state, rules, c, warScores); }
   }
 }
 
@@ -275,7 +275,7 @@ export function holdElection(state, rules, c) {
   const txt = prev === winner
     ? `${c.name}: the ${name} were re-elected with ${Math.round(votes[winner] * 100)}% of the vote.`
     : `${c.name}: the ${name} won the election with ${Math.round(votes[winner] * 100)}% of the vote, replacing the ${P.factions[prev]?.name || prev}.`;
-  log(state, 'politics', txt, { important: c.idx === state.player, country: c.idx });
+  log(state, 'politics', txt, { important: impFor(state, c.idx), country: c.idx });
   refreshEffects(rules, c);
 }
 
@@ -366,7 +366,7 @@ export function setPolicy(state, rules, k, group, option) {
   g.legitimacy = Math.max(0, g.legitimacy - G.policyLegitimacyCost);
   c.stability = Math.max(0, c.stability - G.policyStabilityCost);
   refreshEffects(rules, c);
-  log(state, 'politics', `${c.name} adopted ${rules.politics.policies[group].options[option].name.toLowerCase()}.`, { important: k === state.player, country: k });
+  log(state, 'politics', `${c.name} adopted ${rules.politics.policies[group].options[option].name.toLowerCase()}.`, { important: impFor(state, k), country: k });
   return null;
 }
 

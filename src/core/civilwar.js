@@ -4,7 +4,7 @@
 //
 // The rebels are a new country added to the game (addCountry), so everything per-country they
 // need (economy, government, research, technology row) is created here.
-import { log, aiLog, newArmy, pickCapital, refreshCountryCache } from './state.js';
+import { log, aiLog, newArmy, pickCapital, refreshCountryCache, isHuman } from './state.js';
 import { rand } from './rng.js';
 import { touchRelations } from './relations.js';
 import { transferProvince, endWar, eliminate } from './war.js';
@@ -151,8 +151,9 @@ export function startCivilWar(state, map, rules, k, why = '') {
   };
   state.wars.push(war);
   gov.civilWarDay = reb.civilWarDay = state.day;
-  // the player picks a side (the client asks; until then they keep the government)
-  if (k === state.player) state.civilChoice = { gov: k, rebel: r };
+  // the player picks a side (the client asks; until then they keep the government). In a hotseat
+  // game the choice waits with that human (hotseat.js).
+  if (isHuman(state, k)) { const H = state.hotseat?.humans.find((x) => x.k === k); if (H) H.civil = { gov: k, rebel: r }; else state.civilChoice = { gov: k, rebel: r }; }
   touchRelations(state);
   if (state.econ) computeLedgers(state, map, rules);
   log(state, 'war', `Civil war in ${gov.name}! The ${rules.politics.factions[leader]?.name || 'rebels'} have risen as the ${reb.name}, taking ${ps.length} province(s)${defected.length ? ` and ${defected.length} army(ies)` : ''}${why ? ` (${why})` : ''}.`,

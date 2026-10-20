@@ -6,7 +6,7 @@
 //
 // A general leading an army is stored on it (a.gen); unassigned generals wait in the
 // country's pool (c.generals).
-import { log } from './state.js';
+import { log, logFor, isHuman } from './state.js';
 import { rand } from './rng.js';
 
 const randInt = (state, lo, hi) => lo + Math.floor(rand(state) * (hi - lo + 1));
@@ -147,14 +147,14 @@ export function battleExperience(state, rules, winners, losers, terrain, role) {
         const fit = Object.entries(K.traits).filter(([id, T]) => !g.traits.includes(id) && (!T.terrain || T.terrain[terrain]) && (!T.role || T.role === role(a)));
         if (fit.length) g.traits.push(fit[randInt(state, 0, fit.length - 1)][0]);
       }
-      if (a.owner === state.player) log(state, 'military', `General ${g.name} of the ${a.name} rose to skill ${g.skill}.`);
+      logFor(state, a.owner, 'military', `General ${g.name} of the ${a.name} rose to skill ${g.skill}.`);
     }
   };
   for (const a of winners) gain(a, K.xpWin, true);
   for (const a of losers) {
     gain(a, K.xpLoss, false);
     if (a.gen && rand(state) < K.fallChance) {
-      if (a.owner === state.player) log(state, 'military', `General ${a.gen.name} fell leading the ${a.name}.`, { important: true });
+      logFor(state, a.owner, 'military', `General ${a.gen.name} fell leading the ${a.name}.`, { important: true });
       a.gen = null;
     }
   }
@@ -180,7 +180,7 @@ export function monthlyCommanders(state, map, rules) {
         c.generals.sort((x, y) => y.skill - x.skill);
         a.gen = c.generals.shift();
       } else if (first) a.gen = newGeneral(state, map, rules, c);
-      else if (k !== state.player && c.ledger && c.treasury > hireCost(rules, c) + Math.max(0, c.ledger.revenue) * K.aiReserveMonths
+      else if (!isHuman(state, k) && c.ledger && c.treasury > hireCost(rules, c) + Math.max(0, c.ledger.revenue) * K.aiReserveMonths
         && generalCount(state, k) < maxGenerals(state, rules, k)) {
         c.treasury -= hireCost(rules, c);
         a.gen = newGeneral(state, map, rules, c);

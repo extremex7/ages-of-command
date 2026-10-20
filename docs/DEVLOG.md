@@ -644,3 +644,17 @@ scenarios were rebuilt in sized levels (economy.levelSized). The modern scenario
 (save version 7) convert on load. In 1444, the median country's farm now costs about 3 months of
 revenue and the worst about 20 (it was 93 and 686). Three-year AI runs: stability 58 to 61 in
 every start, and world GDP growth 3% (1444) to 7% (1914) over three years.
+
+## Session 23: hotseat multiplayer
+
+Two to eight players at one computer (ARCHITECTURE.md, Multiplayer). By default they take turns:
+each plans with time paused behind a handover screen that hides the previous player's view, and
+after the last one the game runs for a week, a month or until the next event; or they share the
+screen and switch country with F2 while time runs. Everything that meant "the player" now means
+"a human country": about seventy checks of `state.player` in the simulation became
+`isHuman`/`humanControls`, and the player-only log lines became `logFor`, so each player gets
+their own news, events, proposals and battle reports. Events and offers wait for their player
+instead of expiring during a long round. Peace between two players is an offer the other answers
+in their turn. Each player has their own summary; hotseat games earn no achievements, since the
+device's list belongs to one person. Single-player games and saves are unchanged (no save version
+change: `state.hotseat` is optional). 8 unit tests and a browser check.

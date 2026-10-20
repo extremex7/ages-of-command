@@ -222,3 +222,49 @@ export function aiLog(state, country, text) {
   state.aiLog.push({ day: state.day, c: country, text });
   if (state.aiLog.length > 300) state.aiLog.splice(0, state.aiLog.length - 300);
 }
+
+// Human players. In a single-player game the human is state.player (-1 in observer mode). In a
+// hotseat game (several humans at one computer, see hotseat.js) every country in
+// state.hotseat.humans is human, whoever's turn it is; state.player is the one at the screen.
+export function isHuman(state, k) {
+  return k >= 0 && (k === state.player || (!!state.hotseat && state.hotseat.humans.some((h) => h.k === k)));
+}
+
+// A human country the AI does not run (c.automate hands a human country to the AI).
+export function humanControls(state, k) {
+  return isHuman(state, k) && !state.countries[k].automate;
+}
+
+// The human countries among ks (an array or a Set).
+export function humansIn(state, ks) {
+  const has = Array.isArray(ks) ? (k) => ks.includes(k) : (k) => ks.has(k);
+  if (!state.hotseat) return state.player >= 0 && has(state.player) ? [state.player] : [];
+  return state.hotseat.humans.filter((h) => has(h.k)).map((h) => h.k);
+}
+
+// The "important" flag of a log entry about countries ks: a boolean in single player (as
+// before); in a hotseat game the humans it matters to, or false.
+export function impFor(state, ...ks) {
+  if (!state.hotseat) return state.player >= 0 && ks.includes(state.player);
+  const hs = humansIn(state, ks);
+  return hs.length ? hs : false;
+}
+
+// A log entry only human k sees (in single player: only logged when k is the player).
+export function logFor(state, k, type, text, extra = {}) {
+  if (!isHuman(state, k)) return;
+  log(state, type, text, state.hotseat ? { ...extra, who: k } : extra);
+}
+
+// Whether human k sees a log entry, and whether it is important to them.
+export function visibleTo(l, k) { return l.who == null || l.who === k; }
+export function importantTo(l, k) { return visibleTo(l, k) && (l.important === true || (Array.isArray(l.important) && l.important.includes(k))); }
+
+// Human k's country was annexed. In single player the game ends; in a hotseat game that human is
+// out, and the game ends when every human is.
+export function humanDefeated(state, k, reason) {
+  const H = state.hotseat?.humans.find((h) => h.k === k);
+  if (!H) { state.gameOver = { day: state.day, reason }; return; }
+  H.out = state.day;
+  if (state.hotseat.humans.every((h) => h.out != null)) state.gameOver = { day: state.day, reason: `${reason} Every human player has been defeated.` };
+}

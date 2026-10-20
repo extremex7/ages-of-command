@@ -5,7 +5,7 @@
 // directly by another event. AI countries choose an option by its "ai" weight (strongly
 // preferring the historical option in the "historical" setting); the player gets a dialog and
 // has eventChoiceDays to answer. Formats: docs/MODDING.md.
-import { log, newArmy, pickCapital, refreshCountryCache } from './state.js';
+import { log, newArmy, pickCapital, refreshCountryCache, isHuman, humanControls, impFor } from './state.js';
 import { isAtWar, enemiesOf, atWar, allied, touchRelations } from './relations.js';
 import { rand } from './rng.js';
 import { countryNeighbours } from './geo.js';
@@ -212,9 +212,11 @@ export function fillText(state, s, c, ctx) {
 // is spread over the month. Triggered events are handled the next day.
 export function dailyEvents(state, map, rules) {
   const G = rules.balance.government;
-  // unanswered player events resolve with the AI's choice
+  // unanswered player events resolve with the AI's choice (in a hotseat game taking turns the
+  // time to decide starts when the human first sees the event, see hotseat.js)
   for (const p of [...state.pendingEvents]) {
-    if (state.day - p.day >= G.eventChoiceDays) resolveEvent(state, map, rules, p, aiChoice(state, rules.events.find((e) => e.id === p.ev)));
+    if (state.hotseat?.mode === 'turns' && p.seen == null) continue;
+    if (state.day - (p.seen ?? p.day) >= G.eventChoiceDays) resolveEvent(state, map, rules, p, aiChoice(state, rules.events.find((e) => e.id === p.ev)));
   }
   let warring = null, warScores = null;
   const prep = () => {
@@ -299,8 +301,8 @@ function fire(state, map, rules, c, ev, ctx) {
   c.govt.evDay[ev.id] = state.day;
   (state.fired ||= {})[ev.id] ??= state.day;
   const pend = { id: state.nextId++, ev: ev.id, c: c.idx, day: state.day, rival: ctx.rival, neighbour: ctx.neighbour, title: ev.title, text: fillText(state, ev.text, c, ctx) };
-  if (ev.news && c.idx !== state.player) log(state, 'event', `${c.name}: ${ev.title}.`, { important: true, country: c.idx });
-  if (c.idx === state.player && !c.automate) state.pendingEvents.push(pend);
+  if (ev.news && !isHuman(state, c.idx)) log(state, 'event', `${c.name}: ${ev.title}.`, { important: true, country: c.idx });
+  if (humanControls(state, c.idx)) state.pendingEvents.push(pend);
   else resolveEvent(state, map, rules, pend, aiChoice(state, ev));
 }
 
@@ -319,7 +321,7 @@ export function resolveEvent(state, map, rules, pend, option) {
   if (!ev || !c.alive) return;
   const opt = ev.options[Math.max(0, Math.min(ev.options.length - 1, option))];
   applyEffects(state, map, rules, c, opt.effects || {}, pend);
-  log(state, 'event', `${c.name}: ${ev.title}. ${opt.text}.`, { important: c.idx === state.player, country: c.idx });
+  log(state, 'event', `${c.name}: ${ev.title}. ${opt.text}.`, { important: impFor(state, c.idx), country: c.idx });
 }
 
 // Describes an option's effects in words, for the event dialog.
@@ -416,7 +418,7 @@ export function applyEffects(state, map, rules, c, fx, ctx = {}) {
 // Effects that change wars, borders, governments, treaties and technology.
 function historicalEffect(state, map, rules, c, k, v) {
   const C = state.countries, me = c.idx;
-  const note = (text) => log(state, 'event', text, { important: me === state.player });
+  const note = (text) => log(state, 'event', text, { important: impFor(state, me) });
   switch (k) {
     case 'war': {
       const t = alive(state, v.target);

@@ -10,7 +10,7 @@
 // state.plans = [{ id, owner, kind: 'front' | 'attack', armies: [ids], enemy, target, path,
 // step, status: 'prep' | 'go', prep }]. An army belongs to one plan at most; giving it any
 // other order takes it out of its plan. See docs/MILITARY.md (Battle plans).
-import { log } from './state.js';
+import { log, logFor } from './state.js';
 import { atWar, friendly, canEnter } from './relations.js';
 import { findPath } from './pathfind.js';
 import { orderMove, armySpeed } from './military.js';
@@ -138,7 +138,7 @@ function advance(state, map, rules, p) {
   while (p.step < p.path.length - 1 && ours(p.path[p.step]) && list.every((a) => a.loc === p.path[p.step] || a.battle)) p.step++;
   const way = p.path[p.step];
   if (p.step === p.path.length - 1 && ours(way) && list.some((a) => a.loc === way)) {
-    if (p.owner === state.player) log(state, 'military', `Attack on ${map.name[p.target]} succeeded.`, { prov: p.target });
+    logFor(state, p.owner, 'military', `Attack on ${map.name[p.target]} succeeded.`, { prov: p.target });
     cancelPlan(state, p.id);
     return;
   }

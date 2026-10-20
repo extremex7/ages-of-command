@@ -2,8 +2,9 @@
 // counts of battles, wars and other deeds, and the achievements earned. It feeds the game summary
 // (Menu → Summary, and at the end of a game) and the achievements list. Only the player's country
 // is recorded; in observer mode nothing is. A game in which cheats were used earns no
-// achievements. See docs/ACHIEVEMENTS.md.
-import { log } from './state.js';
+// achievements. In a hotseat game every human has a record (kept with them in state.hotseat)
+// and no achievements are earned. See docs/ACHIEVEMENTS.md.
+import { log, humansIn } from './state.js';
 import { starOf, rankChange } from './prestige.js';
 import { overlordOf } from './diplomacy.js';
 import { isAtWar } from './relations.js';
@@ -20,37 +21,46 @@ function snapshot(state, k) {
   };
 }
 
-// Starts (or restarts, after the player takes over another country) the record.
-export function startRecord(state) {
-  const k = state.player;
+const humanOf = (state, k) => state.hotseat?.humans.find((h) => h.k === k);
+
+// Starts (or restarts, after the player takes over another country) the record of human k.
+export function startRecord(state, k = state.player) {
   if (k < 0) return null;
-  const old = state.record;
+  const H = state.hotseat ? humanOf(state, k) : null;
+  if (state.hotseat && !H) return null;
+  const old = H ? H.record : state.record;
   const start = snapshot(state, k);
-  state.record = {
+  const R = {
     k, tag: state.countries[k].tag, start, hist: [start], best: { rank: start.rank, day: state.day },
     n: { battlesWon: 0, battlesLost: 0, warsWon: 0, warsLost: 0, whitePeace: 0, coups: 0, resolutions: 0 },
     monthsAt1: 0, peaceMonths: 0, ach: old?.ach || {}, earlier: old ? [...(old.earlier || []), { tag: old.tag, until: state.day }] : [],
   };
+  if (H) H.record = R; else state.record = R;
+  return R;
+}
+
+export function recordOf(state, k = state.player) {
+  if (k < 0) return null;
+  if (state.hotseat) { const H = humanOf(state, k); return !H ? null : H.record?.k === k ? H.record : startRecord(state, k); }
+  if (k !== state.player) return null;
+  if (!state.record || state.record.k !== k) return startRecord(state);
   return state.record;
 }
 
-export function recordOf(state) {
-  if (state.player < 0) return null;
-  if (!state.record || state.record.k !== state.player) return startRecord(state);
-  return state.record;
+// The record of human k, if there is one (without starting one).
+export function recordFor(state, k = state.player) {
+  return state.hotseat ? humanOf(state, k)?.record || null : state.record || null;
 }
 
-export function bump(state, key, n = 1) {
-  const R = state.player >= 0 ? recordOf(state) : null;
+export function bump(state, key, n = 1, k = state.player) {
+  const R = k >= 0 ? recordOf(state, k) : null;
   if (R) R.n[key] = (R.n[key] || 0) + n;
 }
 
 // A war ended: did the player's side win, lose, or make a white peace? (`from` dictated terms.)
 export function recordPeace(state, war, from, gained) {
-  const k = state.player;
-  if (k < 0 || !(war.attackers.includes(k) || war.defenders.includes(k))) return;
   const sideFrom = war.attackers.includes(from) ? war.attackers : war.defenders;
-  bump(state, !gained ? 'whitePeace' : sideFrom.includes(k) ? 'warsWon' : 'warsLost');
+  for (const k of humansIn(state, [...war.attackers, ...war.defenders])) bump(state, !gained ? 'whitePeace' : sideFrom.includes(k) ? 'warsWon' : 'warsLost', 1, k);
 }
 
 // Achievement definitions: id, name, what it takes, and the test (record, current snapshot).
@@ -83,13 +93,21 @@ export const ACHIEVEMENTS = [
 
 // Monthly, after prestige: counters, the yearly sample and new achievements (logged).
 export function monthlyRecord(state, rules, month) {
+  if (state.hotseat) {
+    for (const H of state.hotseat.humans) if (state.countries[H.k].alive) recordMonth(state, recordOf(state, H.k), month, false);
+    return [];
+  }
   if (state.player < 0 || !state.countries[state.player].alive) return [];
-  const R = recordOf(state), x = snapshot(state, R.k);
+  return recordMonth(state, recordOf(state), month, !state.cheated);
+}
+
+function recordMonth(state, R, month, achievements) {
+  const x = snapshot(state, R.k);
   R.monthsAt1 = x.rank === 1 ? R.monthsAt1 + 1 : 0;
   R.peaceMonths = isAtWar(state, R.k) ? 0 : R.peaceMonths + 1;
   if (x.rank > 0 && (!R.best.rank || x.rank < R.best.rank)) R.best = { rank: x.rank, day: state.day };
   if (month === 1 && R.hist[R.hist.length - 1].day !== state.day) R.hist.push(x);
-  if (state.cheated) return [];
+  if (!achievements) return [];
   const earned = [];
   for (const a of ACHIEVEMENTS) {
     if (R.ach[a.id] != null || !a.test(R, x, state)) continue;
@@ -101,8 +119,8 @@ export function monthlyRecord(state, rules, month) {
 }
 
 // The game summary: a headline and the figures behind it (start against now).
-export function summary(state) {
-  const R = state.record;
+export function summary(state, k = state.player) {
+  const R = recordFor(state, k);
   if (!R) return null;
   const c = state.countries[R.k], alive = c.alive;
   const now = alive ? snapshot(state, R.k) : R.hist[R.hist.length - 1];
@@ -115,7 +133,7 @@ export function summary(state) {
   else if (to > from) headline = `${c.name} fell from #${from} to #${to}${span}.`;
   else headline = `${c.name} held its place at #${to}${span}.`;
   return {
-    headline, years, from, to, best: R.best, start: R.start, now, n: R.n, hist: R.hist, cheated: !!state.cheated,
+    k: R.k, headline, years, from, to, best: R.best, start: R.start, now, n: R.n, hist: R.hist, cheated: !!state.cheated,
     achievements: ACHIEVEMENTS.filter((a) => R.ach[a.id] != null).map((a) => ({ ...a, day: R.ach[a.id] })),
     total: ACHIEVEMENTS.length, earlier: R.earlier,
   };

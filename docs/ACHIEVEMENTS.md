@@ -12,7 +12,9 @@ counts battles (land and naval) and wars won and lost, white peaces, coups you s
 council resolutions you proposed that passed. It also keeps your best rank, how many months in a
 row you have been first, and how many months since your last war. The record is part of the save.
 If you switch countries (joining the rebels in a civil war), it starts again for the new country
-and keeps the achievements already earned. In observer mode nothing is recorded.
+and keeps the achievements already earned. In observer mode nothing is recorded. In a hotseat
+game (several players at one computer) every player has their own record, kept with them in the
+save.
 
 ## The summary
 
@@ -29,7 +31,10 @@ Menu → **Summary** at any time, and on its own when the game ends (your countr
 
 Checked monthly for the country you lead. Each is announced once per game and kept on the device
 (main menu → **Achievements**, with the country and date it was first earned). A game in which
-cheats were used earns none.
+cheats were used earns none, and neither do hotseat games: the device's achievement list belongs
+to one person, and the players of a hotseat game share the device. The summary still works for
+each of them: Menu → Summary in a player's turn shows theirs, and at the end of the game every
+player's headline is listed with a button for their summary.
 
 | Achievement | How |
 | --- | --- |

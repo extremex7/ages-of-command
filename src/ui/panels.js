@@ -10,6 +10,7 @@ import { recruit, recruitCost, canRecruit, mergeArmies, splitArmy, armyMen, sieg
 import { canUseUnit, eraOf } from '../core/technology.js';
 import { researchTab } from './research_ui.js';
 import { unitCount, provinceGdp } from '../core/state.js';
+import { logOf } from '../core/hotseat.js';
 import { canDeclareWar } from '../core/war.js';
 import { declareDialog } from './dialogs.js';
 import { economyTab, industryTab, provinceEconomy, embargoButton } from './economy_ui.js';
@@ -91,7 +92,7 @@ function countryTab(cl) {
     !mine && c.alive && sanctionsRow(cl, k),
     c.alive && relationsSection(cl, k),
     c.alive && intelSection(cl, k),
-    !mine && c.alive && h('div.row', { style: { marginTop: '0.5em' } },
+    !mine && c.alive && !s.hotseat && h('div.row', { style: { marginTop: '0.5em' } },
       h('button', { tip: 'Take control of this country from now on. The country you leave is run by the AI.', on: { click: () => { cl.setSpeed(0); cl.startPlaying(k); } } }, `Play as ${c.name}`)),
     mine && h('p.note', 'Tip: right-click a province with armies selected to move them. Space pauses, keys 1–5 set speed.'));
 }
@@ -205,7 +206,7 @@ function reportsList(cl) {
 
 function logTab(cl) {
   const s = cl.state;
-  const items = s.log.slice(-120).reverse();
+  const items = logOf(s).slice(-120).reverse(); // in a hotseat game, what this player may see
   return h('div', h('h3', 'Events'), items.length ? items.map((l) => h('div.log-item' + (l.important ? '.imp' : '') + (l.prov != null || l.report ? '.click' : ''),
     { on: { click: () => { if (l.report) cl.openReport(l.report); else if (l.prov != null) cl.focusProvince(l.prov); } } },
     h('span.d', formatDate(l.day)), l.text)) : h('p.muted', 'Nothing has happened yet.'));

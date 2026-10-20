@@ -4,7 +4,7 @@
 // spend network strength: steal technology, sabotage industry, fund the opposition, or stage a
 // coup that installs a friendly government and can make a small country a puppet (subject).
 // Numbers: balance.json → espionage. See docs/ESPIONAGE.md.
-import { log, aiLog } from './state.js';
+import { log, aiLog, logFor, isHuman, impFor } from './state.js';
 import { rand } from './rng.js';
 import { addMod, signTreaty, overlordOf, subjectsOf, validateTreaty } from './diplomacy.js';
 import { changeGovernment, govType } from './government.js';
@@ -110,10 +110,10 @@ export function spyOperation(state, map, rules, k, target, op) {
       changeGovernment(state, rules, t, to, { legitimacy: 30, ruling: rules.politics.types[to].ruling || null });
       t.stability = Math.max(0, t.stability - 10);
       addMod(state, target, k, E.coupOpinion, rules.balance.diplomacy.modDecay, 'Installed our government');
-      if (k === state.player) bump(state, 'coups');
+      if (isHuman(state, k)) bump(state, 'coups', 1, k);
       what = `overthrew the ${was.toLowerCase()} and installed a friendly ${govType(rules, t).name.toLowerCase()}`;
       if (canPuppet(state, map, rules, k, target)) { signTreaty(state, map, rules, 'subject', k, target, { quiet: true }); what += `; ${t.name} is now our puppet`; }
-      log(state, 'politics', `Coup in ${t.name}: the government has fallen${seen ? `, backed by ${c.name}` : ''}.`, { important: k === state.player || target === state.player, country: target });
+      log(state, 'politics', `Coup in ${t.name}: the government has fallen${seen ? `, backed by ${c.name}` : ''}.`, { important: impFor(state, k, target), country: target });
     }
   }
   if (seen) {
@@ -121,8 +121,8 @@ export function spyOperation(state, map, rules, k, target, op) {
     s.nets[target] *= 1 - E.caughtNetworkLoss;
   }
   const label = SPY_OP_NAMES[op];
-  if (k === state.player) log(state, 'diplomacy', `${label} in ${t.name}: ${ok ? what : 'failed'}${seen ? '; our agents were caught' : ''}.`, { important: true });
-  else if (target === state.player && (seen || ok)) log(state, 'diplomacy', seen ? `${c.name}'s agents were caught: ${label.toLowerCase()}${ok ? ` (${what.replace('stole', 'they stole')})` : ', foiled'}.` : `Foreign agents struck: ${what}.`, { important: true });
+  logFor(state, k, 'diplomacy', `${label} in ${t.name}: ${ok ? what : 'failed'}${seen ? '; our agents were caught' : ''}.`, { important: true });
+  if (seen || ok) logFor(state, target, 'diplomacy', seen ? `${c.name}'s agents were caught: ${label.toLowerCase()}${ok ? ` (${what.replace('stole', 'they stole')})` : ', foiled'}.` : `Foreign agents struck: ${what}.`, { important: true });
   else aiLog(state, k, `${label} in ${t.name}: ${ok ? what : 'failed'}${seen ? ', caught' : ''}.`);
   return { ok, seen, what };
 }
@@ -142,7 +142,7 @@ export function monthlyEspionage(state, map, rules) {
     s.building = s.building.filter((t) => state.countries[t]?.alive);
     for (const t of s.building) s.nets[t] = Math.min(100, (s.nets[t] || 0) + E.growth * (1 - counterOf(state, rules, t)));
   }
-  for (const c of state.countries) if (c.alive && c.idx !== state.player && c.ledger) aiSpies(state, map, rules, c);
+  for (const c of state.countries) if (c.alive && !isHuman(state, c.idx) && c.ledger) aiSpies(state, map, rules, c);
 }
 
 // AI: spy on its rival (and enemies at war), steal technology from those ahead, unsettle

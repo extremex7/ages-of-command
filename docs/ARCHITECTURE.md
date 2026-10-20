@@ -203,8 +203,36 @@ wrong array lengths, missing fields are rejected with a message; removed unit ty
 army locations are dropped; a larger newer map extends province arrays). Browser slots use
 localStorage with rotation of autosaves; export/import as files works without storage.
 
-## Multiplayer readiness
+## Multiplayer
 
-All player actions go through core functions that validate and return an error string
-(`recruit`, `orderMove`, `declareWar`, `makePeace`, …) and the simulation is deterministic, which
-is the basis for a lock-step command model later. No networking exists yet.
+**Hotseat** (`hotseat.js`, interface in `src/ui/hotseat_ui.js`): two to eight humans at one
+computer, each leading a country. `state.hotseat` (absent in single player, so old saves and
+single-player games are unchanged) holds the players `{ k, name, seq, record, civil, out }`, the
+mode, how long a round runs, whose turn it is, the stage and the round. `state.player` stays "the
+human at the screen": the active player in their turn, -1 between turns and while a round runs,
+so the interface needed no changes to show one player's view. The simulation instead asks
+`isHuman(state, k)` / `humanControls(state, k)` (state.js), true for every player's country:
+the AI skips them (military, economy, diplomacy, research, policies, spies, strategic forces),
+their events and proposals wait for them, and AI peace offers go to them as offers.
+
+- Taking turns: stage `handover` (a cover hides the map until the named player confirms) →
+  `plan` (time cannot run; End turn) → the next player's handover → `ready` (choose a week, a
+  month, or until the next event) → `run` → the first player's handover. "Until the next event"
+  stops at a new event or offer for a player, a player's civil war, or a new war involving a
+  player (or after a year). Events and offers to a player who has not seen them do not expire;
+  their 30 days start when that player's turn begins (`p.seen`, `o.seen`). A loaded game never
+  reopens a turn without the handover screen.
+- Shared screen: time runs as in single player; F2 or the top-bar button gives the controls to
+  the next player, and a decision for another player switches to them first.
+- Log entries can belong to one player (`who`, written by `logFor`) and `important` can be the
+  list of players it matters to (`impFor`); in single player both behave exactly as before.
+  Each player's turn opens with their news since their last turn; the Events tab and the
+  notifications show only what that player may see. While a round runs only public news shows.
+- Peace demands and separate peace requests to a human leader become offers (`offerToHuman`),
+  answered in the Diplomacy tab in their turn; treaty proposals already worked that way.
+- Records (summary) per player; no achievements. A player whose country is annexed is out and
+  skipped; the game ends when every player is out.
+
+**Online**: all player actions go through core functions that validate and return an error
+string (`recruit`, `orderMove`, `declareWar`, `makePeace`, …) and the simulation is
+deterministic, which is the basis for a lock-step command model later. No networking exists yet.

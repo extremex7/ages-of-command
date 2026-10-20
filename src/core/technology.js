@@ -5,7 +5,7 @@
 // the list of ids, so a changed tech file remaps by id). Everything a country's technologies
 // imply (unlocked goods, buildings, units and government types, the normalised effect
 // multipliers and the era) lives in c.tfx, which is derived and rebuilt on load.
-import { log, aiLog, refreshCountryCache } from './state.js';
+import { log, aiLog, refreshCountryCache, logFor, isHuman, humanControls, impFor } from './state.js';
 import { parseDate, civilFromDays } from './calendar.js';
 import { countryNeighbours } from './geo.js';
 import { isAtWar } from './relations.js';
@@ -170,10 +170,10 @@ export function grantTech(state, map, rules, k, t, why = '') {
   refreshTech(state, rules, c);
   if (c.research.current === T.id) { c.research.current = null; c.research.progress = 0; }
   c.research.queue = c.research.queue.filter((id) => id !== T.id);
-  if (k === state.player) log(state, 'research', `${T.name} ${why || 'researched'}.`, { important: true });
+  logFor(state, k, 'research', `${T.name} ${why || 'researched'}.`, { important: true });
   if (c.tfx.era > before) {
     const E = rules.tech.eras[c.tfx.era];
-    log(state, 'research', `${c.name} enters the ${E.name} era.`, { important: k === state.player });
+    log(state, 'research', `${c.name} enters the ${E.name} era.`, { important: impFor(state, k) });
   }
   if (map) refreshCountryCache(state, map, rules);
   return true;
@@ -304,13 +304,13 @@ export function monthlyResearch(state, map, rules) {
     if (!c.alive || !c.research) continue;
     const k = c.idx, r = c.research;
     const rp = researchPoints(state, rules, c);
-    const ai = k !== state.player || c.automate;
+    const ai = !humanControls(state, k);
     if (!r.current && !startNext(state, rules, k) && ai) chooseResearch(state, map, rules, c);
     if (!r.current) {
       r.bank = Math.min(rp * Rb.bankMonths, r.bank + rp);
-      if (k === state.player && !r.notified && anyAvailable(state, rules, k)) {
+      if (isHuman(state, k) && !r.notified && anyAvailable(state, rules, k)) {
         r.notified = true;
-        log(state, 'research', 'Choose a research project: points are being banked (Research tab).', { important: true });
+        logFor(state, k, 'research', 'Choose a research project: points are being banked (Research tab).', { important: true });
       }
       continue;
     }

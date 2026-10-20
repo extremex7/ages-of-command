@@ -48,6 +48,12 @@ npm start            # serves the game at http://localhost:8080/
 # or: node tools/serve.mjs 8080   (any static server works, e.g. python3 -m http.server)
 ```
 
+**Hotseat:** on the New Game screen choose 2 to 8 players and their names; each picks a country,
+the rest are AI. By default the players take turns: a handover screen hides the map until the
+next player sits down, each plans with time paused and presses **End turn**, and once everyone
+has planned the game runs for a week, a month or until the next event. Or share the screen and
+switch country with **F2** while time runs.
+
 Open the URL, choose **New Game**, pick a scenario (Modern World, Height of Rome 117, Rise of
 Empires 1444, Concert of Europe 1815, A House Divided 1861, The Great War 1914, The Gathering Storm 1936, The Cold War 1962, or the fictional Flashpoint 2035 and
 Orbital Age 2085), then **Choose country**, click a country
@@ -74,7 +80,7 @@ programmes, cyber operations, satellites and space.
 | `P T O V G X K F R Y J Q S W` | Map modes: political, terrain, population, development, economy, resources, industry, infrastructure, military, diplomacy (opinion), government, technology (era), naval (sea control), supply |
 | `N B E U A M Z D L I` | Tabs: nation, government, economy, industry, research, military, strategic, diplomacy, events, AI/performance |
 | `C` · `H` | Centre on your capital · show whole world |
-| `Ctrl+S` | Quick save · `Esc` clears selection / closes dialogs · `F11` full screen |
+| `Ctrl+S` | Quick save · `Esc` clears selection / closes dialogs · `F11` full screen · `F2` next player (hotseat, shared screen) |
 | `Tab` or `\` · `` ` `` | Hide or show the side panel · cheat console (only when cheats are enabled) |
 | `Enter` · `Shift+Enter` | Select the province in the middle of the map · send the selected forces there |
 | `[` · `]` | Previous · next of your armies, fleets and air wings |
@@ -93,7 +99,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 159 unit/integration tests of the simulation (node:test)
+npm test                            # 167 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -110,6 +116,7 @@ node tests/browser/features2.mjs    # generals, battle plans, the civil-war choi
 node tests/browser/editor.mjs       # scenario editor: paint a new country, save, play, reload
 node tests/browser/access.mjs       # colour-blind colours, text size, keyboard-only play
 node tests/browser/summary.mjs      # achievements and the game summary
+node tests/browser/hotseat.mjs      # hotseat: two players pick, plan, hand over, run a week; shared screen
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -139,7 +146,7 @@ index.html, styles/        browser entry point and UI styles
 src/core/                  simulation (pure JS, no DOM): calendar, rng, mapdata, state, economy,
                            industry (production, market, construction), military, pathfind,
                            combat, naval, air, supply, strategic, war, relations, diplomacy,
-                           government, events, technology, ai, ai_diplomacy, sim (clock), save, rules
+                           government, events, technology, ai, ai_diplomacy, hotseat, sim (clock), save, rules
 src/map/                   Canvas 2D renderer, map modes, spatial index / picking
 src/ui/                    menus, HUD, panels, dialogs, save slots (browser storage, or disk in the desktop app)
 launcher/                  desktop launcher (Go; native window), Windows installer script, icon

@@ -12,7 +12,7 @@
 //      unemployment, consumer prices and army supply; world prices follow world demand/supply.
 // All per-province data are typed arrays in state.econ; per-country data live in c.econ.
 import { sanctionPairs, sanctionGoods } from './council.js';
-import { log } from './state.js';
+import { log, logFor, isHuman } from './state.js';
 import { atWar, tradeLinks } from './relations.js';
 
 // ---------------------------------------------------------------------------------------------
@@ -755,9 +755,9 @@ export function processConstruction(state, map, rules) {
   for (const p of done) {
     if (p.kind === 'infra') state.prov.infra[p.prov] = Math.min(rules.balance.industry.maxInfra, state.prov.infra[p.prov] + 1);
     else state.econ.bld[p.prov * X.B + p.b] = Math.min(255, state.econ.bld[p.prov * X.B + p.b] + 1);
-    if (p.owner === state.player) {
+    if (isHuman(state, p.owner)) {
       const what = p.kind === 'infra' ? `Infrastructure level ${state.prov.infra[p.prov]}` : `${X.buildings[p.b].name} level ${state.econ.bld[p.prov * X.B + p.b]}`;
-      log(state, 'economy', `${what} completed in ${map.name[p.prov]}.`, { prov: p.prov });
+      logFor(state, p.owner, 'economy', `${what} completed in ${map.name[p.prov]}.`, { prov: p.prov });
     }
   }
   if (done.length) state.construction = state.construction.filter((p) => !done.includes(p));

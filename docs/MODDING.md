@@ -41,10 +41,12 @@ elasticity and limits, shortage penalties, army consumption, infrastructure and 
 rules (all explained in [ECONOMY.md](ECONOMY.md)). `government` and `diplomacy` hold every number
 in [GOVERNMENT.md](GOVERNMENT.md) and [DIPLOMACY.md](DIPLOMACY.md) (approval curve, coup and
 revolution thresholds, policy costs, treaty opinions, breaking penalties, peace-term costs, AI
-cadence). The optional sections `civilWar`, `commanders`, `espionage` and `council` hold the civil-war
+cadence). The optional sections `civilWar`, `commanders`, `espionage`, `council` and `deals` hold the civil-war
 rules ([GOVERNMENT.md](GOVERNMENT.md)), the generals, their traits and battle plans
-([MILITARY.md](MILITARY.md)), spy networks ([ESPIONAGE.md](ESPIONAGE.md)) and the world council
-([DIPLOMACY.md](DIPLOMACY.md)); without them those features are off. A trait is
+([MILITARY.md](MILITARY.md)), spy networks ([ESPIONAGE.md](ESPIONAGE.md)), the world council
+and the peacetime deals (loans, ultimatums, personal unions, province and money deals, rebel
+support; [DIPLOMACY.md](DIPLOMACY.md), Deals; every key is described in its `_doc`); without them
+those features are off. `diplomacy.treatyOpinion.union` is the opinion a personal union adds. A trait is
 `{ name, text, attack?, defense?, speed?, orgRecovery?, orgLoss?, siege?, supply?, terrain?, role? }`.
 
 ## Goods — `data/rules/goods.json`
@@ -113,6 +115,11 @@ Unknown keys are rejected on load with the file and field named.
 - Milestone 6 conditions: `warheads`, `satellites`, `worldNukes` (numbers) and `hasNukes`
   (boolean); effects: `warheads`, `satellites`, `cyber`, `stations`, `colonies` (deltas; see
   [STRATEGIC.md](STRATEGIC.md)). `treaty` accepts `arms_control`.
+- Personal unions: the effect `union: { with: TAG | "heir", junior: true? }` makes the event's
+  country the senior partner of `with` (or its junior partner with `junior: true`) when the union
+  is possible (DIPLOMACY.md, Deals). The boolean condition `hasHeir` holds for a monarchy with a
+  much weaker neighbouring monarchy whose opinion of it is at least 20 that could join it;
+  `"heir"` names that country and `{heir}` puts its name in the text.
 
 ## Technologies — `data/rules/technologies.json`
 

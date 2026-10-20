@@ -359,6 +359,8 @@ export function validateSeparatePeace(state, map, rules, war, c, terms) {
   if (c === war.leaderA || c === war.leaderD) return 'War leaders negotiate a full peace';
   const att = war.attackers.includes(c);
   if (!att && !war.defenders.includes(c)) return 'Not a participant';
+  const sr = state.dip ? seniorOf(state, c) : -1;
+  if (sr >= 0 && (att ? war.attackers : war.defenders).includes(sr)) return `${state.countries[sr].name}, your senior partner in a personal union, decides on peace`;
   const enemySide = att ? war.defenders : war.attackers;
   for (const p of terms.provinces || []) {
     if (state.prov.owner[p] !== c) return `${map.name[p]} is not yours to cede`;

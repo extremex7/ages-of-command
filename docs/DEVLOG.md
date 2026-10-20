@@ -628,3 +628,20 @@ all, so factories stopped for want of timber. Treasuries were too small to build
 farms. The builder now gives a country one level where the most was planned when a tenth of a
 level or more is left over, and every history scenario was rebuilt. After two years of AI play
 average stability is now 56 to 60 in every start (1444 58, Rome 58, 1815 57, 1861 58, 1914 57).
+
+## Session 23: diplomacy deals
+
+Five kinds of peacetime deal that a comparison with Age of History II and III found missing
+(DIPLOMACY.md, Deals): loans with interest, repaid monthly, with defaults and repudiation;
+ultimatums for provinces, tribute or subjugation with a deadline; personal unions (a new treaty
+type) made by offer, as a peace term or by a dynastic event, with integration and breaking away;
+selling, buying and giving provinces and sending money; and funding another country's unrest or
+civil-war rebels. Unlike those games, every offer shows the other side's answer and its reasons
+before it is sent, a refusal or a betrayal leaves a casus belli that justifies war and that the
+war AI counts as a motive, and the AI uses all of it: it borrows when in debt from the
+friendliest lender at the lowest rate it accepts, forms dynastic unions, sells land when deep in
+debt and buys back lost land when rich, funds its rival's rebels, and now and then threatens a
+much weaker neighbour, asking for the largest tribute the target would pay. In 8-year AI runs of
+the Modern World there were 15 to 25 loans, 3 unions and 6 to 11 ultimatums (a few accepted);
+the benchmark stays within its run-to-run noise (4 to 6 ms a simulated day before and after). The new state is created lazily, so saves need no
+migration. 10 new unit tests and a browser check (tests/browser/deals.mjs).

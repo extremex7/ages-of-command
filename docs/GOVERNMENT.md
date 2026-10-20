@@ -90,6 +90,8 @@ backs factions with approval under 30. The monthly chance is
 0.04 × (15 − stability)/15 × min(1, disgruntled share × 2)
 ```
 
+multiplied by 2, 3 or 4 while a foreign country funds its unrest (DIPLOMACY.md, Support for rebels).
+
 The largest unhappy faction rises as a new country with its own government type (liberals: a
 parliamentary "Free X"; socialists: a one-party "People's Republic of X"; nationalists or the
 military: a military government; and so on). It takes a connected block of 25–45% of the

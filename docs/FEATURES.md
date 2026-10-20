@@ -97,6 +97,12 @@ See [DIPLOMACY.md](DIPLOMACY.md) and [GOVERNMENT.md](GOVERNMENT.md).
 | Espionage and puppet governments by coup | ✅ | Spy networks in every era: steal technology, sabotage, fund the opposition, coups (ESPIONAGE.md) |
 | Demilitarised zones, ceasefires | ✅ | Passed by the world council |
 | AI reforming its own government type | ✅ | Only when its government is in trouble; never against its ruling faction (GOVERNMENT.md) |
+| Loans between countries | ✅ | Amount, rate and term chosen in a dialog; monthly annuity repayments; missed payments, default (reputation, opinion, trust, casus belli) and deliberate repudiation; early repayment; AI borrows when in debt and lends by risk and rate (DIPLOMACY.md, Deals) |
+| Ultimatums (demands without war) | ✅ | Provinces, tribute or subjugation, with a 30-day deadline; the target weighs war odds with its friends, opinion, nuclear weapons and the size of the demand; refusal gives a casus belli the AI acts on; the AI sends them rarely, to much weaker neighbours, and answers the player's |
+| Personal unions | ✅ | By offer, peace term or event (dynastic inheritance); the junior shares foreign policy and wars, can be integrated after 10 years of good relations, or breaks away when relations sour; the AI forms dynastic unions, integrates and breaks away |
+| Province and money deals in peacetime | ✅ | Sell, buy or give border provinces at a price weighed against their value; gifts of money for opinion; the AI sells land when deep in debt and buys back lost provinces when rich |
+| Support for rebels | ✅ | Three funding levels: unrest (stability, civil-war chance) or, in a civil war, money, men and units for the rebels; monthly detection with opinion, trust and casus belli costs; the AI funds its rival's rebels |
+| Casus belli | ✅ | From refused ultimatums, defaults, broken unions and uncovered rebel funding; justifies a war and counts as an AI war motive |
 
 ## Milestone 5 — research, eras and historical scenarios
 
@@ -115,7 +121,7 @@ See [TECHNOLOGY.md](TECHNOLOGY.md) and [SCENARIOS.md](SCENARIOS.md).
 | Reusable historical scenario loader | ✅ | Region-rule definitions → scenario files (`tools/build_history.mjs`), economy seeded per scenario |
 | Playable historical scenarios | ✅ | Height of Rome (117), The Great War (1914), The Gathering Storm (1936), The Cold War (1962) |
 | Dormant countries released by events | ✅ | 34 across the scenarios (Poland 1914, the Soviet republics 1962…) |
-| Historical events with date and condition triggers | ✅ | 114 historical + 15 world events; premises in conditions, chains via `trigger`, once-only |
+| Historical events with date and condition triggers | ✅ | 114 historical + 16 world events; premises in conditions, chains via `trigger`, once-only |
 | Alternate history, events not forced | ✅ | Historical / Plausible / Off setting; every option possible; events skip when their premise fails |
 | Starting wars, subjects, blocs and policies from the scenario | ✅ | |
 | Save v5 with migration; tech file remapping | ✅ | |

@@ -55,7 +55,7 @@ Order of one tick since Milestone 6:
 | 5 | `detectBattles`, `detectNavalBattles` | `monthlyDepots` (lost depots) |
 | 6 | `dailySupply` (supply levels, attrition) | `monthlyResearch` |
 | 7 | `resolveBattles` (with air and naval support), `resolveNavalBattles` | `monthlyMilitary` (reinforcement) |
-| 8 | `processSieges`, `dailyRecovery` | war scores, `monthlyGovernment`, `monthlyDiplomacy` |
+| 8 | `processSieges`, `dailyRecovery` | war scores, `monthlyGovernment`, `monthlyDiplomacy`, `monthlyDeals` |
 | 9 | `dailyStrategic` (queued retaliation strikes) | `aiPeace`, `aiEconomy` |
 | 10 | `processConstruction`, `dailyEvents` | `refreshCountryCache` |
 | 11 | `aiTick` (incl. fleets; wings and depots about every 28 days), `aiDiplomacy` | |
@@ -133,6 +133,11 @@ co-belligerents can sign a separate peace; white peace is accepted when the othe
   projects, and the strategic AI (run inside `monthlyStrategic`).
 - **AI diplomacy** (`ai_diplomacy.js`): rivals, treaty review, one treaty sought per round,
   embargoes, blocs, influence spending; every decision logged.
+- **Deals** (`deals.js`, AI in `ai_deals.js`, rules in DIPLOMACY.md): loans, ultimatums, personal
+  unions (a treaty type), province sales and gifts, money gifts and rebel funding. Its lists
+  (`state.dip.loans`, `support`, `pending`, `cbs`) are created lazily, so older saves load as they
+  are; monthly work is one pass over those short lists, and the AI's deals run in its staggered
+  diplomacy round.
 - **AI** (`ai.js`): budget management (tax/spending), recruitment within its military budget,
   war declarations against neighbours that need a motive (opinion, rivalry, claims,
   independence) and odds that count both sides' likely joiners, scaled by government war

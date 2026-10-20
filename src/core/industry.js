@@ -119,11 +119,39 @@ export function buildingEff(b, de, fert, site = 1) {
   return de;
 }
 
+// Size of one building level in province i, as a share of a full level (the figures in
+// buildings.json). A level is sized to the province's economy (population × output per worker,
+// without industry) relative to levelSizeGdp B a year, between levelSizeMin and 1, so a level's
+// cost, output, inputs and workers all shrink together in small or poor provinces: a 1444 farm
+// costs what a medieval county can pay and pays back as slowly as a modern one. Most modern
+// provinces have full-size levels. See docs/ECONOMY.md.
+export function levelSize(state, rules, i) {
+  const E = rules.balance.economy, I = rules.balance.industry;
+  const base = (state.prov.pop[i] * E.devBase * Math.pow(E.devGrowth, state.prov.dev[i])) / 1e9;
+  return Math.max(I.levelSizeMin ?? 0.01, Math.min(1, base / (I.levelSizeGdp ?? 5)));
+}
+// Most levels of building B a province with level size sz can hold: maxLevel and deposits are in
+// full levels. Levels are stored in a byte, so at most 255.
+export function levelCap(B, sz) { return Math.min(255, Math.floor(B.maxLevel / sz + 1e-6)); }
+export function depositCap(d, sz) { return Math.min(255, Math.floor(d / sz + 1e-6)); }
+
+// Converts building levels counted in full levels (saves before version 7, scenarios without
+// economy.levelSized) to levels of each province's own size, keeping their output.
+export function resizeLevels(state, rules) {
+  const X = rules.econ, ec = state.econ, n = state.prov.owner.length;
+  for (let i = 0; i < n; i++) {
+    const sz = levelSize(state, rules, i);
+    if (sz >= 1) continue;
+    for (let b = 0; b < X.B; b++) { const L = ec.bld[i * X.B + b]; if (L) ec.bld[i * X.B + b] = Math.min(255, Math.max(1, Math.round(L / sz))); }
+  }
+}
+
 // Workforce available to industry and agriculture in a province, and what its buildings need.
 export function provinceLabour(state, rules, i) {
   const X = rules.econ, I = rules.balance.industry, ec = state.econ;
   let need = 0;
-  for (let b = 0; b < X.B; b++) { const L = ec.bld[i * X.B + b]; if (L) need += L * X.buildings[b].workers; }
+  const sz = levelSize(state, rules, i);
+  for (let b = 0; b < X.B; b++) { const L = ec.bld[i * X.B + b]; if (L) need += L * sz * X.buildings[b].workers; }
   const avail = state.prov.pop[i] * I.industrialLaborShare;
   return { need, avail, factor: need > 0 ? Math.min(1, avail / need) : 1 };
 }
@@ -175,8 +203,9 @@ export function initEconomy(state, map, rules, scenario) {
   for (const [id, rec] of Object.entries(S.buildings || {})) {
     const i = +id;
     if (!map.exists[i]) continue;
-    for (const [b, L] of Object.entries(rec)) if (b in X.bi) ec.bld[i * X.B + X.bi[b]] = Math.min(X.buildings[X.bi[b]].maxLevel, L);
+    for (const [b, L] of Object.entries(rec)) if (b in X.bi) ec.bld[i * X.B + X.bi[b]] = Math.min(255, L);
   }
+  if (S.buildings && !S.levelSized) resizeLevels(state, rules); // older scenarios count full levels
   for (const [id, rec] of Object.entries(S.deposits || {})) {
     const i = +id;
     if (!map.exists[i]) continue;
@@ -266,9 +295,9 @@ function potentials(state, map, rules) {
   for (const i of map.ids) {
     const o = P.owner[i];
     if (o < 0) { ec.iw[i] = 0; continue; }
-    const off = i * B;
+    const off = i * B, sz = levelSize(state, rules, i);
     let need = 0;
-    for (let b = 0; b < B; b++) { const L = ec.bld[off + b]; if (L) need += L * X.buildings[b].workers; }
+    for (let b = 0; b < B; b++) { const L = ec.bld[off + b]; if (L) need += L * sz * X.buildings[b].workers; }
     if (!need) { ec.iw[i] = 0; continue; }
     const avail = P.pop[i] * I.industrialLaborShare;
     const lab = Math.min(1, avail / need);
@@ -284,7 +313,7 @@ function potentials(state, map, rules) {
       if (!L) continue;
       const Bd = X.buildings[b];
       const m = Bd.fertility ? (fallout[i] ? 0 : farmMult) : Bd.dep >= 0 ? minM[o] : indM[o];
-      pot[o * B + b] += L * bs * buildingEff(Bd, de, fert[i], Bd.site ? siteMap(map, Bd.site)[i] : 1) * techOutput(tc, b) * m;
+      pot[o * B + b] += L * sz * bs * buildingEff(Bd, de, fert[i], Bd.site ? siteMap(map, Bd.site)[i] : 1) * techOutput(tc, b) * m;
     }
   }
   return { pot, base };
@@ -508,16 +537,16 @@ export function industryMonth(state, map, rules, opts = {}) {
     let va = 0;
     const off = i * B;
     if (base[i] > 0) {
-      const de = devEff(state.prov.dev[i], rules);
+      const de = devEff(state.prov.dev[i], rules), sz = levelSize(state, rules, i);
       for (let b = 0; b < B; b++) {
         const L = ec.bld[off + b];
         if (!L) continue;
         const Bd = X.buildings[b];
-        const p = L * base[i] * buildingEff(Bd, de, fert[i], Bd.site ? siteMap(map, Bd.site)[i] : 1) * (bmC[o] ? bmC[o][b] : 1);
+        const p = L * sz * base[i] * buildingEff(Bd, de, fert[i], Bd.site ? siteMap(map, Bd.site)[i] : 1) * (bmC[o] ? bmC[o][b] : 1);
         const f = fac[o * B + b];
         va += p * f * net[o * B + b];
         potV[o] += p * Math.max(0, net[o * B + b]);
-        const w = L * Bd.workers * Math.min(1, base[i] / infraEff(state.prov.infra[i], rules));
+        const w = L * sz * Bd.workers * Math.min(1, base[i] / infraEff(state.prov.infra[i], rules));
         jobs[o] += w;
         idle[o] += w * (1 - f);
       }
@@ -634,15 +663,17 @@ export function projectCost(state, map, rules, country, prov, kind, b) {
   let money, goods, days, name;
   if (kind === 'infra') {
     const lvl = state.prov.infra[prov] + queued(state, prov, 'infra');
-    const size = 0.5 + Math.sqrt(map.area[prov]) / 300;
+    // larger provinces need more roads; poorer ones build them with cheaper labour (levelSize)
+    const size = (0.5 + Math.sqrt(map.area[prov]) / 300) * levelSize(state, rules, prov);
     money = I.infraCost * size * (1 + 0.25 * lvl) * pl;
     goods = 'steel' in X.gi ? [[X.gi.steel, I.infraSteel * size * (1 + 0.25 * lvl)]] : [];
     days = I.infraDays; name = 'Infrastructure';
   } else {
-    const B = X.buildings[b];
+    const B = X.buildings[b], sz = levelSize(state, rules, prov);
     const lvl = state.econ.bld[prov * X.B + b] + queued(state, prov, 'building', b);
-    money = B.cost * (1 + 0.04 * lvl) * pl;
-    goods = B.goods.map(([g, a]) => [g, a]);
+    // +4% per existing level, counted in full levels so small levels do not get dearer faster
+    money = B.cost * sz * (1 + 0.04 * lvl * sz) * pl;
+    goods = B.goods.map(([g, a]) => [g, a * sz]);
     days = B.days; name = B.name;
   }
   // goods a country has no technology for are not needed (older building methods)
@@ -670,12 +701,12 @@ export function canBuild(state, map, rules, country, prov, kind, b = -1) {
   } else if (kind === 'building') {
     const B = X.buildings[b];
     if (!B) return 'Unknown building';
-    const lvl = state.econ.bld[prov * X.B + b] + queued(state, prov, 'building', b);
-    if (lvl >= B.maxLevel) return `${B.name} is at the maximum level (${B.maxLevel})`;
+    const lvl = state.econ.bld[prov * X.B + b] + queued(state, prov, 'building', b), sz = levelSize(state, rules, prov);
+    if (lvl >= levelCap(B, sz)) return `${B.name} is at the maximum level (${levelCap(B, sz)})`;
     if (B.dep >= 0) {
       const d = state.econ.dep[prov * X.R + B.dep];
       if (!d) return `Needs a ${X.resources[B.dep].replace('_', ' ')} deposit`;
-      if (lvl >= d) return `The ${X.resources[B.dep].replace('_', ' ')} deposit supports ${d} level(s)`;
+      if (lvl >= depositCap(d, sz)) return `The ${X.resources[B.dep].replace('_', ' ')} deposit supports ${depositCap(d, sz)} level(s)`;
     }
     if (B.minDev && P.dev[prov] < B.minDev) return `Needs development ${B.minDev} (province has ${P.dev[prov].toFixed(0)})`;
     if (c.tfx && !c.tfx.bld[b]) return `Needs the technology ${rules.tech.list[rules.tech.bldTech[b]].name}`;
@@ -723,7 +754,7 @@ export function processConstruction(state, map, rules) {
   }
   for (const p of done) {
     if (p.kind === 'infra') state.prov.infra[p.prov] = Math.min(rules.balance.industry.maxInfra, state.prov.infra[p.prov] + 1);
-    else state.econ.bld[p.prov * X.B + p.b] = Math.min(X.buildings[p.b].maxLevel, state.econ.bld[p.prov * X.B + p.b] + 1);
+    else state.econ.bld[p.prov * X.B + p.b] = Math.min(255, state.econ.bld[p.prov * X.B + p.b] + 1);
     if (p.owner === state.player) {
       const what = p.kind === 'infra' ? `Infrastructure level ${state.prov.infra[p.prov]}` : `${X.buildings[p.b].name} level ${state.econ.bld[p.prov * X.B + p.b]}`;
       log(state, 'economy', `${what} completed in ${map.name[p.prov]}.`, { prov: p.prov });

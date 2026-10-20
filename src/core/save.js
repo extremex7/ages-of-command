@@ -3,7 +3,7 @@
 // forward step by step, then validated against the loaded map before use.
 import { SAVE_VERSION, refreshCountryCache } from './state.js';
 import { touchRelations } from './relations.js';
-import { initEconomy } from './industry.js';
+import { initEconomy, resizeLevels } from './industry.js';
 import { initGovernment, newGovt, govEffects } from './government.js';
 import { initDiplomacy, TREATIES } from './diplomacy.js';
 import { initTechnology, refreshAllTech, newResearch } from './technology.js';
@@ -98,6 +98,13 @@ const MIGRATIONS = {
     s.version = 6;
     return s;
   },
+  // v6 → v7: building levels are sized to their province (industry.js levelSize). Old levels
+  // counted full-size levels; they are converted so every province keeps its output.
+  6: (s) => {
+    s.needsLevelResize = true;
+    s.version = 7;
+    return s;
+  },
 };
 
 export function deserialize(text, map, rules, scenario = null) {
@@ -154,7 +161,12 @@ export function deserialize(text, map, rules, scenario = null) {
   if (s.needsEconomy) {
     if (!scenario) throw new Error('This save predates the economy; loading it needs its scenario');
     delete s.needsEconomy;
+    delete s.needsLevelResize; // the scenario's industry is installed at its own level sizes
     initEconomy(s, map, rules, scenario);
+  }
+  if (s.needsLevelResize) {
+    delete s.needsLevelResize;
+    resizeLevels(s, rules);
   }
   if (s.needsPolitics) {
     delete s.needsPolitics;

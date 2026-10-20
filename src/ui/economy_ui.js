@@ -8,7 +8,7 @@ import { computeLedgers } from '../core/economy.js';
 import { provinceGdp, provinceGdpParts } from '../core/state.js';
 import {
   popDemand, milDemand, constructionSlots, canBuild, startProject, cancelProject, projectCost,
-  efficiencyBreakdown, provinceLabour, toggleEmbargo, tradePartners, fertilityMap, siteMap,
+  efficiencyBreakdown, provinceLabour, levelSize, toggleEmbargo, tradePartners, fertilityMap, siteMap,
 } from '../core/industry.js';
 
 function bar(v, color = '') {
@@ -150,7 +150,7 @@ export function industryTab(cl) {
         h('span.muted', n < slots ? `${p.left}d left` : 'queued'),
         mine && h('button', { tip: `Cancel: refunds ${pct(R.balance.industry.cancelRefund)} of ${money(p.paid)}`, on: { click: (ev) => { ev.stopPropagation(); cancelProject(s, R, p.id); refresh(cl); } } }, '×')))) : h('p.muted', 'Nothing under construction.'),
     h('h3', { style: { marginTop: '0.8em' } }, 'Buildings'),
-    levels.length ? h('table.t.small', levels.map(({ b, n, prov }) => h('tr', { tip: `${b.name}: makes ${b.out.map(([g, a]) => `${a} ${X.goods[g].name.toLowerCase()}`).join(', ')}${b.inp.length ? ' from ' + b.inp.map(([g, a]) => `${a} ${X.goods[g].name.toLowerCase()}`).join(', ') : ''} per level and month at 100% efficiency; ${b.workers.toLocaleString()} workers per level.` },
+    levels.length ? h('table.t.small', levels.map(({ b, n, prov }) => h('tr', { tip: `${b.name}: makes ${b.out.map(([g, a]) => `${a} ${X.goods[g].name.toLowerCase()}`).join(', ')}${b.inp.length ? ' from ' + b.inp.map(([g, a]) => `${a} ${X.goods[g].name.toLowerCase()}`).join(', ') : ''} per full-size level and month at 100% efficiency; ${b.workers.toLocaleString()} workers per full-size level. Levels in small or poor provinces are smaller (see a province's level size).` },
       h('td', b.name), h('td.n', `${n} levels`), h('td.n.muted', `${prov} prov.`)))) : h('p.muted', 'No industry.'),
     h('h3', { style: { marginTop: '0.8em' } }, 'Trade partners'),
     partners == null ? h('p.muted', 'Shown after the next monthly market.')
@@ -182,6 +182,7 @@ export function provinceEconomy(cl, p) {
       h('span', { className: lab.factor < 1 ? 'warn' : '' }, `${people(Math.min(lab.need, lab.avail))} / ${people(lab.avail)}`),
       h('span', { tip: 'Farm output multiplier from terrain and latitude.' }, 'Farmland'), h('span', fert.toFixed(2)),
       h('span', { tip: 'Solar and wind farm output multipliers from terrain, latitude and the coast.' }, 'Sun / wind'), h('span', `${siteMap(map, 'solar')[p].toFixed(2)} / ${siteMap(map, 'wind')[p].toFixed(2)}`),
+      h('span', { tip: `Building levels here are ${pct(levelSize(s, R, p), 1)} of a full-size level: cost, output, inputs and workers all scale with the province's economy (population × productivity ${money(parts.base)} a year, full size from ${money(R.balance.industry.levelSizeGdp ?? 5)}). Deposits are counted in full-size levels.` }, 'Building level size'), h('span', pct(levelSize(s, R, p), levelSize(s, R, p) < 0.1 ? 1 : 0)),
       h('span', 'Deposits'), h('span', deps.length ? deps.map(([r, v]) => `${r.replace('_', ' ')} ${v}`).join(', ') : 'none')),
   ];
   if (built.length) {

@@ -628,3 +628,19 @@ all, so factories stopped for want of timber. Treasuries were too small to build
 farms. The builder now gives a country one level where the most was planned when a tenth of a
 level or more is left over, and every history scenario was rebuilt. After two years of AI play
 average stability is now 56 to 60 in every start (1444 58, Rome 58, 1815 57, 1861 58, 1914 57).
+
+## Session 22: building levels sized to their province
+
+Aayush found that a small 1444 nation could never build anything. A farm cost 0.7 to 0.9B
+everywhere, which was 93 months of revenue for the median 1444 country and up to 57 years for the
+smallest. Building costs were fixed modern figures, and the price level has a floor of 0.35.
+Cutting the price alone would have made pre-modern buildings pay for themselves in one to three
+months, because a level's output keeps its modern value: a 1444 farm level made more than a small
+kingdom's whole economy. So a building level is now sized to its province (levelSize in
+industry.js): the province's economy without industry ÷ 5B a year, between 1% and 100%. Cost,
+goods, output, inputs and workers scale together, so payback stays the same in every era.
+Infrastructure cost scales too. Maximum levels and deposits stay in full-size levels. The history
+scenarios were rebuilt in sized levels (economy.levelSized). The modern scenario and older saves
+(save version 7) convert on load. In 1444, the median country's farm now costs about 3 months of
+revenue and the worst about 20 (it was 93 and 686). Three-year AI runs: stability 58 to 61 in
+every start, and world GDP growth 3% (1444) to 7% (1914) over three years.

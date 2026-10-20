@@ -209,6 +209,8 @@
     "_doc": "Industry, labour, market and construction constants. See docs/ECONOMY.md.",
     "laborShare": 0.45,
     "industrialLaborShare": 0.25,
+    "levelSizeGdp": 5,
+    "levelSizeMin": 0.01,
     "infraEffBase": 0.7,
     "infraEffPerLevel": 0.04,
     "infraSpeedPerLevel": 0.05,

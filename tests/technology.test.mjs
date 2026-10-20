@@ -118,7 +118,7 @@ test('save v4 → v5 migration installs technologies; saves remap a changed tech
   o.version = 4; delete o.tech;
   for (const c of o.countries) delete c.research;
   const g2 = loadGame(JSON.stringify(o), d);
-  assert.equal(g2.state.version, 6);
+  assert.equal(g2.state.version, 7);
   assert.ok(knowsId(g2.state, d.rules, tagIdx(g2, 'USA'), 'transistor'));
   runDays(g2, 40);
   // a mod that removes a technology: known flags of the rest are kept by id

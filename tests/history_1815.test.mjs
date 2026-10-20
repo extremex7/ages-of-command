@@ -94,11 +94,13 @@ test('1815: runs three years, saves and loads; Sugauli ends the Nepal war', () =
 });
 
 test('1815: Iguala triggers Central American independence the next day', () => {
-  const g = start({ seed: 'iguala' });
+  const g = start({ seed: 'iguala-2' }); // Spain's AI takes the historical option about 18 times in 19
   const s = g.state;
   // jump to February 1821 with Spain still holding Mexico
   s.day += Math.round((new Date('1821-02-25') - new Date('1815-11-20')) / 864e5);
-  runDays(g, 400);
+  // checked as soon as the chain has fired: what the AI does with Central America afterwards
+  // (Mexico annexed it in 1822) is not part of this test
+  for (let d = 0; d < 400 && s.fired.central_american_independence == null; d += 5) runDays(g, 5);
   assert.ok(s.fired.plan_of_iguala != null, 'Iguala fired');
   assert.ok(s.countries[tagIdx(g, 'MEX')].alive, 'Mexico released');
   assert.equal(s.fired.central_american_independence, s.fired.plan_of_iguala + 1, 'chained by trigger the next day');

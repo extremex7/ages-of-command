@@ -15,7 +15,7 @@ import { aiWings } from './air.js';
 import { aiDepots } from './supply.js';
 import { nuclearDeterred, hasDeterrent } from './strategic.js';
 import { portZonesOf } from './mapdata.js';
-import { constructionSlots, projectCost, canBuild, startProject, provinceLabour, devEff, infraEff, buildingEff, fertilityMap, siteMap } from './industry.js';
+import { constructionSlots, projectCost, canBuild, startProject, provinceLabour, devEff, infraEff, buildingEff, fertilityMap, siteMap, levelSize, levelCap, depositCap } from './industry.js';
 
 export { countryNeighbours };
 
@@ -480,13 +480,13 @@ function bestSiteEff(state, map, rules, c, b) {
   let best = -1, bestScore = 0, bestEff = 0;
   for (const i of countryProvinces(state, map, c.idx)) {
     if (P.controller[i] !== c.idx) continue;
-    const L = state.econ.bld[i * X.B + b];
-    if (L >= B.maxLevel) continue;
-    if (B.dep >= 0 && L >= state.econ.dep[i * X.R + B.dep]) continue;
+    const L = state.econ.bld[i * X.B + b], sz = levelSize(state, rules, i);
+    if (L >= levelCap(B, sz)) continue;
+    if (B.dep >= 0 && L >= depositCap(state.econ.dep[i * X.R + B.dep], sz)) continue;
     if (B.minDev && P.dev[i] < B.minDev) continue;
     if (B.fertility && fert[i] < 0.25) continue;
     const lab = provinceLabour(state, rules, i);
-    const labF = Math.min(1, lab.avail / (lab.need + B.workers));
+    const labF = Math.min(1, lab.avail / (lab.need + B.workers * sz));
     if (labF < 0.6) continue;
     const eff = labF * infraEff(P.infra[i], rules) * buildingEff(B, devEff(P.dev[i], rules), fert[i], B.site ? siteMap(map, B.site)[i] : 1);
     const score = eff / (1 + 0.04 * L);
@@ -524,7 +524,7 @@ function rankProducers(state, map, rules, c, g) {
     let none = false;
     for (const [i, a] of B.inp) {
       // no supply at all (gas before any gas field): only worth it if the country can dig its own
-      if (e.prod[i] + e.imp[i] + e.stock[i] <= 1e-6 && worldGaps(state, X).prod[i] < 1 && !X.producers[i].some((pb) => bestSite(state, map, rules, c, pb) >= 0)) none = true;
+      if (e.prod[i] + e.imp[i] + e.stock[i] <= 1e-6 && worldGaps(state, rules).prod[i] < 1 && !X.producers[i].some((pb) => bestSite(state, map, rules, c, pb) >= 0)) none = true;
       v -= a * eff * prices[i] * (e.need[i] > 0 && (e.prod[i] + e.imp[i]) / e.need[i] < 0.9 ? 2 : 1);
     }
     if (none) continue;
@@ -536,7 +536,8 @@ function rankProducers(state, map, rules, c, g) {
 // World need minus world production per good, world production, and unused deposit levels per resource (world
 // total and per country), computed once a day.
 const worldCache = new WeakMap();
-function worldGaps(state, X) {
+function worldGaps(state, rules) {
+  const X = rules.econ;
   const w = worldCache.get(state);
   if (w && w.day === state.day) return w;
   const gap = new Float64Array(X.G), prod = new Float64Array(X.G), C = state.countries.length;
@@ -547,7 +548,7 @@ function worldGaps(state, X) {
     for (let i = 0; i < own.length; i++) {
       const o = own[i], d = ec.dep[i * X.R + b.dep];
       if (o < 0 || !d) continue;
-      const f = Math.max(0, d - ec.bld[i * X.B + b.i]);
+      const f = Math.max(0, d - ec.bld[i * X.B + b.i] * levelSize(state, rules, i)); // in full levels
       free[o * X.R + b.dep] += f; freeAll[b.dep] += f;
     }
   }
@@ -569,7 +570,7 @@ function aiBuild(state, map, rules, c) {
   // output already under construction counts towards a gap, and need is padded a little so
   // the country builds ahead of growing demand instead of after the shortage arrives
   const coming = new Float64Array(X.G);
-  for (const p of state.construction) if (p.owner === c.idx && p.kind === 'building') for (const [g, a] of X.buildings[p.b].out) coming[g] += a;
+  for (const p of state.construction) if (p.owner === c.idx && p.kind === 'building') { const sz = levelSize(state, rules, p.prov); for (const [g, a] of X.buildings[p.b].out) coming[g] += a * sz; }
   const gaps = [];
   for (const g of X.goods) {
     const gap = e.need[g.i] * (A.buildHeadroom ?? 1) - e.prod[g.i] - coming[g.i];
@@ -578,7 +579,7 @@ function aiBuild(state, map, rules, c) {
   // raw materials the world is short of (price above base): countries with unused deposits take
   // their share of the world gap (by their share of the world's unused deposits) and mine it for
   // export, since importers without deposits cannot build mines themselves
-  const W = worldGaps(state, X);
+  const W = worldGaps(state, rules);
   for (const g of X.goods) {
     if (prices[g.i] < g.price * (A.worldShortagePrice ?? 1.05) || W.gap[g.i] <= 0) continue;
     const mine = X.producers[g.i].find((b) => X.buildings[b].dep >= 0);
@@ -620,7 +621,7 @@ function aiBuild(state, map, rules, c) {
       aiLog(state, c.idx, `Building ${X.buildings[bb].name} in ${map.name[site]}${why}: ${X.goods[g].name.toLowerCase()} ${world ? 'world shortage, to export' : 'shortfall'} worth ${value.toFixed(1)}B/month, cost ${cost.total.toFixed(1)}B.`);
       started++;
       // a bottleneck fix counts as one step towards the gap; the producer itself covers its output
-      left -= bb === b ? (X.buildings[b].out.find(([o]) => o === g)?.[1] || left) : left;
+      left -= bb === b ? ((X.buildings[b].out.find(([o]) => o === g)?.[1] || 0) * levelSize(state, rules, site) || left) : left;
       done = true;
       break;
     }

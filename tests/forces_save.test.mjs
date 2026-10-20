@@ -102,7 +102,7 @@ test('save migration 5 -> 6: an old save gets empty forces and initialised strat
   const g = game({ seed: 'm6mig', settings: { aiAggression: 1 } });
   runDays(g, 20);
   const s = deserialize(asV5(saveGame(g)), d.map, d.rules, d.scenario);
-  assert.equal(s.version, 6);
+  assert.equal(s.version, 7);
   assert.deepEqual(s.fleets, []);
   assert.deepEqual(s.wings, []);
   assert.deepEqual(s.navalBattles, []);

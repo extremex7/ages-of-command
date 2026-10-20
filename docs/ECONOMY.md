@@ -197,9 +197,19 @@ Construction is paid up front from the treasury when a project starts.
 
 ## Construction
 
-- **Cost.** Each level costs `cost × (1 + 4% per existing level) × price level`, plus its goods
-  taken from the stockpile. Goods you lack are bought at 1.5× the world price.
-- **Infrastructure** costs more for larger provinces and for higher levels.
+- **Level size.** A building level is sized to its province. The size is the province's economy
+  without industry (population × output per worker) ÷ 5B a year, between 1% and 100%. Its cost,
+  goods, output, inputs and workers all scale with that size. Most modern provinces have
+  full-size levels (the figures in buildings.json). In 1444 a typical county's levels are a few
+  percent of that, so a farm costs a few months of a small kingdom's revenue instead of years,
+  and it pays back no faster than a modern one. Maximum levels and deposits count full-size
+  levels: a province with size 5% can hold 20 times as many levels, up to 255. The province
+  panel shows the size. Sizes follow population and development as they change.
+- **Cost.** Each level costs `cost × level size × (1 + 4% per existing full-size level) × price
+  level`, plus its goods (× level size) taken from the stockpile. Goods you lack are bought at
+  1.5× the world price.
+- **Infrastructure** costs more for larger provinces and for higher levels, and is scaled by the
+  province's level size like buildings.
 - **Slots.** The number of projects that advance at once is 2 + 0.5 per trillion of GDP, up to 20.
   Further projects wait in the queue, which holds up to 30 projects.
 - **Occupation.** Projects in occupied provinces pause. Projects in provinces you lose are cancelled.
@@ -257,9 +267,11 @@ start. It reuses the game's own demand and efficiency functions:
   each province's workforce, deposits and maximum levels.
 - **Value-added cap.** Industrial value added is capped at 70% of a country's GDP; farms are exempt.
 - **Iteration.** The builder iterates until world output reaches ~103% of need for every good.
-- **Rounding.** Levels are rounded to whole levels per country, carrying remainders between
-  provinces. If a tenth of a level or more is left over, the country gets one more level where the
-  most was planned, so small pre-modern countries are not left with no farms or lumber camps.
+- **Rounding.** The plan is in full-size levels. Each province gets whole levels of its own size,
+  with remainders carried between provinces. If a tenth of a full level or more is left over, it
+  goes where the most was planned, so small pre-modern countries are not left with no farms or
+  lumber camps. Generated scenarios are marked `economy.levelSized`; older scenarios and saves
+  (before save version 7) count full-size levels and are converted when loaded.
 
 `node tools/econ_report.mjs [years]` prints world supply and demand, prices and national
 indicators at the start and after N years of AI play. It is used to check the calibration.

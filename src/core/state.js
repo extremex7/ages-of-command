@@ -6,7 +6,7 @@ import { portZonesOf } from './mapdata.js';
 import { newFleet, fleetPower } from './naval.js';
 import { newWing, wingStat } from './air.js';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 export function createState({ map, scenario, rules, playerTag = null, seed = 'aoc3', settings = {} }) {
   const N = map.count;

@@ -57,7 +57,7 @@ that produces it and, if people should consume it, a `demand` above 0.
 ## Buildings — `data/rules/buildings.json`
 
 Each key is a building id, run in file order every month: `name`, `out` and `in` (good → units per
-level per month), `workers` per level, `cost` (B at price level 1), `goods` consumed when
+level per month), `workers` per level, `cost` (B for a full-size level at price level 1; levels are sized to their province, see ECONOMY.md), `goods` consumed when
 construction starts, `days`, `maxLevel` (≤ 255), optional `deposit` (resource name; levels cannot
 exceed the province's deposit), `fertility: true` (scales with farmland), `site: "solar"` or `"wind"` (scales with the province's sunshine or wind), `minDev`. Saves store the ids of goods, buildings and resources, so adding or reordering them keeps old saves loadable (new resources take their deposits from the scenario).
 Put producers before their consumers so this month's output is available downstream.
@@ -192,8 +192,10 @@ them (saves drop fleets in zones that no longer exist).
 - `provinces` maps a stable province id to `[ownerTag, population, development 0–100, fort 0–5,
   infrastructure 0–10]` (infrastructure is optional; default development / 11).
 - `economy` (optional): `{ "deposits": { "798": { "timber": 2 } }, "buildings": { "798": { "farm": 4,
-  "factory": 3 } } }`. Unknown building or resource names are ignored. Without it the scenario
-  starts with no industry. `node tools/build_economy.mjs <scenario>` generates it from
+  "factory": 3 } }, "levelSized": true }`. Unknown building or resource names are ignored. Without
+  it the scenario starts with no industry. Deposits count full-size levels. With `levelSized`,
+  building levels are in each province's own level size (see ECONOMY.md); without it they count
+  full-size levels and are converted when the game starts. `node tools/build_economy.mjs <scenario>` generates it from
   `tools/resource_table.csv`.
   Province ids are listed in `data/map/world.json` (`provinces[].id`, `name`, `iso`) and never change.
 - `gov` is one of `republic, federal_republic, parliamentary, const_monarchy, abs_monarchy,

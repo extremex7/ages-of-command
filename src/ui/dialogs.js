@@ -108,14 +108,14 @@ export function peaceDialog(cl, war) {
   const cands = map.ids.filter((i) => theirSide.includes(s.prov.owner[i]) && mySide.includes(s.prov.controller[i]))
     .sort((a, b) => provinceValue(s, R, b) - provinceValue(s, R, a));
   const chosen = new Set();
-  const extra = { reparations: false, subject: false, independence: false };
+  const extra = { reparations: false, subject: false, independence: false, union: false };
   const result = h('div');
   const update = () => {
     const terms = { provinces: [...chosen], to: me, ...extra };
     const ev = evaluatePeace(s, map, R, war, me, terms);
     cl.view.highlight = [...chosen];
     cl.requestFrame();
-    const any = chosen.size || extra.reparations || extra.subject || extra.independence;
+    const any = chosen.size || extra.reparations || extra.subject || extra.independence || extra.union;
     mount(result,
       h('p', `War score (yours): `, h('b', Math.round(ev.score)), ` · demands cost: `, h('b', Math.round(ev.cost))),
       h('p', { className: ev.accept ? 'good' : 'bad' }, (C[other].idx === s.player ? '' : `${C[other].name}: `) + ev.reason),
@@ -124,7 +124,7 @@ export function peaceDialog(cl, war) {
         h('button', { on: { click: () => { cl.view.highlight = null; w.remove(); cl.requestFrame(); } } }, 'Cancel')));
   };
   const check = (key, label, tip) => h('label.item', { style: { display: 'flex', gap: '0.5em', alignItems: 'center' }, tip },
-    h('input', { type: 'checkbox', on: { change: (e) => { extra[key] = e.target.checked; update(); } } }), h('span', label), h('span.muted', `cost ${PC[key]}`));
+    h('input', { type: 'checkbox', on: { change: (e) => { extra[key] = e.target.checked; update(); } } }), h('span', label), h('span.muted', `cost ${key === 'union' ? R.balance.deals?.unionPeaceCost : PC[key]}`));
   const list = h('div.list', cands.length ? cands.map((p) => {
     const cb = h('input', { type: 'checkbox', on: { change: (e) => { if (e.target.checked) chosen.add(p); else chosen.delete(p); update(); } } });
     return h('label.item', { style: { display: 'flex', gap: '0.5em', alignItems: 'center' } }, cb, h('span', map.name[p]),
@@ -138,7 +138,8 @@ export function peaceDialog(cl, war) {
     h('div.list',
       indep ? check('independence', 'Independence', `${C[other].name} releases you from subject status.`) : null,
       check('reparations', `Reparations (${Math.round(D.reparationsShare * 100)}% of their tax for ${D.reparationsYears} years)`, 'Paid monthly from their tax revenue into your treasury.'),
-      !indep && check('subject', `Make ${C[other].name} a subject`, `They follow you into wars, cannot sign treaties, leave their organisations and pay ${Math.round(D.subjectTribute * 100)}% of their tax as tribute. Only for countries of up to ${D.subjectMaxProvinces} provinces.`)),
+      !indep && check('subject', `Make ${C[other].name} a subject`, `They follow you into wars, cannot sign treaties, leave their organisations and pay ${Math.round(D.subjectTribute * 100)}% of their tax as tribute. Only for countries of up to ${D.subjectMaxProvinces} provinces.`),
+      !indep && R.balance.deals && check('union', `Personal union with ${C[other].name}`, `${C[other].name} keeps its name and economy but follows your foreign policy and joins your wars; you can integrate it after ${R.balance.deals.unionIntegrateYears} years of good relations. Only for countries much weaker than you (at most ${Math.round(R.balance.deals.unionMaxPowerShare * 100)}% of your strength, ${R.balance.deals.unionMaxProvinces} provinces).`)),
     result);
   update();
 }

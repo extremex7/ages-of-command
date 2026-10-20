@@ -10,7 +10,7 @@ import { isAtWar, enemiesOf, atWar, allied, touchRelations } from './relations.j
 import { rand } from './rng.js';
 import { countryNeighbours } from './geo.js';
 import { govFamily, monthsToElection, addGovModifier, shiftSupport, checkEffects, changeGovernment } from './government.js';
-import { addMod, overlordOf, signTreaty, validateTreaty, recordOrder, treatiesBetween, removeTreaty, addClaim, TREATIES } from './diplomacy.js';
+import { addMod, overlordOf, signTreaty, validateTreaty, recordOrder, treatiesBetween, removeTreaty, addClaim, TREATIES, opinion, unionProblem, formUnion } from './diplomacy.js';
 import { warScore, canDeclareWar, declareWar, joinWar, makePeace, makeSeparatePeace, transferProvince } from './war.js';
 import { parseDate, civilFromDays } from './calendar.js';
 import { grantTech, knows, knowsId, techCost, refreshTech } from './technology.js';
@@ -19,13 +19,13 @@ import { computeLedgers } from './economy.js';
 
 const NUM = ['stability', 'legitimacy', 'approval', 'unemployment', 'inflation', 'foodSat', 'living', 'tax', 'civilShare',
   'warMonths', 'warScore', 'provinces', 'avgDev', 'monthsToElection', 'treasuryMonths', 'year', 'warheads', 'satellites', 'worldNukes'];
-const BOOL = ['atWar', 'hasRival', 'rivalNeighbour', 'neighbourAtWar', 'independent', 'hasNukes'];
+const BOOL = ['atWar', 'hasRival', 'rivalNeighbour', 'neighbourAtWar', 'independent', 'hasNukes', 'hasHeir'];
 // conditions naming countries (tags), technologies, ISO codes or events
 const TAGCOND = ['exists', 'notExists', 'atWarWith', 'notAtWarWith', 'warBetween', 'allied', 'subjectOf', 'strongerThan'];
 const OTHERCOND = ['hasTech', 'notTech', 'ownsAll', 'ownsAny', 'fired', 'notFired'];
 const EFFECTS = ['stability', 'legitimacy', 'treasuryMonths', 'tax', 'civilShare', 'manpower', 'modifier', 'support', 'opinion', 'popShare', 'dev',
   'war', 'joinWar', 'peace', 'annex', 'transfer', 'release', 'government', 'rename', 'treaty', 'breakTreaties', 'rival', 'techs', 'research', 'trigger', 'claims',
-  'warheads', 'satellites', 'cyber', 'stations', 'colonies'];
+  'warheads', 'satellites', 'cyber', 'stations', 'colonies', 'union'];
 const OPS = { '<': (a, b) => a < b, '>': (a, b) => a > b, '<=': (a, b) => a <= b, '>=': (a, b) => a >= b, '=': (a, b) => a === b };
 
 export function compileEvents(files, politics) {
@@ -60,6 +60,7 @@ export function compileEvents(files, politics) {
           if (k === 'treaty' && (!TREATIES[v.type] || TREATIES[v.type].peaceOnly || !v.with)) errs.push(`${where}: treaty needs a proposable type and "with"`);
           if ((k === 'war' && !v.target) || (k === 'joinWar' && !v.ally) || (k === 'peace' && !v.with) || (k === 'release' && !v.tag) || (k === 'transfer' && !v.from)) errs.push(`${where}: effect "${k}" is missing its country`);
           if (k === 'trigger' && !v.event) errs.push(`${where}: trigger needs "event"`);
+          if (k === 'union' && !v.with) errs.push(`${where}: union needs "with" (a tag, or "heir")`);
         }
       }
       list.push(ev);
@@ -106,6 +107,11 @@ export function eventContext(state, map, rules, c, warScores, warring = null) {
   }
   let neighbour = -1;
   for (const k of nb) if (warring ? warring.has(k) : isAtWar(state, k)) { neighbour = k; break; }
+  // heir: a much weaker neighbouring monarchy that likes us and could join us in a personal union
+  let heir = -1;
+  if (state.dip && rules.balance.deals && /monarchy/.test(c.gov)) {
+    for (const k of nb) if (/monarchy/.test(state.countries[k].gov) && !unionProblem(state, map, rules, c.idx, k) && opinion(state, map, rules, k, c.idx) >= 20) { heir = k; break; }
+  }
   return {
     stability: c.stability, legitimacy: g.legitimacy, approval: g.approvalAll,
     unemployment: e?.unemployment ?? 0.05, inflation: e?.inflation ?? 0, foodSat: e?.foodSat ?? 1, living: e?.living ?? 1,
@@ -115,7 +121,7 @@ export function eventContext(state, map, rules, c, warScores, warring = null) {
     atWar: n > 0, hasRival: c.rival >= 0, rivalNeighbour: c.rival >= 0 && nb.has(c.rival), neighbourAtWar: neighbour >= 0 && !enemiesOf(state, c.idx).has(neighbour),
     independent: !state.dip || overlordOf(state, c.idx) < 0, year: civilFromDays(state.day).y,
     warheads: c.strat?.warheads || 0, hasNukes: (c.strat?.warheads || 0) > 0, satellites: c.strat ? satCount(c) : 0, worldNukes: state.strategic?.detonations || 0,
-    rival: c.rival, neighbour, state, map,
+    rival: c.rival, neighbour, heir, hasHeir: heir >= 0, state, map,
   };
 }
 
@@ -205,7 +211,8 @@ function eligible(state, ev, c) {
 export function fillText(state, s, c, ctx) {
   const C = state.countries;
   return s.replace(/\{country\}/g, c.name).replace(/\{rival\}/g, ctx.rival >= 0 ? C[ctx.rival].name : 'a rival')
-    .replace(/\{neighbour\}/g, ctx.neighbour >= 0 ? C[ctx.neighbour].name : 'a neighbouring country');
+    .replace(/\{neighbour\}/g, ctx.neighbour >= 0 ? C[ctx.neighbour].name : 'a neighbouring country')
+    .replace(/\{heir\}/g, ctx.heir >= 0 ? C[ctx.heir].name : 'a neighbouring crown');
 }
 
 // Runs daily; each country checks its events once every 30 days, on its own day, so the work
@@ -298,7 +305,7 @@ function eventLists(state, rules) {
 function fire(state, map, rules, c, ev, ctx) {
   c.govt.evDay[ev.id] = state.day;
   (state.fired ||= {})[ev.id] ??= state.day;
-  const pend = { id: state.nextId++, ev: ev.id, c: c.idx, day: state.day, rival: ctx.rival, neighbour: ctx.neighbour, title: ev.title, text: fillText(state, ev.text, c, ctx) };
+  const pend = { id: state.nextId++, ev: ev.id, c: c.idx, day: state.day, rival: ctx.rival, neighbour: ctx.neighbour, heir: ctx.heir ?? -1, title: ev.title, text: fillText(state, ev.text, c, ctx) };
   if (ev.news && c.idx !== state.player) log(state, 'event', `${c.name}: ${ev.title}.`, { important: true, country: c.idx });
   if (c.idx === state.player && !c.automate) state.pendingEvents.push(pend);
   else resolveEvent(state, map, rules, pend, aiChoice(state, ev));
@@ -351,6 +358,7 @@ export function describeEffects(rules, fx, state = null) {
     else if (k === 'techs') out.push(`Gain ${v.map((id) => rules.tech?.list[rules.tech.idx[id]]?.name || id).join(', ')}`);
     else if (k === 'research') out.push(`Research ${sg(Math.round(v * 100))}% of the current project`);
     else if (k === 'claims') out.push(`Claims on ${name(v)}'s border provinces`);
+    else if (k === 'union') out.push(v.junior ? `Personal union under ${name(v.with)}` : `Personal union with ${v.with === 'heir' ? 'them' : name(v.with)} under our crown`);
     else if (k === 'warheads') out.push(`Nuclear warheads ${sg(v)}`);
     else if (k === 'satellites') out.push(`Satellites ${sg(v)}`);
     else if (k === 'cyber') out.push(`Cyber points ${sg(v)}`);
@@ -386,6 +394,14 @@ export function applyEffects(state, map, rules, c, fx, ctx = {}) {
       case 'opinion': {
         const t = v.target === 'rival' ? ctx.rival : v.target === 'neighbour' ? ctx.neighbour : alive(state, v.target);
         if (t >= 0) addMod(state, c.idx, t, v.value, rules.balance.diplomacy.modDecay, v.why || 'Border incident');
+        break;
+      }
+      case 'union': {
+        // { with: tag or "heir", junior: true when we are the junior partner }
+        const t = v.with === 'heir' ? ctx.heir ?? -1 : alive(state, v.with);
+        if (t < 0 || t === c.idx || !state.dip) break;
+        const [sr, jr] = v.junior ? [t, c.idx] : [c.idx, t];
+        if (!unionProblem(state, map, rules, sr, jr)) formUnion(state, map, rules, sr, jr);
         break;
       }
       case 'warheads': if (knowsId(state, rules, c.idx, 'atomic_bomb')) c.strat.warheads = Math.max(0, c.strat.warheads + v); break;

@@ -298,6 +298,7 @@ export function issueDemand(state, map, rules, from, to, d) {
   // the AI answers first (the answer reads the demand as it is now, before any influence is spent)
   const ev = playerDecides(state, to) ? null : evaluateDemand(state, map, rules, from, to, d);
   C[from].influence -= X.demandInfluence;
+  state.dip.refused[`demand:${from}:${to}`] = state.day; // one ultimatum to the same country a year
   // a demand backed by claims, rivalry or a casus belli is not held against the demander
   const justified = C[from].rival === to || casusBelli(state, from, to) || C[from].claims.some((x) => state.prov.owner[x.p] === to);
   if (!justified) C[from].reputation = Math.max(-100, C[from].reputation - X.demandReputation);

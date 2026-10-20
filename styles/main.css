@@ -108,6 +108,9 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover { background: var(-
 .log-item.imp { color: #f0d890; } .log-item .d { color: var(--muted); font-size: 0.85em; margin-right: 0.4em; }
 .log-item.click { cursor: pointer; }
 .chip { display: inline-block; padding: 0 0.45em; border-radius: 3px; background: var(--panel-2); border: 1px solid var(--line); font-size: 0.85em; }
+.chip.trait { cursor: help; margin: 0.15em 0; padding: 0.1em 0.5em; }
+.small { font-size: 0.88em; }
+.army-card.mission .bar { margin: 0.25em 0; }
 .paused-flag { color: var(--warn); font-size: 0.8em; }
 @media (max-width: 1000px) { .topbar .opt { display: none; } }
 a { color: var(--accent); }

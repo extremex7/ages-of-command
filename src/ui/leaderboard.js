@@ -41,7 +41,7 @@ export function leaderboardDialog(cl) {
       return h('tr' + (k === s.player ? '.me' : '') + (x.rising ? '.rising' : ''), { on: { click: () => { cl.view.selectedCountry = k; cl.setTab('country'); cl.focusCountry(k); wrap.remove(); } } },
         h('td.n', P.rank[k]), h('td', changeCell(x)), h('td', starBadge(P.rank[k])),
         h('td', flagCanvas(c), ' ', c.name, x.rising ? h('span.rising-tag', { tip: `Rising star: up ${x.change} places since ${sinceYear} (from ${x.from})` }, icon('rising'), 'Rising star') : null),
-        h('td.n', { tip: Object.entries(PRESTIGE_WEIGHTS).map(([n, w]) => `${n}: ${Math.round(p[n] * 100)}% × ${w * 100}`).join('\n') }, h('b', P.score[k].toFixed(1))),
+        h('td.n', { tip: Object.entries(PRESTIGE_WEIGHTS).map(([n, w]) => `${n}: ${Math.round(p[n] * 100)}% × ${w * 100}`).join('\n') + (C[k].prestigeBonus >= 0.05 ? `\nbonus: +${Math.min(15, C[k].prestigeBonus).toFixed(1)} (formed nations, missions)` : '') }, h('b', P.score[k].toFixed(1))),
         h('td.n.opt', money(c.cache.gdp)), h('td.n.opt', people(c.cache.pop)), h('td.n.opt', c.tfx?.known ?? '–'), h('td.n.opt', Math.round(c.stability)));
     };
     mount(body, list.length ? h('table.t.lb',

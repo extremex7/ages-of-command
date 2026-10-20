@@ -8,6 +8,7 @@ import { declareWar, canDeclareWar, warScore, demandCost, evaluatePeace, makePea
   separateScore, evaluateSeparatePeace, makeSeparatePeace, warJustified } from './war.js';
 import { opinion, treatiesBrokenByWar, overlordOf, subjectsOf, hasClaim, TREATIES, juniorsOf, followsOf, casusBelli, unionProblem } from './diplomacy.js';
 import { govType } from './government.js';
+import { missionMotive } from './missions.js';
 import { rand } from './rng.js';
 import { countryNeighbours } from './geo.js';
 import { aiFleets } from './naval.js';
@@ -218,7 +219,8 @@ function considerWar(state, map, rules, c) {
     let claims = 0;
     for (const x of c.claims) if (state.prov.owner[x.p] === t) claims++;
     const cb = casusBelli(state, c.idx, t); // a refused ultimatum, a defaulted loan, funded rebels (deals.js)
-    const motive = Math.max(0, -op) / 100 + (c.rival === t ? 0.5 : 0) + Math.min(0.6, claims * 0.1) + (t === independence ? 0.6 : 0) + (cb ? 0.4 : 0);
+    const mission = missionMotive(state, map, rules, c, t); // objectives naming them (docs/NATIONS.md)
+    const motive = Math.max(0, -op) / 100 + (c.rival === t ? 0.5 : 0) + Math.min(0.6, claims * 0.1) + (t === independence ? 0.6 : 0) + (cb ? 0.4 : 0) + mission;
     const broken = treatiesBrokenByWar(state, c.idx, t).filter((x) => x.type === 'nap' || x.type === 'guarantee');
     // the AI aggression setting lowers the grievance needed for war
     const need = (D.aiWarMotive + (broken.length ? 0.5 : 0) + (warJustified(state, c.idx, t) ? 0 : 0.1)) / Math.max(0.5, set.aiAggression ?? 1);
@@ -231,7 +233,7 @@ function considerWar(state, map, rules, c) {
     const nuke = nuclearDeterred(state, map, rules, c.idx, [t, ...odds.joiners]);
     if (nuke >= 0 && (!hasDeterrent(state, map, rules, c.idx) || motive < need + 1 || rand(state) > 0.2)) continue;
     const s = ratio * (0.5 + motive);
-    if (!best || s > best.s) best = { t, ratio, op, claims, motive, broken, odds, s, cb };
+    if (!best || s > best.s) best = { t, ratio, op, claims, motive, broken, odds, s, cb, mission };
   }
   if (!best) return;
   if (rand(state) > A.baseWarChance * aggr * T.warPropensity * (0.5 + best.motive)) return;
@@ -241,6 +243,7 @@ function considerWar(state, map, rules, c) {
   if (c.rival === best.t) why.push('rival');
   if (best.claims) why.push(`holds ${best.claims} of our former provinces`);
   if (best.cb) why.push(`casus belli: ${best.cb.why.toLowerCase()}`);
+  if (best.mission) why.push('a national objective');
   if (best.op < 0) why.push(`opinion ${Math.round(best.op)}`);
   if (best.broken.length) why.push(`breaking our ${best.broken.map((x) => TREATIES[x.type].name.toLowerCase()).join(', ')}`);
   aiLog(state, c.idx, `Declared war on ${C[best.t].name}: ${why.join(', ')}; strength ratio ${best.ratio.toFixed(1)} counting ${best.odds.joiners.length} countries that would join them; stability ${Math.round(c.stability)}.`);

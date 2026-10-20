@@ -142,6 +142,52 @@ Unknown keys are rejected on load with the file and field named.
 - Prerequisite cycles, unknown ids and unknown effect keys are rejected when the rules load.
   Formulas: [TECHNOLOGY.md](TECHNOLOGY.md).
 
+## Nations — `data/rules/traits.json`, `formables.json`, `nations.json`
+
+Rules and formulas: [NATIONS.md](NATIONS.md). Effect names (traits, advisors): `tax` (tax
+efficiency, added), `stability`, `legitimacy` (points), `influence` (a month), and shares
+`manpower construction research combat naval trade industry farm growth movement siege`
+(negative `construction` = cheaper). Unknown effects, traits, eras and regions are rejected on load.
+
+`traits.json`:
+
+```json
+"traits": { "seafarers": { "name": "Seafarers", "text": "…", "effects": { "naval": 0.05, "trade": 0.015 } } },
+"tags": { "GBR": ["naval_tradition", "mercantile", "free_spirit"], "AUS@rise_of_empires_1444": ["diplomats", "bureaucratic"] },
+"defaultCount": 2,
+"defaults": [ { "when": { "region": ["mena"], "eras": ["world_war", "future"] }, "pick": ["oil_wealth", "devout"] } ]
+```
+
+`tags` gives 1 to 3 traits; `TAG@scenario` wins over `TAG`. `defaults` rules are read in order
+and each matching one adds one trait from `pick` (fixed by the tag). `when` may test `region`
+(west_europe, north_europe, east_europe, mena, sub_saharan, south_asia, east_asia,
+southeast_asia, steppe, north_america, latin_america, oceania), `eras` [first, last], `minPop`,
+`minDev`, `coastal` and `mountains` (minimum share of provinces); `{}` matches everything.
+
+`formables.json`: id → nation.
+
+```json
+"yugoslavia": { "name": "Yugoslavia", "text": "…", "region": [{ "iso": ["SRB", "HRV", "BIH"] }], "need": 0.8,
+  "capitalIn": ["SRB", "HRV"], "tags": [], "is": ["YUG"], "eras": ["industrial", "future"], "families": ["democracy"],
+  "flag": "hist/yugoslavia_sfr", "flagEras": [{ "before": "cold_war", "flag": "hist/yugoslavia_kingdom" }],
+  "pattern": { "pattern": "h", "colors": ["#003893", "#ffffff", "#de0000"] }, "color": "#5a6fa8",
+  "trait": "brotherhood_unity", "prestige": 5 }
+```
+
+`region` rules use `iso`, optional `box` [lonMin, latMin, lonMax, latMax] and `names` like
+scenario definitions. `need` is the share of the region's provinces to own. `capitalIn` (ISO
+codes) and `tags` say who may form it; `is` lists tags that already are this nation (`TAG@scenario`
+allowed in `tags` and `is`). `families` (optional) limits government families. `flag` is a file
+under `data/flags/` without `.svg` (or null for the `pattern`); `flagEras` gives an older flag
+before an era. `color`, `trait` and `prestige` are what forming gives.
+
+`nations.json`: `forming` (`minStability`, `stability`, `legitimacy`, `claims`, `aiChance`),
+`prestige.decayMonth`, `advisors` (`types` → `{ name, eraNames, text, perSkill }`, `slots` by
+government type, `defaultSlots`, salary, pool, ageing and AI numbers) and `missions` (`count`,
+`repeatMonths`, and per kind `years`, `reward` with `prestige`, `moneyMonths`, `stability`,
+`legitimacy`, `influence`, `claims`, plus `gdp.growth`, `form.minShare`, `ally.minOpinion`,
+`stability.below/target`; `aiMotive`).
+
 ## Historical scenario definitions — `tools/history/*.json`
 
 Historical scenarios are written as country lists with region rules (ISO codes, boxes, polygons,

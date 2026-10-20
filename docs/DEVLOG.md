@@ -675,3 +675,26 @@ much weaker neighbour, asking for the largest tribute the target would pay. In 8
 the Modern World there were 15 to 25 loans, 3 unions and 6 to 11 ultimatums (a few accepted);
 the benchmark stays within its run-to-run noise (4 to 6 ms a simulated day before and after). The new state is created lazily, so saves need no
 migration. 10 new unit tests and a browser check (tests/browser/deals.mjs).
+
+## Session 23: formable nations, traits, advisors and missions
+
+Four features found missing in a comparison with Age of History II and III (NATIONS.md).
+**Formable nations**: 25 nations from Germany and Italy to Gran Colombia, the Arab League, a
+restored Roman Empire and a European Federation, each with a region of provinces, who may form it
+(capital or tag), an era range and sometimes a government family. Forming renames the country,
+gives it a real flag where one exists (following the era: the imperial German flag before the
+World War era), a trait, prestige and claims on the rest of the region; the Nation tab's Decisions
+section shows progress and the missing provinces, and the AI forms nations too. **National
+traits**: every country has 1 to 3 of 55 traits, listed by tag for about 120 tags and otherwise
+chosen from its region, era and situation. **Advisors**: five kinds with skill, salary, seats by
+government type, a yearly candidate pool, ageing, retirement and death; the AI hires them.
+**Missions**: up to three objectives per country from nine kinds, with deadlines and rewards; the
+AI pursues them loosely. A prestige bonus from forming and objectives now counts in the ranking.
+
+The bonuses combine into one set (`natfx.js`) folded into the government effects and technology
+multipliers, so every system that already read those sees them. Two balance findings: a national
+bonus to power plants and refineries upset the world gas market in the two-year economy test (gas
+at 36% of its base price), so the industry bonus skips them; and the new AI log lines pushed war
+declarations out of the 300-line AI log in the aggressive-AI test, so completed AI objectives are
+no longer logged. None of the new systems draws from the game's random stream (`hashRand`), so
+existing seeded tests and replays keep their rolls. Cost: about 2 ms a game month.

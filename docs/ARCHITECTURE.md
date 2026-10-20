@@ -56,7 +56,7 @@ Order of one tick since Milestone 6:
 | 6 | `dailySupply` (supply levels, attrition) | `monthlyResearch` |
 | 7 | `resolveBattles` (with air and naval support), `resolveNavalBattles` | `monthlyMilitary` (reinforcement) |
 | 8 | `processSieges`, `dailyRecovery` | war scores, `monthlyGovernment`, `monthlyDiplomacy`, `monthlyDeals` |
-| 9 | `dailyStrategic` (queued retaliation strikes) | `aiPeace`, `aiEconomy` |
+| 9 | `dailyStrategic` (queued retaliation strikes) | `aiPeace`, `aiEconomy`, `monthlyNations` (traits, advisors, formable nations, missions) |
 | 10 | `processConstruction`, `dailyEvents` | `refreshCountryCache` |
 | 11 | `aiTick` (incl. fleets; wings and depots about every 28 days), `aiDiplomacy` | |
 
@@ -131,6 +131,9 @@ co-belligerents can sign a separate peace; white peace is accepted when the othe
   `state.strategic` for the world: nuclear programmes, delivery, interception, strikes and
   retaliation, nuclear winter and fallout, cyber operations, satellites, ASAT and debris, space
   projects, and the strategic AI (run inside `monthlyStrategic`).
+- **Nations** (`nations.js`, `advisors.js`, `missions.js`, `natfx.js`; rules in NATIONS.md): traits,
+  formable nations, advisors and missions per country, all optional in saves. Their combined
+  bonuses are derived (`natfx.js`) and folded into `govt.fx` and `tfx` when those are rebuilt.
 - **AI diplomacy** (`ai_diplomacy.js`): rivals, treaty review, one treaty sought per round,
   embargoes, blocs, influence spending; every decision logged.
 - **Deals** (`deals.js`, AI in `ai_deals.js`, rules in DIPLOMACY.md): loans, ultimatums, personal

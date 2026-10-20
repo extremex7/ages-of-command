@@ -592,7 +592,7 @@ export class Client {
         sound = 'victory'; rank = 6;
       }
       if (l.important || (l.type === 'battle' && l.report)) {
-        this.toast(l.text, l.important && !l.achievement, l.prov);
+        this.toast(l.text, l.important && !l.achievement && !l.mission && !l.formed && !l.decision, l.prov);
         // the most significant new notification gets a sound
         const [name, r] = soundFor(l);
         if (r > rank) { sound = name; rank = r; }

@@ -9,6 +9,7 @@ import { log, aiLog, refreshCountryCache, logFor, isHuman, humanControls, impFor
 import { parseDate, civilFromDays } from './calendar.js';
 import { countryNeighbours } from './geo.js';
 import { isAtWar } from './relations.js';
+import { nationalFx } from './natfx.js';
 
 export const TECH_EFFECTS = ['farm', 'mine', 'industry', 'research', 'popGrowth', 'combat', 'movement', 'siege', 'devGrowth', 'tax', 'construction'];
 const REF_YEAR = 2020;
@@ -123,11 +124,17 @@ export function refreshTech(state, rules, c) {
   }
   const mult = {};
   for (const e of TECH_EFFECTS) mult[e] = e === 'construction' ? (1 + R.ref[e]) / (1 + sum[e]) : (1 + sum[e]) / (1 + R.ref[e]);
+  // national traits and advisors (docs/NATIONS.md); naval and trade are read from tfx.nat, and the
+  // industry bonus is applied per building below (not to power plants and refineries, where a
+  // national edge only upsets the world energy market)
+  const nat = nationalFx(rules, c);
+  mult.research *= 1 + nat.research; mult.combat *= 1 + nat.combat; mult.farm *= 1 + nat.farm;
+  mult.popGrowth *= 1 + nat.growth; mult.movement *= 1 + nat.movement; mult.siege *= 1 + nat.siege;
   const goods = new Uint8Array(X.G), bld = new Uint8Array(X.B), bm = new Float64Array(X.B);
   for (let g = 0; g < X.G; g++) goods[g] = knows(state, k, R.goodTech[g]) ? 1 : 0;
   for (const b of X.buildings) {
     bld[b.i] = knows(state, k, R.bldTech[b.i]) ? 1 : 0;
-    bm[b.i] = b.fertility ? mult.farm : b.dep >= 0 ? mult.mine : mult.industry;
+    bm[b.i] = b.fertility ? mult.farm : b.dep >= 0 ? mult.mine : mult.industry * (b.out.some(([g]) => X.goods[g].id === 'energy' || X.goods[g].id === 'fuel') ? 1 : 1 + nat.industry);
   }
   // inputs a country has no technology for are not required (pre-industrial methods)
   const inp = X.buildings.map((b) => b.inp.filter(([g]) => goods[g]));
@@ -140,7 +147,7 @@ export function refreshTech(state, rules, c) {
     for (const t of ts) if (knows(state, k, t)) kn++;
     if (kn / ts.length >= 0.5) era = e.i; else break;
   }
-  c.tfx = { mult, goods, bld, bm, inp, era, known: n };
+  c.tfx = { mult, goods, bld, bm, inp, era, known: n, nat };
   return c.tfx;
 }
 

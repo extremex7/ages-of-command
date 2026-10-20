@@ -1,0 +1,157 @@
+{
+  "_doc": "Formable nations (docs/NATIONS.md). region: rules over the shared admin-1 map (iso = ISO-3 codes, optional box [lonMin, latMin, lonMax, latMax] on the province centre, optional names); a country may form the nation when it owns at least `need` of the region's provinces, its capital lies in one of `capitalIn` (ISO-3) or its tag is in `tags`, its technology era is within `eras` [first, last], it is not a subject and its stability is at least the minimum in nations.json. `is`: tags that already are this nation (they cannot form it, and while one exists nobody can); TAG@scenario limits a tag to one scenario. Forming renames the country, sets its flag (`flag` = file under data/flags/ without .svg; `flagEras` picks an older flag before an era; null or no file = the drawn `pattern`), may change its colour, grants the `trait`, prestige, stability and legitimacy, and claims on every province of the region it does not own.",
+  "germany": {
+    "name": "Germany", "text": "Unite the German lands under one crown or one constitution.",
+    "region": [{ "iso": ["DEU"] }], "need": 0.8, "capitalIn": ["DEU", "AUT"], "tags": ["PRS", "PRU@concert_1815", "BRD", "DDR"], "is": ["DEU", "GER"],
+    "eras": ["renaissance", "future"], "flag": "de", "flagEras": [{ "before": "world_war", "flag": "hist/german_empire" }],
+    "pattern": { "pattern": "h", "colors": ["#000000", "#dd0000", "#ffce00"] }, "color": "#6b6b6b", "trait": "unified_germany", "prestige": 8
+  },
+  "italy": {
+    "name": "Italy", "text": "Bring the peninsula and its islands under a single state.",
+    "region": [{ "iso": ["ITA", "SMR", "VAT"] }], "need": 0.8, "capitalIn": ["ITA"], "tags": [], "is": ["ITA"],
+    "eras": ["renaissance", "future"], "flag": "it", "flagEras": [{ "before": "cold_war", "flag": "hist/italy_kingdom" }],
+    "pattern": { "pattern": "v", "colors": ["#009246", "#ffffff", "#ce2b37"] }, "color": "#3f8f4f", "trait": "risorgimento", "prestige": 7
+  },
+  "spain": {
+    "name": "Spain", "text": "Join the crowns of Castile and Aragon and the rest of Iberia's Spanish lands.",
+    "region": [{ "iso": ["ESP"] }], "need": 0.85, "capitalIn": ["ESP"], "tags": [], "is": ["ESP", "SPA"],
+    "eras": ["medieval", "future"], "flag": "es", "flagEras": [{ "before": "cold_war", "flag": "hist/spain_plain" }],
+    "pattern": { "pattern": "h", "colors": ["#aa151b", "#f1bf00", "#aa151b"] }, "color": "#c9a227", "trait": "united_crowns", "prestige": 6
+  },
+  "great_britain": {
+    "name": "Great Britain", "text": "Unite England, Scotland, Wales and Ireland's north under one parliament.",
+    "region": [{ "iso": ["GBR"] }], "need": 0.9, "capitalIn": ["GBR"], "tags": [], "is": ["GBR"],
+    "eras": ["renaissance", "future"], "flag": "gb",
+    "pattern": { "pattern": "cross", "colors": ["#012169", "#ffffff", "#c8102e"] }, "color": "#a23a3a", "trait": "united_kingdom", "prestige": 6
+  },
+  "russia": {
+    "name": "Russia", "text": "Gather the Russian lands west of the Urals into one realm.",
+    "region": [{ "iso": ["RUS"], "box": [19, 40, 60, 72] }], "need": 0.7, "capitalIn": ["RUS"], "tags": [], "is": ["RUS", "SOV"],
+    "eras": ["medieval", "future"], "flag": "ru",
+    "pattern": { "pattern": "h", "colors": ["#ffffff", "#0039a6", "#d52b1e"] }, "color": "#3d7a4a", "trait": "third_rome", "prestige": 7
+  },
+  "ottoman": {
+    "name": "Ottoman Empire", "text": "Rule from the Bosporus over Anatolia and the Balkans.",
+    "region": [{ "iso": ["TUR", "GRC", "BGR", "MKD", "ALB"] }], "need": 0.7, "capitalIn": ["TUR", "GRC", "BGR"], "tags": [], "is": ["OTT"],
+    "eras": ["medieval", "world_war"], "flag": "hist/ottoman",
+    "pattern": { "pattern": "disc", "colors": ["#e30a17", "#ffffff"] }, "color": "#7a9a4a", "trait": "sublime_porte", "prestige": 7
+  },
+  "poland_lithuania": {
+    "name": "Polish-Lithuanian Commonwealth", "text": "Join Poland and Lithuania in a commonwealth of two nations.",
+    "region": [{ "iso": ["POL", "LTU", "BLR"] }], "need": 0.75, "capitalIn": ["POL", "LTU"], "tags": [], "is": [],
+    "eras": ["medieval", "future"], "flag": null,
+    "pattern": { "pattern": "h", "colors": ["#dc143c", "#ffffff", "#dc143c"] }, "color": "#b0475a", "trait": "golden_liberty", "prestige": 6
+  },
+  "scandinavia": {
+    "name": "Scandinavia", "text": "Unite Denmark, Norway and Sweden as the Kalmar Union once did.",
+    "region": [{ "iso": ["SWE", "NOR", "DNK"] }], "need": 0.8, "capitalIn": ["SWE", "NOR", "DNK", "FIN"], "tags": [], "is": ["KAL@rise_of_empires_1444"],
+    "eras": ["medieval", "future"], "flag": null,
+    "pattern": { "pattern": "cross", "colors": ["#c8102e", "#ffd100", "#c8102e"] }, "color": "#4a7aa8", "trait": "nordic_union", "prestige": 6
+  },
+  "netherlands": {
+    "name": "United Netherlands", "text": "Join the Low Countries in one state, as in 1815.",
+    "region": [{ "iso": ["NLD", "BEL", "LUX"] }], "need": 0.85, "capitalIn": ["NLD", "BEL", "LUX"], "tags": [], "is": ["NET@concert_1815"],
+    "eras": ["early_modern", "future"], "flag": "nl",
+    "pattern": { "pattern": "h", "colors": ["#ae1c28", "#ffffff", "#21468b"] }, "color": "#e08a2a", "trait": "low_countries", "prestige": 4
+  },
+  "iberia": {
+    "name": "Iberian Union", "text": "Hold Spain and Portugal under one ruler.",
+    "region": [{ "iso": ["ESP", "PRT"] }], "need": 0.85, "capitalIn": ["ESP", "PRT"], "tags": [], "is": [],
+    "eras": ["renaissance", "future"], "flag": null,
+    "pattern": { "pattern": "v", "colors": ["#006600", "#f1bf00", "#aa151b"] }, "color": "#b58a2a", "trait": "two_oceans", "prestige": 6
+  },
+  "austria_hungary": {
+    "name": "Austria-Hungary", "text": "Bind the Danube lands into a dual monarchy.",
+    "region": [{ "iso": ["AUT", "HUN", "CZE", "SVK", "SVN", "HRV"] }], "need": 0.75, "capitalIn": ["AUT", "HUN", "CZE"], "tags": [], "is": ["AUH"],
+    "eras": ["industrial", "world_war"], "flag": "hist/austria_hungary",
+    "pattern": { "pattern": "h", "colors": ["#000000", "#ffd700"] }, "color": "#d6c27a", "trait": "dual_monarchy", "prestige": 6
+  },
+  "yugoslavia": {
+    "name": "Yugoslavia", "text": "Unite the South Slavs between the Alps and the Aegean.",
+    "region": [{ "iso": ["SRB", "HRV", "BIH", "SVN", "MNE", "MKD"] }], "need": 0.8, "capitalIn": ["SRB", "HRV", "BIH", "SVN", "MNE", "MKD"], "tags": [], "is": ["YUG"],
+    "eras": ["industrial", "future"], "flag": "hist/yugoslavia_sfr", "flagEras": [{ "before": "cold_war", "flag": "hist/yugoslavia_kingdom" }],
+    "pattern": { "pattern": "h", "colors": ["#003893", "#ffffff", "#de0000"] }, "color": "#5a6fa8", "trait": "brotherhood_unity", "prestige": 5
+  },
+  "czechoslovakia": {
+    "name": "Czechoslovakia", "text": "Join the Czech lands and Slovakia.",
+    "region": [{ "iso": ["CZE", "SVK"] }], "need": 0.9, "capitalIn": ["CZE", "SVK"], "tags": [], "is": ["CZS"],
+    "eras": ["industrial", "future"], "flag": "cz",
+    "pattern": { "pattern": "h", "colors": ["#ffffff", "#d7141a"] }, "color": "#5f8fbf", "trait": "bohemian_industry", "prestige": 3
+  },
+  "baltic": {
+    "name": "Baltic Federation", "text": "Bring Estonia, Latvia and Lithuania into one federation.",
+    "region": [{ "iso": ["EST", "LVA", "LTU"] }], "need": 0.9, "capitalIn": ["EST", "LVA", "LTU"], "tags": [], "is": [],
+    "eras": ["industrial", "future"], "flag": null,
+    "pattern": { "pattern": "h", "colors": ["#0072ce", "#000000", "#ffffff"] }, "color": "#6a8fae", "trait": "baltic_traders", "prestige": 3
+  },
+  "korea": {
+    "name": "Korea", "text": "Reunite the peninsula north and south.",
+    "region": [{ "iso": ["KOR", "PRK"] }], "need": 0.9, "capitalIn": ["KOR", "PRK"], "tags": [], "is": ["KOR@orbital_age_2085", "KOR@concert_1815", "KOR@house_divided_1861"],
+    "eras": ["world_war", "future"], "flag": null,
+    "pattern": { "pattern": "disc", "colors": ["#ffffff", "#0047a0"] }, "color": "#6f8fc9", "trait": "one_peninsula", "prestige": 5
+  },
+  "vietnam": {
+    "name": "Vietnam", "text": "Reunite Vietnam from the Red River to the Mekong.",
+    "region": [{ "iso": ["VNM"] }], "need": 0.9, "capitalIn": ["VNM"], "tags": [], "is": ["VNM", "VIE"],
+    "eras": ["world_war", "future"], "flag": "vn",
+    "pattern": { "pattern": "disc", "colors": ["#da251d", "#ffff00"] }, "color": "#b5463a", "trait": "people_in_arms", "prestige": 4
+  },
+  "india": {
+    "name": "India", "text": "Unite the subcontinent from the Indus to the Ganges delta.",
+    "region": [{ "iso": ["IND", "PAK", "BGD"] }], "need": 0.7, "capitalIn": ["IND", "PAK", "BGD", "NPL"], "tags": [], "is": ["IND"],
+    "eras": ["medieval", "future"], "flag": "in",
+    "pattern": { "pattern": "h", "colors": ["#ff9933", "#ffffff", "#138808"] }, "color": "#d08a3a", "trait": "subcontinent", "prestige": 8
+  },
+  "arab_league": {
+    "name": "Arab League", "text": "Join the Arab states of the Levant, Mesopotamia, Arabia and the Nile in one union.",
+    "region": [{ "iso": ["EGY", "SYR", "IRQ", "JOR", "LBN", "SAU", "YEM", "OMN", "ARE", "KWT", "QAT", "BHR", "PSE"] }], "need": 0.6,
+    "capitalIn": ["EGY", "SYR", "IRQ", "JOR", "LBN", "SAU", "YEM", "OMN", "ARE", "KWT", "QAT", "BHR", "LBY", "SDN"], "tags": [], "is": [],
+    "eras": ["industrial", "future"], "flag": "hist/uar",
+    "pattern": { "pattern": "h", "colors": ["#ce1126", "#ffffff", "#000000"] }, "color": "#3f8f6f", "trait": "pan_arab", "prestige": 8
+  },
+  "maghreb": {
+    "name": "Maghreb Union", "text": "Unite North Africa from the Atlantic to the Gulf of Sidra.",
+    "region": [{ "iso": ["MAR", "DZA", "TUN", "LBY", "ESH"] }], "need": 0.7, "capitalIn": ["MAR", "DZA", "TUN", "LBY", "MRT"], "tags": [], "is": [],
+    "eras": ["early_modern", "future"], "flag": null,
+    "pattern": { "pattern": "v", "colors": ["#006233", "#ffffff", "#c1272d"] }, "color": "#9a7a3a", "trait": "caravan_routes", "prestige": 5
+  },
+  "persia": {
+    "name": "Persian Empire", "text": "Restore the empire of Iran from the Zagros to the Oxus.",
+    "region": [{ "iso": ["IRN", "AFG", "IRQ", "TKM"] }], "need": 0.7, "capitalIn": ["IRN", "AFG"], "tags": [], "is": [],
+    "eras": ["classical", "future"], "flag": "hist/persia",
+    "pattern": { "pattern": "h", "colors": ["#239f40", "#ffffff", "#da0000"] }, "color": "#8a5aa8", "trait": "shahanshah", "prestige": 6
+  },
+  "gran_colombia": {
+    "name": "Gran Colombia", "text": "Revive Bolívar's republic of Colombia, Venezuela, Ecuador and Panama.",
+    "region": [{ "iso": ["COL", "VEN", "ECU", "PAN"] }], "need": 0.75, "capitalIn": ["COL", "VEN", "ECU", "PAN"], "tags": [], "is": ["GCO"],
+    "eras": ["enlightenment", "future"], "flag": null,
+    "pattern": { "pattern": "h", "colors": ["#fcd116", "#003893", "#ce1126"] }, "color": "#c9a83a", "trait": "liberators", "prestige": 6
+  },
+  "central_america": {
+    "name": "United Provinces of Central America", "text": "Reunite the five republics of the isthmus.",
+    "region": [{ "iso": ["GTM", "HND", "SLV", "NIC", "CRI"] }], "need": 0.8, "capitalIn": ["GTM", "HND", "SLV", "NIC", "CRI"], "tags": [], "is": ["UCA"],
+    "eras": ["enlightenment", "future"], "flag": null,
+    "pattern": { "pattern": "h", "colors": ["#0d3b99", "#ffffff", "#0d3b99"] }, "color": "#4a8fb5", "trait": "isthmus", "prestige": 4
+  },
+  "east_africa": {
+    "name": "East African Federation", "text": "Federate the states of the African Great Lakes.",
+    "region": [{ "iso": ["KEN", "UGA", "TZA", "RWA", "BDI"] }], "need": 0.8, "capitalIn": ["KEN", "UGA", "TZA", "RWA", "BDI"], "tags": [], "is": ["EAF"],
+    "eras": ["world_war", "future"], "flag": null,
+    "pattern": { "pattern": "h", "colors": ["#1eb53a", "#000000", "#fcd116"] }, "color": "#6a9a3a", "trait": "great_lakes", "prestige": 5
+  },
+  "roman_empire": {
+    "name": "Roman Empire", "text": "Restore the empire of the Caesars around the whole Mediterranean.",
+    "region": [{ "iso": ["ITA", "FRA", "ESP", "PRT", "GRC", "TUR", "EGY", "TUN", "SYR", "LBN", "ISR", "PSE", "HRV", "ALB", "BGR", "MKD"] }], "need": 0.7,
+    "capitalIn": ["ITA", "TUR", "GRC"], "tags": ["BYZ"], "is": ["ROM@height_of_rome_117"],
+    "eras": ["classical", "future"], "flag": "hist/rome_vexillum",
+    "pattern": { "pattern": "disc", "colors": ["#7a1a1a", "#d4af37"] }, "color": "#8a2a3a", "trait": "imperium", "prestige": 15
+  },
+  "european_federation": {
+    "name": "European Federation", "text": "Turn the countries of Europe into one federal state.",
+    "region": [{ "iso": ["FRA", "DEU", "ITA", "ESP", "PRT", "NLD", "BEL", "LUX", "AUT", "POL", "CZE", "SVK", "HUN", "SVN", "HRV", "DNK", "SWE", "FIN", "IRL", "GRC", "ROU", "BGR", "EST", "LVA", "LTU"] }], "need": 0.6,
+    "capitalIn": ["FRA", "DEU", "ITA", "ESP", "PRT", "NLD", "BEL", "LUX", "AUT", "POL", "CZE", "SVK", "HUN", "SVN", "HRV", "DNK", "SWE", "FIN", "IRL", "GRC", "ROU", "BGR", "EST", "LVA", "LTU"],
+    "tags": [], "is": ["EUF"], "families": ["democracy"],
+    "eras": ["cold_war", "future"], "flag": "eu",
+    "pattern": { "pattern": "disc", "colors": ["#003399", "#ffcc00"] }, "color": "#3a5fa8", "trait": "federal_union", "prestige": 12
+  }
+}

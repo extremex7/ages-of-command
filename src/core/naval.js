@@ -350,7 +350,7 @@ export function navalSide(state, rules, ids, enemyIds) {
   let fire = 0, tough = 0, ships = 0, org = 0;
   for (const f of fleets) {
     const c = state.countries[f.owner];
-    const tech = c.tfx?.mult.combat ?? 1;
+    const tech = (c.tfx?.mult.combat ?? 1) * (1 + (c.tfx?.nat?.naval || 0)); // national naval bonus (docs/NATIONS.md)
     const mun = c.econ ? 0.6 + 0.4 * c.econ.supplyMun : 1;
     const of = (0.35 + 0.65 * f.org) * (1 + f.exp * 0.25) * tech * mun * f.str;
     for (const t in f.units) {

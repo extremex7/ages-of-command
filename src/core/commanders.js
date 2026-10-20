@@ -43,13 +43,19 @@ function region(map, c) {
 
 const LETTERS = 'ABCDEFGHJKLMNPRSTV';
 
+// An initial and a surname from the country's region; rnd() returns [0, 1). Also used for advisors.
+export function personName(map, c, rnd) {
+  const names = NAMES[region(map, c)];
+  return `${LETTERS[Math.floor(rnd() * LETTERS.length)]}. ${names[Math.floor(rnd() * names.length)]}`;
+}
+
 // A new general for country c: skill 1–3 (higher rarer), one random trait.
 export function newGeneral(state, map, rules, c) {
-  const K = rules.balance.commanders, names = NAMES[region(map, c)];
+  const K = rules.balance.commanders;
   const traits = Object.keys(K.traits);
   const r = rand(state);
   const g = {
-    id: state.nextId++, name: `${LETTERS[randInt(state, 0, LETTERS.length - 1)]}. ${names[randInt(state, 0, names.length - 1)]}`,
+    id: state.nextId++, name: personName(map, c, () => rand(state)),
     skill: r < 0.6 ? 1 : r < 0.9 ? 2 : 3, xp: 0, traits: [traits[randInt(state, 0, traits.length - 1)]], wins: 0, losses: 0,
   };
   return g;

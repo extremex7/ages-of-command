@@ -201,6 +201,10 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Colour-blind map colours, larger text, keyboard-only play | ✅ |
 | Screen reader support | ⬜ The map is a canvas; clickable rows are labelled as buttons |
 | Achievements and the game summary | ✅ 24 achievements (ACHIEVEMENTS.md), kept on the device; Menu → Summary and the end of a game show the rank history, start against now and the deeds |
+| Formable nations | ✅ 25 nations (NATIONS.md) by region share, tag or capital, era and government limits; renaming, real or drawn flags that follow the era, a trait, prestige and claims on the rest of the region; Decisions in the Nation tab with progress and missing provinces; the AI forms them too |
+| National traits | ✅ 1 to 3 per country (55 traits): listed by tag (per scenario where tags differ), otherwise from the capital's region, era and situation; effects on tax, stability, research, combat, naval combat, trade, industry and more; shown with tooltips in the Nation tab |
+| Advisors | ✅ Five kinds with skill 1–5, salaries in the budget, seats by government type, a yearly pool of candidates, ageing, promotion, retirement and death; AI hiring and dismissal; Government tab |
+| Missions (national objectives) | ✅ Up to three per country from nine kinds drawn from its situation (economy, claims, forming, alliance, era, rival, order, debt, independence), with deadlines and rewards (prestige, money, stability, legitimacy, influence, claims); notifications; the AI pursues them through war motives and alliance offers |
 
 ## Known limitations
 

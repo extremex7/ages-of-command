@@ -261,3 +261,15 @@ table.lb th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
 .ach { display: grid; grid-template-columns: auto 1fr auto; gap: 0.6em; align-items: center; padding: 0.35em 0.5em; border: 1px solid var(--line); border-radius: 5px; opacity: 0.6; }
 .ach.got { opacity: 1; border-color: var(--accent); }
 .ach .ach-icon .icon { width: 1.4em; height: 1.4em; } .ach.got .ach-icon { color: var(--accent); }
+
+/* Session 23: victory, bulk construction, colonies */
+.score-stat { cursor: pointer; }
+.victory-setup .row { flex-wrap: wrap; gap: 0.35em; margin-bottom: 0.3em; align-items: center; }
+.victory-table td { vertical-align: top; }
+.victory-table .bar { min-width: 6em; }
+.bulk select { width: 100%; }
+.bulk .row { flex-wrap: wrap; gap: 0.3em; margin: 0.3em 0; }
+.bulk-go { margin: 0.3em 0; }
+.auto-econ { margin-top: 0.6em; align-items: center; gap: 0.3em; }
+.colony .kv { margin: 0.3em 0; }
+.colonise-btn { margin-top: 0.3em; display: inline-flex; align-items: center; gap: 0.3em; }

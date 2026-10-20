@@ -97,10 +97,12 @@ function newGameScreen(pick) {
   }
   function renderDetail() {
     const s = data.scenarios.find((x) => x.id === sel);
+    opts.onScenario?.(s);
     if (!s) return mount(detail, h('p', 'No scenarios found.'));
     mount(detail, h('h3', s.name), h('p', s.description), s.approximations && h('p.note', 'Approximations: ' + s.approximations));
   }
   renderList(); renderDetail();
+  const vbox = victorySetup(opts, () => data.scenarios.find((x) => x.id === sel));
   const diff = h('select', { on: { change: (e) => (opts.difficulty = e.target.value) } },
     ['easy', 'normal', 'hard'].map((d) => h('option', { value: d, selected: d === 'normal' }, d[0].toUpperCase() + d.slice(1))));
   const aggr = h('select', { on: { change: (e) => (opts.aiAggression = +e.target.value) } },
@@ -120,16 +122,49 @@ function newGameScreen(pick) {
         h('div.field', h('label', 'AI aggressiveness'), aggr),
         h('div.field', h('label', 'Historical events (dated events of the scenario\'s period; each still needs its conditions)'), hist),
         h('div.field', h('label', 'Random events (disasters, scandals, booms)'), rate),
-        h('div.field', h('label', 'Random seed (same seed + same choices = same game)'), seed))),
+        h('div.field', h('label', 'Random seed (same seed + same choices = same game)'), seed),
+        vbox)),
     h('div.row.spread', { style: { marginTop: '1em' } },
       h('button', { on: { click: mainMenu } }, 'Back'),
       h('button.primary', { on: { click: async () => {
         const sc = await getScenario(sel);
         const game = newGame({ map: data.map, scenario: sc, rules: data.rules, playerTag: null,
           seed: opts.seed || String(Math.floor(Math.random() * 1e9)),
-          settings: { difficulty: opts.difficulty, aiAggression: opts.aiAggression, historicalEvents: opts.historicalEvents, eventRate: opts.eventRate, autosaveMonths: data.settings.autosaveMonths, autosaveKeep: data.settings.autosaveKeep, cheats: !!data.settings.cheats } });
+          settings: { difficulty: opts.difficulty, aiAggression: opts.aiAggression, historicalEvents: opts.historicalEvents, eventRate: opts.eventRate, victory: victorySettings(opts.victory), capitulation: opts.capitulation, autosaveMonths: data.settings.autosaveMonths, autosaveKeep: data.settings.autosaveKeep, cheats: !!data.settings.cheats } });
         startClient(game, 'pick');
       } } }, 'Choose country →')))));
+}
+
+// New Game: victory conditions (any combination; none ticked is a sandbox game) and the
+// capitulation threshold. See src/core/victory.js and src/core/capitulation.js.
+function victorySetup(opts, scenario) {
+  const eras = data.rules.tech?.eras || [];
+  const V = opts.victory = { conquest: false, conquestShare: 0.5, economy: false, economyShare: 0.4, economyYears: 10, tech: false, techEra: eras[eras.length - 1]?.id || '', score: false, scoreYear: 0 };
+  opts.capitulation = data.rules.balance.capitulation?.occupied ?? 0.6;
+  const sel = (key, list, cur) => h('select', { on: { change: (e) => { V[key] = isNaN(+e.target.value) ? e.target.value : +e.target.value; note(); } } },
+    list.map(([v, n]) => h('option', { value: String(v), selected: v === cur }, n)));
+  const tick = (key, label) => h('label.row', h('input', { type: 'checkbox', className: 'victory-' + key, on: { change: (e) => { V[key] = e.target.checked; note(); } } }), ' ', label);
+  const year = h('input', { type: 'number', className: 'victory-year', style: { width: '6em' }, on: { input: (e) => { V.scoreYear = +e.target.value || 0; } } });
+  const msg = h('p.muted.small');
+  const note = () => { msg.textContent = V.conquest || V.economy || V.tech || V.score ? 'The first country to meet any ticked condition wins; you can keep playing afterwards.' : 'Nothing ticked: a sandbox game with no victory.'; };
+  opts.onScenario = (s) => { if (!s) return; const y = +String(s.startDate).split('-')[0] + 100; V.scoreYear = y; year.value = String(y); };
+  opts.onScenario(scenario());
+  note();
+  return h('div.victory-setup',
+    h('h4', 'Victory'),
+    h('div.row', tick('conquest', 'Conquest: own'), sel('conquestShare', [[0.25, '25%'], [0.5, '50%'], [0.75, '75%'], [1, 'all']], 0.5), h('span.muted', 'of the world\'s provinces')),
+    h('div.row', tick('economy', 'Economic: the largest economy with'), sel('economyShare', [[0.25, '25%'], [0.33, '33%'], [0.4, '40%'], [0.5, '50%']], 0.4), h('span.muted', 'of world GDP for'), sel('economyYears', [[5, '5 years'], [10, '10 years'], [20, '20 years']], 10)),
+    h('div.row', tick('tech', 'Technology: first to know every technology of the'), sel('techEra', eras.map((e) => [e.id, e.name]), V.techEra), h('span.muted', 'era')),
+    h('div.row', tick('score', 'Prestige: the highest score on 1 January'), year),
+    msg,
+    h('div.field', h('label', 'Capitulation (a country gives up when this share of its provinces and its capital are occupied)'),
+      h('select', { on: { change: (e) => { opts.capitulation = +e.target.value; } } },
+        [[0, 'Off'], [0.4, '40%'], [0.6, '60%'], [0.8, '80%']].map(([v, n]) => h('option', { value: String(v), selected: v === opts.capitulation }, n)))));
+}
+
+function victorySettings(V) {
+  if (!V || !(V.conquest || V.economy || V.tech || V.score)) return null;
+  return { conquest: V.conquest ? V.conquestShare : 0, economy: V.economy ? V.economyShare : 0, economyYears: V.economyYears, tech: V.tech ? V.techEra : '', scoreYear: V.score ? V.scoreYear : 0 };
 }
 
 function loadScreen() {

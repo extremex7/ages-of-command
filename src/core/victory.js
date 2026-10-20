@@ -34,6 +34,9 @@ export function victoryConditions(state, rules) {
   return out;
 }
 
+// 50% or 0.4%: whole percents unless that would round to nothing
+const pc = (x) => (x >= 0.1 ? Math.round(x * 100) : +(x * 100).toPrecision(2)) + '%';
+
 function vstate(state) { return (state.victory ||= { econ: null, won: null, continued: false }); }
 
 function provincesWithSubjects(state, k) {
@@ -58,14 +61,14 @@ export function victoryProgress(state, map, rules, k) {
     const name = VICTORY_KINDS[v.id].name;
     if (v.id === 'conquest') {
       const n = provincesWithSubjects(state, k), need = Math.ceil(v.share * map.ids.length);
-      return { id: v.id, name, value: Math.min(1, n / need), text: `${n} of ${need} provinces (${Math.round(v.share * 100)}% of the world's ${map.ids.length})` };
+      return { id: v.id, name, value: Math.min(1, n / need), text: `${n} of ${need} provinces (${pc(v.share)} of the world's ${map.ids.length})` };
     }
     if (v.id === 'economy') {
       const { world, top } = worldGdp(state), share = world ? (c.cache?.gdp || 0) / world : 0;
       const months = V.econ?.k === k ? V.econ.months : 0;
       const need = v.years * 12;
       const value = share < v.share || top !== k ? 0.5 * Math.min(1, share / v.share) : 0.5 + 0.5 * Math.min(1, months / need);
-      return { id: v.id, name, value, text: `${(share * 100).toFixed(1)}% of world GDP${top === k ? ', the largest economy' : ''}; needs ${Math.round(v.share * 100)}% as the largest for ${v.years} years${months ? ` (${Math.floor(months / 12)} y ${months % 12} m so far)` : ''}` };
+      return { id: v.id, name, value, text: `${(share * 100).toFixed(1)}% of world GDP${top === k ? ', the largest economy' : ''}; needs ${pc(v.share)} as the largest for ${v.years} years${months ? ` (${Math.floor(months / 12)} y ${months % 12} m so far)` : ''}` };
     }
     if (v.id === 'technology') {
       const ts = eraTechs(rules, v.era);
@@ -115,14 +118,14 @@ export function monthlyVictory(state, map, rules) {
       const need = Math.ceil(v.share * map.ids.length);
       let best = -1, bn = need - 1;
       for (const c of C) if (c.alive && c.cache) { const n = provincesWithSubjects(state, c.idx); if (n > bn) { bn = n; best = c.idx; } }
-      if (best >= 0) win = { k: best, id: v.id, why: `owns, with its subjects, ${Math.round(v.share * 100)}% of the world's provinces` };
+      if (best >= 0) win = { k: best, id: v.id, why: `owns, with its subjects, ${pc(v.share)} of the world's provinces` };
     } else if (v.id === 'economy') {
       const { world, top } = worldGdp(state);
       const ok = top >= 0 && world > 0 && C[top].cache.gdp / world >= v.share;
       if (!ok) V.econ = null;
       else if (V.econ?.k === top) V.econ.months++;
       else V.econ = { k: top, months: 1 };
-      if (V.econ && V.econ.months >= v.years * 12) win = { k: top, id: v.id, why: `held ${Math.round(v.share * 100)}% of world GDP as the largest economy for ${v.years} years` };
+      if (V.econ && V.econ.months >= v.years * 12) win = { k: top, id: v.id, why: `held ${pc(v.share)} of world GDP as the largest economy for ${v.years} years` };
     } else if (v.id === 'technology') {
       const ts = eraTechs(rules, v.era);
       if (!ts.length) continue;

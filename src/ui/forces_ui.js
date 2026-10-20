@@ -4,6 +4,7 @@ import { h } from './dom.js';
 import { money, pct } from './format.js';
 import { shipCount, fleetPower, fleetSpeed, orderFleet, mergeFleets, splitFleet, nearestPort, hostileSea, zoneBalance } from '../core/naval.js';
 import { MISSIONS, wingCount, wingRange, wingStat, setMission, rebaseWing, mergeWings, canBase } from '../core/air.js';
+import { expLevel, expRules } from '../core/experience.js';
 import { canBuildDepot, buildDepot, removeDepot, maxDepots, depotCost, provinceCapacity } from '../core/supply.js';
 
 const MISSION_NAMES = { superiority: 'Air superiority', support: 'Close air support', bombing: 'Strategic bombing', idle: 'Stand down' };
@@ -49,6 +50,13 @@ export function fleetsSection(cl) {
     fleets.length ? fleets.map((f) => fleetCard(cl, f)) : h('p.muted', 'No fleets. Build warships in a coastal province (Navy above).'));
 }
 
+// Experience (from battles; diluted by recruits and reinforcements) and the country's expertise.
+export function expLine(cl, a) {
+  const R = cl.game.rules, X = expRules(R), e = a.exp || 0, c = cl.state.countries[a.owner];
+  return h('div.row.exp-line', { style: { gap: '0.4em' }, tip: `Experience ${pct(e / X.cap)} (${expLevel(R, e)}): +${Math.round(e * X.bonus * 100)}% damage, up to +${Math.round(X.cap * X.bonus * 100)}%. Gained in battle, more for victories; new recruits and replacements dilute it.${c.expertise ? `\nNational military expertise: +${(c.expertise * 100).toFixed(1)}% damage for every army and fleet.` : ''}` },
+    h('span.muted', 'Exp'), h('div', { style: { flex: 1 } }, bar(e / X.cap, 'var(--warn)')), h('span.muted.small', expLevel(R, e)));
+}
+
 function fleetCard(cl, f) {
   const s = cl.state, map = cl.game.map, R = cl.game.rules;
   const sel = cl.view.selectedFleets.has(f.id);
@@ -68,6 +76,7 @@ function fleetCard(cl, f) {
     h('div.muted', `${Object.entries(f.units).map(([t, n]) => `${n} ${R.units[t].short}`).join(' · ')} · ${shipCount(f)} ships · power ${fleetPower(f, R).toFixed(0)} · ${Math.round(fleetSpeed(f, R, s))} km/day`),
     h('div.row', { style: { gap: '0.4em' } }, h('span.muted', 'Str'), h('div', { style: { flex: 1 }, tip: `Strength ${pct(f.str)}: share of ships fully crewed and undamaged. Repaired in port.` }, bar(f.str)),
       h('span.muted', 'Org'), h('div', { style: { flex: 1 }, tip: `Organisation ${pct(f.org)}: readiness. Lost in battle, recovers over time.` }, bar(f.org, 'var(--blue)'))),
+    expLine(cl, f),
     bal && bal.enemy > 0 && h('div', { className: bal.enemy > bal.own ? 'bad' : 'warn', tip: 'Surface power at sea in this zone: your side against your enemies.' }, `Enemy fleets here: ${bal.own.toFixed(0)} vs ${bal.enemy.toFixed(0)}`),
     h('div', { className: f.battle ? 'bad' : 'muted' }, status));
 }

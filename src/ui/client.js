@@ -30,6 +30,8 @@ import { icon } from './icons.js';
 import { renderEditor, editorClick } from './editor.js';
 import { summaryDialog } from './summary.js';
 import { startRecord } from '../core/record.js';
+import { scoreStat, victoryDialog, capitulationDialog } from './victory_ui.js';
+import { pendingVictory } from '../core/victory.js';
 import { saveDialog, peaceDialog, menuDialog, reportDialog, separatePeaceDialog, eventDialog, civilWarDialog } from './dialogs.js';
 
 export const SPEEDS = [0, 1, 3, 8, 20, 0]; // days per second; 5 = as fast as the frame budget allows
@@ -175,6 +177,8 @@ export class Client {
         if (touches.size > 2) return;
       }
       down = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, button: e.button, drag: false, shift: e.shiftKey, id: e.pointerId };
+      // the construction brush (Industry tab): dragging paints provinces instead of panning
+      if (this.view.brush?.on && e.button === 0 && this.mode === 'play') { down.paint = true; this.paintAt(...local(e)); return; }
       if (e.pointerType === 'touch') {
         down.timer = setTimeout(() => {
           if (!down || down.drag) return;
@@ -199,6 +203,7 @@ export class Client {
           return;
         }
       }
+      if (down?.paint && down.id === e.pointerId) { this.paintAt(sx, sy); return; }
       if (down && down.id === e.pointerId) {
         const dx = e.clientX - down.x, dy = e.clientY - down.y;
         if (!down.drag && Math.hypot(dx, dy) > (e.pointerType === 'touch' ? 10 : 4)) { down.drag = true; clearTimeout(down.timer); }
@@ -221,6 +226,7 @@ export class Client {
       }
       if (down && down.id === e.pointerId) {
         clearTimeout(down.timer);
+        if (down.paint) { this.uiDirty = true; down = null; this.requestFrame(); return; }
         if (!down.drag && !down.done && e.type === 'pointerup') {
           if (down.button === 0) this.click(sx, sy, e.shiftKey);
           else if (down.button === 2) this.rightClick(sx, sy);
@@ -276,6 +282,7 @@ export class Client {
     else if (e.key === '\\') this.toggleSidebar();
     else if (e.key === 'Tab' && kbd) return; // moves the focus between buttons
     else if (/^[1-5]$/.test(e.key)) this.setSpeed(+e.key);
+    else if (e.key === 'Escape' && this.view.brush?.on) { this.view.brush.on = false; this.uiDirty = true; }
     else if (e.key === 'Escape') { if (this.el.contains(document.activeElement)) document.activeElement.blur(); this.clearSelection(); }
     else if (e.key === '+' || e.key === '=') { this.renderer.zoomAt(this.renderer.vw / 2, this.renderer.vh / 2, 1.25); }
     else if (e.key === '-') { this.renderer.zoomAt(this.renderer.vw / 2, this.renderer.vh / 2, 0.8); }
@@ -412,6 +419,21 @@ export class Client {
     }
     if (errs.length) this.toast(errs[0], true);
     this.uiDirty = true;
+  }
+
+  // Brush painting (view.brush = { provs, on, erase }, see bulk_ui.js): adds (in erase mode
+  // removes) the player's province under the pointer to the painted set, highlighted on the map.
+  paintAt(sx, sy) {
+    const B = this.view.brush, s = this.state;
+    const [wx, wy] = this.renderer.screenToWorld(sx, sy);
+    const p = pickProvince(this.game.map, this.index, wx, wy);
+    if (p < 0 || s.prov.owner[p] !== s.player) return;
+    const had = B.provs.has(p);
+    if (B.erase ? !had : had) return;
+    if (B.erase) B.provs.delete(p); else B.provs.add(p);
+    this.view.highlight = [...B.provs];
+    this.uiDirty = true;
+    this.requestFrame();
   }
 
   selectProvince(p) {
@@ -608,6 +630,10 @@ export class Client {
     if (ev && this.mode === 'play') { ev.shown = true; this.autoPause(); this.openEvent(ev); }
     // the player's country split: lead the government or the rebels
     if (s.civilChoice && this.mode === 'play') { const cc = s.civilChoice; delete s.civilChoice; this.autoPause(); civilWarDialog(this, cc); }
+    // a war of ours ended in a capitulation; a victory condition was met
+    if (s.capitulations?.length && this.mode === 'play' && !this.el.querySelector('.dialog-wrap')) { this.autoPause(); capitulationDialog(this, s.capitulations.shift()); }
+    const won = pendingVictory(s);
+    if (won && this.mode === 'play') victoryDialog(this, won);
     if (s.gameOver && !this.gameOverShown) {
       this.gameOverShown = true; this.speed = 0;
       this.toast(`Game over: ${s.gameOver.reason}`, true);
@@ -688,6 +714,7 @@ export class Client {
     mount(this.topbar,
       me ? h('div.nation', { on: { click: () => { this.setTab('country'); this.focusCountry(me.idx); } }, tip: 'Your country. Click to centre on the capital (key C).' }, flagCanvas(me), me.name)
         : h('div.nation', h('span.muted', { pick: 'Choose a country', edit: 'Scenario editor' }[this.mode] || 'Observer')),
+      me && scoreStat(this),
       me && s.prestige?.rank?.[me.idx] && h('button.rank-btn', { tip: 'Your world rank by prestige. Click for the leaderboard.', on: { click: () => leaderboardDialog(this) } }, starBadge(s.prestige.rank[me.idx], true)),
       h('div.row', h('button.play', { tip: 'Pause / resume (Space)', 'aria-label': this.speed ? 'Pause' : 'Play', on: { click: () => this.togglePause() }, disabled: this.mode !== 'play' }, icon(this.speed ? 'pause' : 'play')),
         h('div.date', formatDate(s.day), this.speed ? '' : h('div.paused-flag', 'PAUSED')), h('div.speed', speedBtns)),

@@ -17,12 +17,14 @@ import { diplomacyTab, relationsSection } from './diplomacy_ui.js';
 import { governmentTab } from './government_ui.js';
 import { govType } from '../core/government.js';
 import { portZonesOf } from '../core/mapdata.js';
-import { fleetsSection, wingsSection, provinceForces, supplyLine } from './forces_ui.js';
+import { fleetsSection, wingsSection, provinceForces, supplyLine, expLine } from './forces_ui.js';
 import { strategicTab, nuclearButton } from './strategic_ui.js';
 import { commandSection, generalLine } from './command_ui.js';
 import { leavePlans } from '../core/plans.js';
 import { intelSection } from './intel_ui.js';
 import { sanctionsRow } from './council_ui.js';
+import { colonySection } from './colony_ui.js';
+import { expRules } from '../core/experience.js';
 
 export const TABS = [
   { id: 'country', name: 'Nation', key: 'n', tip: 'Overview of the selected country, or yours, and your relations with it.' },
@@ -138,6 +140,8 @@ function militaryTab(cl) {
     locked.length > 0 && h('div.muted', { style: { marginTop: '0.3em', fontSize: '0.9em' } }, 'Not yet available: ' + locked.map((t) => `${R.units[t].name} (${R.tech.list[R.tech.unitTech[t]].name})`).join(', ')),
     queue.length > 0 && h('div.muted', { style: { marginTop: '0.4em' } }, `In training: ${queue.map((r) => `${R.units[r.type].short} ${r.days}d`).join(', ')}`),
     h('h3', { style: { marginTop: '1em' } }, `Armies (${armies.length})`),
+    h('div.muted.expertise', { tip: `Military expertise comes from battles and won wars and raises the damage of every army and fleet, up to +${Math.round(expRules(R).expertise.cap * 100)}%. It fades by ${Math.round(expRules(R).expertise.peaceDecay * 100)}% a month in peacetime.` },
+      `Military expertise: +${((c.expertise || 0) * 100).toFixed(1)}% combat`),
     selected.length > 0 && h('div.row', { style: { marginBottom: '0.5em' } },
       h('button', { disabled: selected.length < 2, on: { click: () => { const e = mergeArmies(s, selected.map((a) => a.id)); if (e) cl.toast(e, true); cl.view.selectedArmies = new Set([selected[0].id]); cl.uiDirty = true; } } }, 'Merge'),
       h('button', { disabled: selected.length !== 1, on: { click: () => { const e = splitArmy(s, selected[0].id); if (e) cl.toast(e, true); cl.uiDirty = true; } } }, 'Split'),
@@ -187,6 +191,7 @@ function armyCard(cl, a) {
     h('div.muted', `${Object.entries(u).map(([t, n]) => `${n} ${R.units[t].short}`).join(' · ')} · ${people(armyMen(a, R))} men`),
     h('div.row', { style: { gap: '0.4em' } }, h('span.muted', 'Str'), h('div', { style: { flex: 1 }, tip: `Strength ${pct(a.str)}: share of full manpower. Reinforced monthly in friendly territory.` }, bar(a.str)),
       h('span.muted', 'Org'), h('div', { style: { flex: 1 }, tip: `Organisation ${pct(a.org)}: combat readiness. Lost in battle, recovers daily.` }, bar(a.org, 'var(--blue)'))),
+    expLine(cl, a),
     generalLine(cl, a),
     supplyLine(cl, a),
     h('div', { className: a.battle ? 'bad' : 'muted' }, status));
@@ -255,6 +260,7 @@ export function renderProvince(cl, el) {
     battle && h('div.bad', `Battle in progress (day ${battle.days})`),
     nuclearButton(cl, p),
     provinceEconomy(cl, p),
+    colonySection(cl, p),
     here.length > 0 && h('h4', 'Armies here'),
     here.map((a) => h('div.row.spread', h('span', flagCanvas(C[a.owner]), ' ', a.name), h('span.muted', `${unitCount(a)} units · ${pct(a.org)} org`))),
     provinceForces(cl, p),

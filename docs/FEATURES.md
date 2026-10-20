@@ -42,6 +42,8 @@ Nothing is marked ✅ if it is only a placeholder.
 | Basic country AI, military interface | ✅ | |
 | Separate peace for non-leaders | ✅ | Co-belligerents leave a war with their own terms; the AI does it too (DIPLOMACY.md) |
 | Fronts, battle plans, commanders | ✅ | Generals with skill and traits; front lines and attack arrows for the player (MILITARY.md). The AI moves its armies without plans |
+| Army and fleet experience, national military expertise | ✅ | Experience from battles, diluted by reinforcements and recruits, shown on army and fleet cards; expertise from won wars fades in peace (MILITARY.md) |
+| Capitulation | ✅ | A country with most of its provinces and its capital occupied gives up on automatic terms; threshold chosen at New Game (MILITARY.md) |
 
 ## Milestone 3 — economy
 
@@ -59,6 +61,7 @@ See [ECONOMY.md](ECONOMY.md) for every formula.
 | Workforce and unemployment | ✅ | Industrial workforce per province; idle workers counted |
 | Infrastructure | ✅ | 0–10 per province; building efficiency and movement speed |
 | Construction queue with slots, goods and refunds | ✅ | Province panel build menu; Industry tab queue |
+| Bulk construction, build where most needed, auto-managed economy | ✅ | Industry tab: one building in a region, the whole country or provinces painted on the map, with a cost preview; the AI's site ranking (ECONOMY.md) |
 | World market, prices, imports/exports | ✅ | Automatic each month; prices follow world supply and demand |
 | Embargoes; war closes trade | ✅ | Player embargo button; AI embargoes since Milestone 4 |
 | Inflation / CPI and price level | ✅ | CPI raises unit, upkeep and construction costs |
@@ -120,7 +123,7 @@ See [TECHNOLOGY.md](TECHNOLOGY.md) and [SCENARIOS.md](SCENARIOS.md).
 | Starting wars, subjects, blocs and policies from the scenario | ✅ | |
 | Save v5 with migration; tech file remapping | ✅ | |
 | Scenario editor UI | ✅ | Paint borders, add and delete countries, edit them, armies, treaties and starting wars; save, play, export and import |
-| Colonisation of unowned land | ⬜ | Unowned land is impassable in Height of Rome |
+| Colonisation of unowned land | ✅ | Settlers from a neighbouring province or by sea from a port; cost, time and chance of success; the AI colonises too. Armies still cannot enter unowned land (ECONOMY.md) |
 | Technology espionage | ✅ | Spies (any era) and cyber espionage (modern) steal research |
 | Technology trading | ⬜ | Diffusion models spread instead |
 | Navy, air and space technologies with their own systems | ✅ | Done in Milestone 6: they unlock ships, aircraft, warheads, satellites and space projects |
@@ -164,7 +167,7 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Aircraft attacking fleets, air control over sea zones | ⬜ | Air acts over land battles and bombing targets only |
 | AI-planned amphibious invasions | ⬜ | The AI goes by sea only when its normal orders find it faster |
 | Supply that consumes goods; fleet and air supply | ⬜ | Supply levels have no goods cost |
-| Wing experience, warheads assigned to launchers | ⬜ | Fields exist but are not used |
+| Wing experience, warheads assigned to launchers | ⬜ | Fields exist but are not used (armies and fleets gain experience) |
 
 ## Later milestones
 
@@ -193,6 +196,7 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | iOS app | ⬜ Postponed; needs a Mac to build |
 | Colour-blind map colours, larger text, keyboard-only play | ✅ |
 | Screen reader support | ⬜ The map is a canvas; clickable rows are labelled as buttons |
+| Victory conditions | ✅ Chosen at New Game: conquest, economic share held for some years, a technology era, best score at an end date, or a sandbox. Score in the top bar, a victory screen with the summary, and Continue playing (ACHIEVEMENTS.md) |
 | Achievements and the game summary | ✅ 24 achievements (ACHIEVEMENTS.md), kept on the device; Menu → Summary and the end of a game show the rank history, start against now and the deeds |
 
 ## Known limitations
@@ -223,6 +227,6 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 
 1. **Milestone 6 follow-ups**: transport capacity, aircraft against fleets, AI amphibious
    planning, supply with goods cost, winning back the simulation speed lost in M6.
-2. **Milestone 5 follow-ups**: colonisation of unowned land, a war AI that sustains long wars, technology trading.
+2. **Milestone 5 follow-ups**: a war AI that sustains long wars, technology trading.
 3. **Milestone 4 follow-ups**: the player's own bloc votes.
 4. Economy follow-ups: a gas and renewable energy split, transport costs.

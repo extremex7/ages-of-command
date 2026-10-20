@@ -44,7 +44,10 @@ revolution thresholds, policy costs, treaty opinions, breaking penalties, peace-
 cadence). The optional sections `civilWar`, `commanders`, `espionage` and `council` hold the civil-war
 rules ([GOVERNMENT.md](GOVERNMENT.md)), the generals, their traits and battle plans
 ([MILITARY.md](MILITARY.md)), spy networks ([ESPIONAGE.md](ESPIONAGE.md)) and the world council
-([DIPLOMACY.md](DIPLOMACY.md)); without them those features are off. A trait is
+([DIPLOMACY.md](DIPLOMACY.md)); without them those features are off. The sections `experience`,
+`capitulation` and `colonisation` tune army experience and national expertise, capitulation and
+colonies ([MILITARY.md](MILITARY.md), [ECONOMY.md](ECONOMY.md)); a missing section or value takes
+the default in code (`src/core/experience.js`, `capitulation.js`, `colonies.js`). A trait is
 `{ name, text, attack?, defense?, speed?, orgRecovery?, orgLoss?, siege?, supply?, terrain?, role? }`.
 
 ## Goods — `data/rules/goods.json`

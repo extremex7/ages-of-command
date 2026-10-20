@@ -3,7 +3,7 @@
 // settlements. Each country's capabilities live in c.strat; world-wide consequences (nuclear
 // detonations, nuclear winter, orbital debris, fallout) in state.strategic. Constants: the
 // `strategic` section of balance.json; formulas: docs/STRATEGIC.md.
-import { log, aiLog } from './state.js';
+import { log, aiLog, logFor, isHuman, humanControls, humansIn, impFor } from './state.js';
 import { atWar, isAtWar, enemiesOf, warBetween } from './relations.js';
 import { knowsId, techCost, grantTech, available } from './technology.js';
 import { addMod } from './diplomacy.js';
@@ -209,7 +209,7 @@ function afterStrike(state, map, rules, k, target, firstUse, retaliation, Y) {
     war.battleScore = Math.max(-W.maxBattleScore, Math.min(W.maxBattleScore, war.battleScore + sign * S.strikeWarScore * Y));
   }
   // launch on warning: the victim retaliates the next day if it still can
-  if (!retaliation && hasDeterrent(state, map, rules, target) && (target !== state.player || t.launchOnWarning)) {
+  if (!retaliation && hasDeterrent(state, map, rules, target) && (!humanControls(state, target) || t.launchOnWarning)) {
     if (!state.strategic.pending.some((x) => x.from === target && x.to === k)) state.strategic.pending.push({ from: target, to: k, day: state.day + 1, n: S.retaliationStrikes });
   }
 }
@@ -333,8 +333,8 @@ export function cyberOperation(state, map, rules, k, target, op) {
   }
   if (seen) addMod(state, target, k, -S.cyberOpinion, 1, 'Cyber attack');
   const label = { espionage: 'Cyber espionage', sabotage: 'Cyber sabotage', disruption: 'Network disruption', disinformation: 'Disinformation campaign' }[op];
-  if (k === state.player) log(state, 'diplomacy', `${label} against ${t.name}: ${ok ? what : 'failed'}${seen ? '; we were identified' : ''}.`, { important: true });
-  else if (target === state.player && (seen || ok)) log(state, 'diplomacy', seen ? `${label} by ${c.name}: ${ok ? what.replace('stole', 'they stole') : 'it failed'}.` : `An unidentified ${label.toLowerCase()} hit us: ${what}.`, { important: true });
+  logFor(state, k, 'diplomacy', `${label} against ${t.name}: ${ok ? what : 'failed'}${seen ? '; we were identified' : ''}.`, { important: true });
+  if (seen || ok) logFor(state, target, 'diplomacy', seen ? `${label} by ${c.name}: ${ok ? what.replace('stole', 'they stole') : 'it failed'}.` : `An unidentified ${label.toLowerCase()} hit us: ${what}.`, { important: true });
   return { ok, seen, what };
 }
 
@@ -382,7 +382,7 @@ export function asatStrike(state, rules, k, target) {
   const kind = ['warning', 'recon', 'nav', 'comms'].find((x) => t.strat.sats[x] > 0);
   const hit = rand(state) < (laser ? S.asatLaser : S.asatHit);
   if (hit) { t.strat.sats[kind]--; state.strategic.debris += laser ? S.debrisLaser : S.debrisKinetic; }
-  if (k === state.player || target === state.player) log(state, 'war', `${c.name} fired an anti-satellite weapon at a ${kind} satellite of ${t.name}: ${hit ? 'destroyed' : 'missed'}.`, { important: target === state.player && hit });
+  for (const x of humansIn(state, [k, target])) logFor(state, x, 'war', `${c.name} fired an anti-satellite weapon at a ${kind} satellite of ${t.name}: ${hit ? 'destroyed' : 'missed'}.`, { important: x === target && hit });
   return null;
 }
 
@@ -439,7 +439,7 @@ export function monthlyStrategic(state, map, rules) {
       if (n > 0) {
         s.warheads += n; c.treasury -= n * S.warheadCost * pl;
         if (iU != null && c.econ) c.econ.stock[iU] -= n * S.uraniumPerWarhead;
-        if (s.warheads === n && c.idx !== state.player) log(state, 'world', `${c.name} has built its first nuclear weapons.`, { important: true });
+        if (s.warheads === n && !isHuman(state, c.idx)) log(state, 'world', `${c.name} has built its first nuclear weapons.`, { important: true });
         else if (s.warheads === n) log(state, 'military', 'We have built our first nuclear weapons.', { important: true });
       }
     }
@@ -453,7 +453,7 @@ export function monthlyStrategic(state, map, rules) {
       const P = SPACE_PROJECTS[s.project.kind];
       if (s.project.kind === 'station') s.stations++; else s.colonies++;
       if (s.project.kind === 'colony') c.stability = Math.min(100, c.stability + 3);
-      log(state, c.idx === state.player ? 'economy' : 'world', `${c.name} completed: ${P.name.toLowerCase()} (fictional technology).`, { important: c.idx === state.player });
+      log(state, isHuman(state, c.idx) ? 'economy' : 'world', `${c.name} completed: ${P.name.toLowerCase()} (fictional technology).`, { important: impFor(state, c.idx) });
       s.project = null;
     }
     // orbital debris destroys satellites
@@ -479,7 +479,7 @@ function aiStrategic(state, map, rules) {
   const S = rules.balance.strategic, C = state.countries, W = state.strategic;
   const month = Math.floor((state.day - state.startDay) / 30.44);
   for (const c of C) {
-    if (!c.alive || (c.idx === state.player && !c.automate)) continue;
+    if (!c.alive || humanControls(state, c.idx)) continue;
     const s = c.strat;
     // programmes: keep the arsenal; threatened powers with means may start one
     if (canHaveNukes(state, rules, c.idx) && s.programme === 'none' && (c.idx + month) % 12 === 0) {

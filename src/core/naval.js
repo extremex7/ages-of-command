@@ -6,7 +6,7 @@
 // A fleet is { id, owner, name, zone, port, units, str, org, exp, path, prog, battle, dock }:
 // `port` is the province it is docked in (-1 at sea), `path` a list of zones to sail through
 // and `dock` the province to enter at the end of the path (-1 = stay at sea).
-import { log, ordinal } from './state.js';
+import { log, ordinal, logFor, humansIn } from './state.js';
 import { atWar, friendly, canEnter, warBetween } from './relations.js';
 import { portZonesOf } from './mapdata.js';
 import { rand, randRange } from './rng.js';
@@ -256,7 +256,7 @@ export function processFleets(state, map, rules) {
       for (let k = S.start[f.zone]; k < S.start[f.zone + 1]; k++) if (S.adj[k] === next) { e = k; break; }
       if (e < 0 || !linkOpen(state, map, f.owner, S.link[e])) {
         f.path = []; f.prog = 0; f.dock = -1;
-        if (f.owner === state.player) log(state, 'military', `${f.name} halted: the way to the ${S.zones[next].name} is closed.`);
+        logFor(state, f.owner, 'military', `${f.name} halted: the way to the ${S.zones[next].name} is closed.`);
         continue;
       }
       f.prog += fleetSpeed(f, rules, state) / Math.max(50, S.km[e]);
@@ -313,7 +313,7 @@ export function detectNavalBattles(state, map, rules) {
     b = { id: state.nextId++, zone: z, war: war ? war.id : 0, start: state.day, days: 0, att: attIn.map((f) => f.id), def: defIn.map((f) => f.id), sunk: [0, 0], lost: [0, 0] };
     for (const f of [...attIn, ...defIn]) { f.battle = b.id; f.path = []; f.prog = 0; }
     state.navalBattles.push(b);
-    if ([...attIn, ...defIn].some((f) => f.owner === state.player)) log(state, 'battle', `Naval battle in the ${map.sea.zones[z].name} has begun.`, { zone: z });
+    for (const x of humansIn(state, new Set([...attIn, ...defIn].map((f) => f.owner)))) logFor(state, x, 'battle', `Naval battle in the ${map.sea.zones[z].name} has begun.`, { zone: z });
   }
 }
 
@@ -452,11 +452,13 @@ function endNavalBattle(state, map, rules, b, winner) {
   state.reports.push(report);
   if (state.reports.length > 60) state.reports.shift();
   const all = win.concat(lose);
-  if (all.some((f) => f.owner === state.player) || report.attackers.includes(C[state.player]?.name) || report.defenders.includes(C[state.player]?.name)) {
-    const won = win.some((f) => f.owner === state.player);
-    recordBump(state, won ? 'battlesWon' : 'battlesLost');
+  const sides = new Set(all.map((f) => f.owner));
+  for (const c of C) if (report.attackers.includes(c.name) || report.defenders.includes(c.name)) sides.add(c.idx);
+  for (const k of humansIn(state, sides)) {
+    const won = win.some((f) => f.owner === k);
+    recordBump(state, won ? 'battlesWon' : 'battlesLost', 1, k);
     const theirs = b.sunk[won === (winner === 'att') ? 1 : 0], ours = b.sunk[won === (winner === 'att') ? 0 : 1];
-    log(state, 'battle', `Naval battle in the ${z.name} ${won ? 'won' : 'lost'}: ${ours} of our ships and ${theirs} enemy ships sunk.`, { zone: b.zone, report: b.id, important: !won });
+    logFor(state, k, 'battle', `Naval battle in the ${z.name} ${won ? 'won' : 'lost'}: ${ours} of our ships and ${theirs} enemy ships sunk.`, { zone: b.zone, report: b.id, important: !won });
   }
 }
 

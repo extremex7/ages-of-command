@@ -4,7 +4,7 @@
 // the rival's enemies, pacts with strong neighbours, guarantees for small friends, trade with big
 // markets); embargo a hated rival; join a defence bloc when outmatched; spend influence on the
 // partner it most wants. Every decision is written to the AI log with its reason.
-import { aiLog } from './state.js';
+import { aiLog, isHuman, humanControls } from './state.js';
 import { allied, atWar, isAtWar } from './relations.js';
 import { countryNeighbours } from './geo.js';
 import { opinion, evaluateTreaty, proposeTreaty, recentlyRefused, validateTreaty, recordOrder, findTreaty, treatiesOf, cancelTreaty,
@@ -20,7 +20,7 @@ export function aiDiplomacy(state, map, rules) {
   const period = Math.round(D.aiEveryMonths * 30.44);
   let greats = null;
   for (const c of state.countries) {
-    if (!c.alive || !c.cache || (c.idx === state.player && !c.automate)) continue;
+    if (!c.alive || !c.cache || humanControls(state, c.idx)) continue;
     const t = state.day + c.idx * 7;
     if (t % period) continue;
     const round = Math.floor(t / period);
@@ -136,8 +136,8 @@ function seekTreaty(state, map, rules, c, greats) {
     const [a, b] = recordOrder(w.type, k, w.p);
     if (findTreaty(state, w.type, a, b) || validateTreaty(state, map, rules, w.type, a, b)) continue;
     if (recentlyRefused(state, rules, w.type, k, w.p)) { if (wanted < 0) wanted = w.p; continue; }
-    if (w.p === state.player && !C[w.p].automate && state.offers.filter((o) => o.kind === 'treaty' && o.to === w.p).length >= 2) continue;
-    if (w.type !== 'guarantee' && w.p !== state.player) {
+    if (humanControls(state, w.p) && state.offers.filter((o) => o.kind === 'treaty' && o.to === w.p).length >= 2) continue;
+    if (w.type !== 'guarantee' && !isHuman(state, w.p)) {
       const ev = evaluateTreaty(state, map, rules, w.type, k, w.p);
       if (!ev.accept) { if (wanted < 0 && ev.score > -25) wanted = w.p; continue; }
     }

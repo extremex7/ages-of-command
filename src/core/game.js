@@ -12,6 +12,7 @@ import { compileTech, initTechnology } from './technology.js';
 import { declareWar, joinWar } from './war.js';
 import { initStrategic } from './strategic.js';
 import { computePrestige } from './prestige.js';
+import { checkHotseat } from './hotseat.js';
 
 // governments: data/rules/governments.json; events: list of data/events/*.json files;
 // technologies: data/rules/technologies.json
@@ -67,6 +68,7 @@ export function loadGame(text, { map, rules, scenario }) {
   if (state.countries.some((c) => c.alive && !c.ledger)) computeLedgers(state, map, rules);
   // saves from before the leaderboard: start its history now
   if (!state.prestige) computePrestige(state);
+  checkHotseat(state);
   return { state, map, rules, scenario };
 }
 

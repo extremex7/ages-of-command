@@ -4,7 +4,7 @@
 // to a friendly neighbour or surrenders if encircled.
 import { TERRAINS, neighbours } from './mapdata.js';
 import { atWar, friendly, warBetween } from './relations.js';
-import { unitCount, log } from './state.js';
+import { unitCount, log, logFor, humansIn } from './state.js';
 import { randRange } from './rng.js';
 import { armyMen } from './military.js';
 import { battleSupport, airCombatDay } from './air.js';
@@ -64,9 +64,7 @@ export function detectBattles(state, map) {
     for (const a of att) a.battle = b.id;
     for (const a of def) { a.battle = b.id; a.path = []; a.prog = 0; }
     state.battles.push(b);
-    if (att.some((a) => a.owner === state.player) || def.some((a) => a.owner === state.player)) {
-      log(state, 'battle', `Battle of ${map.name[p]} has begun.`, { prov: p });
-    }
+    for (const k of humansIn(state, new Set([...att, ...def].map((a) => a.owner)))) logFor(state, k, 'battle', `Battle of ${map.name[p]} has begun.`, { prov: p });
   }
 }
 
@@ -169,7 +167,7 @@ function endBattle(state, map, rules, b, winner) {
     a.battle = 0; a.path = []; a.prog = 0;
     const to = retreatTarget(state, map, a);
     if (to < 0 || a.str < 0.04) {
-      if (a.gen && a.owner === state.player) log(state, 'military', `General ${a.gen.name} was captured with the ${a.name}.`, { important: true });
+      if (a.gen) logFor(state, a.owner, 'military', `General ${a.gen.name} was captured with the ${a.name}.`, { important: true });
       surrendered += Math.round(armyMen(a, rules));
       b.cas[winner === 'att' ? 1 : 0] += armyMen(a, rules);
       state.armies.splice(state.armies.indexOf(a), 1);
@@ -198,11 +196,12 @@ function endBattle(state, map, rules, b, winner) {
   if (!report.defenders.length && D) report.defenders = [...new Set(D.armies.map((a) => C[a.owner].name))];
   state.reports.push(report);
   if (state.reports.length > 60) state.reports.shift();
-  const involved = winners.concat(losers).some((a) => a.owner === state.player);
-  if (involved || (A && A.armies.some((a) => a.owner === state.player)) || (D && D.armies.some((a) => a.owner === state.player))) {
-    const won = winners.some((a) => a.owner === state.player);
-    bump(state, won ? 'battlesWon' : 'battlesLost');
-    log(state, 'battle', `Battle of ${map.name[b.prov]} ${won ? 'won' : 'lost'} after ${b.days} days.` +
+  // each human whose armies fought (several in a hotseat game) gets the result from their side
+  const fought = new Set([...winners, ...losers, ...(A ? A.armies : []), ...(D ? D.armies : [])].map((a) => a.owner));
+  for (const k of humansIn(state, fought)) {
+    const won = winners.some((a) => a.owner === k);
+    bump(state, won ? 'battlesWon' : 'battlesLost', 1, k);
+    logFor(state, k, 'battle', `Battle of ${map.name[b.prov]} ${won ? 'won' : 'lost'} after ${b.days} days.` +
       (surrendered ? ` ${surrendered.toLocaleString()} troops surrendered.` : ''), { prov: b.prov, report: b.id, important: !won });
   }
 }

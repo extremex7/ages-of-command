@@ -1,5 +1,5 @@
 // Armies: recruitment, orders, daily movement, sieges/occupation, reinforcement.
-import { newArmy, unitCount, log, refreshCountryCache } from './state.js';
+import { newArmy, unitCount, log, logFor, humansIn, refreshCountryCache } from './state.js';
 import { canEnter, atWar, friendly } from './relations.js';
 import { findPath, findSeaPath, pathDays, stepDays, edgeIndex } from './pathfind.js';
 import { canUseUnit } from './technology.js';
@@ -134,14 +134,14 @@ export function processRecruitment(state, map, rules) {
     if (--r.days > 0) { keep.push(r); continue; }
     if (state.prov.controller[r.prov] !== r.owner) {
       // training site lost: the unit is lost too
-      if (r.owner === state.player) log(state, 'military', `Recruitment in ${map.name[r.prov]} was lost to occupation.`);
+      logFor(state, r.owner, 'military', `Recruitment in ${map.name[r.prov]} was lost to occupation.`);
       continue;
     }
     const domain = rules.units[r.type].domain || 'land';
     if (domain !== 'land') {
       if (domain === 'sea') commissionShip(state, map, rules, r.owner, r.prov, r.type);
       else commissionWing(state, map, rules, r.owner, r.prov, r.type);
-      if (r.owner === state.player) log(state, 'military', `${rules.units[r.type].name} ready in ${map.name[r.prov]}.`, { prov: r.prov });
+      logFor(state, r.owner, 'military', `${rules.units[r.type].name} ready in ${map.name[r.prov]}.`, { prov: r.prov });
       continue;
     }
     let army = state.armies.find((a) => a.owner === r.owner && a.loc === r.prov && !a.path.length && !a.battle && !(a.sea >= 0));
@@ -155,7 +155,7 @@ export function processRecruitment(state, map, rules) {
       army.org = 0.6;
       state.armies.push(army);
     }
-    if (r.owner === state.player) log(state, 'military', `${rules.units[r.type].name} ready in ${map.name[r.prov]}.`, { prov: r.prov });
+    logFor(state, r.owner, 'military', `${rules.units[r.type].name} ready in ${map.name[r.prov]}.`, { prov: r.prov });
   }
   state.recruit = keep;
 }
@@ -215,14 +215,14 @@ export function processMovement(state, map, rules) {
     }
     if (!canEnter(state, a.owner, next)) {
       a.path = []; a.prog = 0;
-      if (a.owner === state.player) log(state, 'military', `${a.name} halted: no access to ${map.name[next]}.`);
+      logFor(state, a.owner, 'military', `${a.name} halted: no access to ${map.name[next]}.`);
       continue;
     }
     const e = edgeIndex(map, a.loc, next);
     if (e < 0) { a.path = []; a.prog = 0; continue; }
     if (map.adjKind[e] > 0 && !laneOpen(state, map, rules, a.owner, e)) {
       a.path = []; a.prog = 0;
-      if (a.owner === state.player) log(state, 'military', `${a.name} halted: enemy fleets hold the crossing to ${map.name[next]}.`, { prov: a.loc });
+      logFor(state, a.owner, 'military', `${a.name} halted: enemy fleets hold the crossing to ${map.name[next]}.`, { prov: a.loc });
       continue;
     }
     need = stepDays(map, state, a.loc, e, armySpeed(a, rules, state));
@@ -245,8 +245,8 @@ function atSea(state, map, rules, a) {
   const NB = rules.balance.naval;
   if (hostileSea(state, map, rules, a.owner, a.sea)) {
     a.str = Math.max(0, a.str - NB.transportLossDay);
-    if (a.owner === state.player) log(state, 'military', `${a.name} is under attack at sea in the ${map.sea.zones[a.sea].name}.`, { important: true });
-    if (a.str < 0.05) { if (a.owner === state.player) log(state, 'military', `${a.name} was lost at sea.`, { important: true }); return true; }
+    logFor(state, a.owner, 'military', `${a.name} is under attack at sea in the ${map.sea.zones[a.sea].name}.`, { important: true });
+    if (a.str < 0.05) { logFor(state, a.owner, 'military', `${a.name} was lost at sea.`, { important: true }); return true; }
   }
   if (!a.path.length) {
     let best = -1;
@@ -318,9 +318,9 @@ export function setController(state, map, p, c) {
   const own = state.prov.owner[p];
   const C = state.countries;
   if (c === own) {
-    if (own === state.player || prev === state.player) log(state, 'war', `${map.name[p]} liberated by ${C[c].name}.`, { prov: p });
-  } else if (c === state.player || own === state.player) {
-    log(state, 'war', `${C[c].name} occupied ${map.name[p]} (${C[own].name}).`, { prov: p, important: own === state.player });
+    for (const x of humansIn(state, [own, prev])) logFor(state, x, 'war', `${map.name[p]} liberated by ${C[c].name}.`, { prov: p });
+  } else {
+    for (const x of humansIn(state, [c, own])) logFor(state, x, 'war', `${C[c].name} occupied ${map.name[p]} (${C[own].name}).`, { prov: p, important: x === own });
   }
   if (C[own] && C[own].capital === p && c !== own) C[own].stability = Math.max(0, C[own].stability - 8);
 }

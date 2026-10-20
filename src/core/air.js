@@ -6,7 +6,7 @@
 //
 // A wing is { id, owner, name, base, units, str, exp, mission }: mission is superiority,
 // support, bombing or idle.
-import { log, ordinal } from './state.js';
+import { log, ordinal, logFor } from './state.js';
 import { atWar, friendly, isAtWar, enemiesOf } from './relations.js';
 import { portZonesOf } from './mapdata.js';
 import { rand } from './rng.js';
@@ -128,7 +128,7 @@ export function processWings(state, map, rules) {
       const to = canBase(state, map, w.owner, c.capital) ? c.capital : -1;
       if (to < 0) { state.wings.splice(i, 1); continue; }
       w.base = to;
-      if (w.owner === state.player) log(state, 'military', `${w.name} lost its base and flew to ${map.name[to]}.`);
+      logFor(state, w.owner, 'military', `${w.name} lost its base and flew to ${map.name[to]}.`);
     }
     if (!w.fought) w.str = Math.min(1, w.str + A.repairDay);
     w.fought = 0;
@@ -231,12 +231,8 @@ export function strategicBombing(state, map, rules) {
     }
     if (success > 0.5 && state.prov.infra[target] > 0 && rand(state) < success) state.prov.infra[target]--;
     state.countries[owner].stability = Math.max(0, state.countries[owner].stability - success * A.bombingStability);
-    if (w.owner === state.player || owner === state.player) {
-      const msg = w.owner === state.player
-        ? `${w.name} bombed ${map.name[target]}: ${destroyed} building level(s) destroyed, ${Math.round(success * 100)}% of bombers got through.`
-        : `Enemy bombers struck ${map.name[target]}: ${destroyed} building level(s) destroyed.`;
-      log(state, 'war', msg, { prov: target, important: owner === state.player && destroyed > 0 });
-    }
+    logFor(state, w.owner, 'war', `${w.name} bombed ${map.name[target]}: ${destroyed} building level(s) destroyed, ${Math.round(success * 100)}% of bombers got through.`, { prov: target, important: false });
+    logFor(state, owner, 'war', `Enemy bombers struck ${map.name[target]}: ${destroyed} building level(s) destroyed.`, { prov: target, important: destroyed > 0 });
   }
 }
 

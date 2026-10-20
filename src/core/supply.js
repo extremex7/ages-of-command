@@ -7,7 +7,7 @@
 import { friendly, atWar, hasAccess, isAtWar } from './relations.js';
 import { portZonesOf } from './mapdata.js';
 import { hostileSea, laneOpen, zoneBalance } from './naval.js';
-import { unitCount, log, aiLog } from './state.js';
+import { unitCount, log, aiLog, logFor, isHuman } from './state.js';
 
 // Supply quality of a province on the country's own network.
 export function homeSupply(rules, infra) {
@@ -152,9 +152,9 @@ export function dailySupply(state, map, rules) {
     if (s < S.low && !a.battle) {
       const loss = S.attritionDay * (1 - s / S.low);
       a.str = Math.max(0.02, a.str - loss);
-      if (a.owner === state.player && a.str < 0.5 && !a.warnedSupply) {
+      if (isHuman(state, a.owner) && a.str < 0.5 && !a.warnedSupply) {
         a.warnedSupply = 1;
-        log(state, 'military', `${a.name} is out of supply in ${map.name[a.loc]} and losing men to attrition.`, { prov: a.loc, important: true });
+        logFor(state, a.owner, 'military', `${a.name} is out of supply in ${map.name[a.loc]} and losing men to attrition.`, { prov: a.loc, important: true });
       }
     } else if (s >= S.low) a.warnedSupply = 0;
   }
@@ -210,7 +210,7 @@ export function monthlyDepots(state, map, rules) {
     const before = c.depots.length;
     c.depots = c.depots.filter((p) => state.prov.controller[p] === c.idx);
     if (c.depots.length < before) state.supplyVer = (state.supplyVer || 0) + 1;
-    if (c.depots.length < before && c.idx === state.player) log(state, 'military', 'A supply depot was lost to the enemy.');
+    if (c.depots.length < before) logFor(state, c.idx, 'military', 'A supply depot was lost to the enemy.');
   }
 }
 

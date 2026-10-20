@@ -1,6 +1,6 @@
 // War declarations, war score, peace negotiation and territorial transfer.
 import { atWar, allied, touchRelations, warBetween, hasAccess, isAtWar } from './relations.js';
-import { log, refreshCountryCache, provinceGdp, aiLog } from './state.js';
+import { log, refreshCountryCache, provinceGdp, aiLog, isHuman, humanControls, impFor, humanDefeated } from './state.js';
 import { overlordOf, subjectsOf, defendersOf, treatiesBetween, removeTreaty, breakTreatiesForWar, treatiesBrokenByWar, TREATIES,
   opinion, addMod, addClaim, hasClaim, signTreaty, forgetCountry } from './diplomacy.js';
 import { recordPeace } from './record.js';
@@ -86,9 +86,8 @@ export function declareWar(state, map, rules, a, b) {
   }
   C[a].stability = Math.max(0, C[a].stability - 3);
   const joined = defenders.slice(1).map((k) => C[k].name);
-  const involvesPlayer = war.attackers.includes(state.player) || defenders.includes(state.player);
   log(state, 'war', `${C[a].name} declared war on ${C[b].name}.` + (joined.length ? ` Joining the defence: ${joined.join(', ')}.` : ''),
-    { important: involvesPlayer, war: war.id });
+    { important: impFor(state, ...war.attackers, ...defenders), war: war.id });
   if (state.dip) callToArms(state, map, rules, war);
   return null;
 }
@@ -106,7 +105,7 @@ function callToArms(state, map, rules, war) {
   const partners = state.dip.treaties.filter((t) => t.type === 'alliance' && (t.a === a || t.b === a)).map((t) => (t.a === a ? t.b : t.a));
   for (const p of partners) {
     if (!C[p].alive || war.attackers.includes(p) || war.defenders.includes(p) || allied(state, p, b)) continue;
-    if (p === state.player && !C[p].automate) {
+    if (humanControls(state, p)) {
       state.offers.push({ id: state.nextId++, kind: 'call', war: war.id, from: a, to: p, day: state.day });
       continue;
     }
@@ -131,7 +130,7 @@ export function joinWar(state, map, rules, war, k, side) {
   (side === 'A' ? war.attackers : war.defenders).push(k);
   touchRelations(state);
   clearTreatiesAcross(state, war);
-  log(state, 'war', `${C[k].name} joined the ${war.name} on the side of ${C[side === 'A' ? war.leaderA : war.leaderD].name}.`, { important: k === state.player || war.attackers.includes(state.player) || war.defenders.includes(state.player) });
+  log(state, 'war', `${C[k].name} joined the ${war.name} on the side of ${C[side === 'A' ? war.leaderA : war.leaderD].name}.`, { important: impFor(state, k, ...war.attackers, ...war.defenders) });
   return null;
 }
 
@@ -275,7 +274,7 @@ export function makePeace(state, map, rules, war, from, terms) {
   recordPeace(state, war, from, !!(transferred.length || terms.reparations || terms.subject || terms.independence));
   endWar(state, map, rules, war);
   log(state, 'peace', parts.length ? `Peace: ${parts.join('; ')}.` : `White peace between ${C[war.leaderA].name} and ${C[war.leaderD].name}.`,
-    { important: war.attackers.includes(state.player) || war.defenders.includes(state.player) });
+    { important: impFor(state, ...war.attackers, ...war.defenders) });
 }
 
 export function endWar(state, map, rules, war) {
@@ -383,7 +382,7 @@ export function makeSeparatePeace(state, map, rules, war, c, terms) {
   touchRelations(state);
   settleAfterPeace(state, map, rules);
   log(state, 'peace', `${C[c].name} made a separate peace with ${C[enemyLeader].name}${ceded.length ? `, ceding ${ceded.length} province(s)` : ''} and left the ${war.name}.`,
-    { important: war.attackers.includes(state.player) || war.defenders.includes(state.player) || c === state.player });
+    { important: impFor(state, c, ...war.attackers, ...war.defenders) });
 }
 
 export function transferProvince(state, map, p, to) {
@@ -420,7 +419,7 @@ export function eliminate(state, map, c) {
   if (state.pendingEvents) state.pendingEvents = state.pendingEvents.filter((p) => p.c !== c);
   touchRelations(state);
   log(state, 'war', `${C[c].name} has ceased to exist.`, { important: true });
-  if (c === state.player) state.gameOver = { day: state.day, reason: `${C[c].name} was annexed.` };
+  if (isHuman(state, c)) humanDefeated(state, c, `${C[c].name} was annexed.`);
   for (const w of [...state.wars]) if (!w.attackers.length || !w.defenders.length) state.wars.splice(state.wars.indexOf(w), 1);
 }
 

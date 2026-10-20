@@ -12,7 +12,7 @@
 //   stability  10% stability ÷ 100
 //   territory   5% √(provinces ÷ most provinces)
 
-import { log } from './state.js';
+import { logFor } from './state.js';
 
 export const PRESTIGE_WEIGHTS = { economy: 0.3, military: 0.2, technology: 0.15, population: 0.1, prosperity: 0.1, stability: 0.1, territory: 0.05 };
 // star tiers by rank
@@ -52,13 +52,17 @@ export function computePrestige(state) {
 
 // Monthly, after the country caches are refreshed.
 export function monthlyPrestige(state, month) {
-  const k = state.player, before = k >= 0 ? starOf(state.prestige?.rank?.[k] ?? 0) : null;
+  // the human countries (several in a hotseat game) hear about their own stars
+  const ks = state.hotseat ? state.hotseat.humans.map((h) => h.k) : state.player >= 0 ? [state.player] : [];
+  const befores = ks.map((k) => starOf(state.prestige?.rank?.[k] ?? 0));
   const P = computePrestige(state);
-  if (k >= 0 && state.countries[k].alive) {
+  for (let i = 0; i < ks.length; i++) {
+    const k = ks[i], before = befores[i];
+    if (!state.countries[k].alive) continue;
     const after = starOf(P.rank[k]), tier = (x) => (x ? STARS.indexOf(x) : STARS.length);
     if (tier(after) !== tier(before)) {
       const name = state.countries[k].name;
-      log(state, 'world', after && tier(after) < tier(before) ? `${name} has earned a ${after.name.toLowerCase()}: now ranked ${P.rank[k]} in the world.`
+      logFor(state, k, 'world', after && tier(after) < tier(before) ? `${name} has earned a ${after.name.toLowerCase()}: now ranked ${P.rank[k]} in the world.`
         : `${name} has lost its ${before.name.toLowerCase()}: now ranked ${P.rank[k]} in the world.`, { important: true });
     }
   }

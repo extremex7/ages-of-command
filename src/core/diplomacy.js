@@ -2,7 +2,7 @@
 // Opinions are not stored: they are computed from the current state (governments, treaties,
 // wars, borders, rivalries, embargoes) plus a sparse list of decaying modifiers, so they always
 // explain themselves. Constants: balance.json → diplomacy. See docs/DIPLOMACY.md.
-import { log } from './state.js';
+import { log, logFor, humanControls, impFor } from './state.js';
 import { atWar, allied, touchRelations, enemiesOf, isAtWar, cobelligerent } from './relations.js';
 import { countryNeighbours } from './geo.js';
 import { govFamily } from './government.js';
@@ -193,7 +193,7 @@ export function signTreaty(state, map, rules, type, a, b, { until = -1, quiet = 
       ? `${C[a].name} and ${C[b].name} signed a ${TREATIES[type].name.toLowerCase()}.`
       : { access: `${C[a].name} granted military access to ${C[b].name}.`, guarantee: `${C[a].name} guaranteed the independence of ${C[b].name}.`,
         subject: `${C[b].name} became a subject of ${C[a].name}.`, reparations: `${C[a].name} must pay reparations to ${C[b].name}.` }[type];
-    log(state, 'diplomacy', txt, { important: a === state.player || b === state.player });
+    log(state, 'diplomacy', txt, { important: impFor(state, a, b) });
   }
   return t;
 }
@@ -217,7 +217,7 @@ export function cancelTreaty(state, map, rules, t, by) {
   if (!TREATIES[t.type].peaceOnly) addMod(state, other, by, early ? -20 : -10, D.modDecay, 'Ended a treaty with us');
   removeTreaty(state, t);
   const what = t.type === 'subject' ? `${C[t.a].name} released ${C[t.b].name}.` : `${C[by].name} ended its ${TREATIES[t.type].name.toLowerCase()} with ${C[other].name}${early ? ' early (reputation lost)' : ''}.`;
-  log(state, 'diplomacy', what, { important: by === state.player || other === state.player });
+  log(state, 'diplomacy', what, { important: impFor(state, by, other) });
   return null;
 }
 
@@ -422,7 +422,7 @@ export function proposeTreaty(state, map, rules, type, from, to) {
     addMod(state, b, a, 10, rules.balance.diplomacy.modDecay, 'Guaranteed our independence');
     return { ok: true, reason: 'Guarantee issued.' };
   }
-  if (to === state.player && !C[to].automate) {
+  if (humanControls(state, to)) {
     if (!state.offers.some((o) => o.kind === 'treaty' && o.type === type && o.from === from && o.to === to)) {
       state.offers.push({ id: state.nextId++, kind: 'treaty', type, from, to, day: state.day });
     }
@@ -513,8 +513,8 @@ export function applyToBloc(state, map, rules, bloc, k) {
     bloc.members.push(k);
     touchRelations(state);
     log(state, 'diplomacy', `${C[k].name} joined ${bloc.name} (${yes} votes for, ${no} against).`, { important: true });
-  } else if (k === state.player) {
-    log(state, 'diplomacy', `${bloc.name} rejected the membership application of ${C[k].name} (${yes} for, ${no} against).`, { important: true });
+  } else {
+    logFor(state, k, 'diplomacy', `${bloc.name} rejected the membership application of ${C[k].name} (${yes} for, ${no} against).`, { important: true });
   }
   return { ok, yes, no, reason: ok ? `Accepted: ${yes} for, ${no} against.` : `Rejected: ${yes} for, ${no} against${against.length ? ` (${against.slice(0, 4).join(', ')}${against.length > 4 ? '…' : ''})` : ''}. Needs ${Math.round(D.blocVoteShare * 100)}%.` };
 }
@@ -563,7 +563,7 @@ export function monthlyDiplomacy(state, map, rules) {
   for (const t of [...state.dip.treaties]) {
     if (t.until >= 0 && state.day >= t.until) {
       removeTreaty(state, t);
-      if (t.type === 'reparations') log(state, 'diplomacy', `${C[t.a].name} finished paying reparations to ${C[t.b].name}.`, { important: t.a === state.player || t.b === state.player });
+      if (t.type === 'reparations') log(state, 'diplomacy', `${C[t.a].name} finished paying reparations to ${C[t.b].name}.`, { important: impFor(state, t.a, t.b) });
     }
   }
   for (const k of Object.keys(state.dip.refused)) if (state.day - state.dip.refused[k] > D.refusalCooldownDays) delete state.dip.refused[k];

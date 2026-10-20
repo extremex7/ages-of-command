@@ -10,7 +10,7 @@
 // League becomes the UN) are permanent members and can veto. A resolution passes with more yes than no votes and no veto. Countries may
 // also impose arms or energy sanctions on their own (c.econ.sanctions).
 // Numbers: balance.json → council. See docs/DIPLOMACY.md (World council).
-import { log, aiLog } from './state.js';
+import { log, aiLog, isHuman, impFor } from './state.js';
 import { rand } from './rng.js';
 import { touchRelations, allied, atWar } from './relations.js';
 import { opinion, addMod } from './diplomacy.js';
@@ -60,7 +60,7 @@ export function canPropose(state, map, rules, by, res) {
   if (!RES_KINDS.includes(res.kind)) return 'Unknown resolution';
   const W = councilOf(state);
   if (state.day - (W.lastBy[by] ?? -1e9) < K.proposeCooldownDays) return `You can propose one resolution every ${Math.round(K.proposeCooldownDays / 30)} months`;
-  if (by === state.player && C[by].influence < K.proposeInfluence) return `Needs ${K.proposeInfluence} influence`;
+  if (isHuman(state, by) && C[by].influence < K.proposeInfluence) return `Needs ${K.proposeInfluence} influence`;
   const same = (r) => r.kind === res.kind && r.target === res.target && r.war === res.war && r.a === res.a && r.b === res.b;
   if (W.pending.some(same)) return 'Already being voted on';
   if (res.kind === 'sanction') {
@@ -92,13 +92,13 @@ export function propose(state, map, rules, by, res) {
   const why = canPropose(state, map, rules, by, res);
   if (why) return { error: why };
   const K = rules.balance.council, W = councilOf(state);
-  if (by === state.player) state.countries[by].influence -= K.proposeInfluence;
+  if (isHuman(state, by)) state.countries[by].influence -= K.proposeInfluence;
   W.lastBy[by] = state.day;
   const r = { id: W.nextId++, kind: res.kind, target: res.target ?? -1, level: res.level, war: res.war ?? 0, a: res.a ?? -1, b: res.b ?? -1, by, day: state.day, voteDay: state.day + K.voteDays, votes: {} };
   if (r.kind === 'ceasefire') r.warName = state.wars.find((w) => w.id === r.war).name;
   W.pending.push(r);
   const text = `${state.countries[by].name} proposes to the ${councilName(state, rules)}: ${describeRes(state, rules, r)}. Vote within ${K.voteDays} days (Diplomacy tab).`;
-  log(state, 'diplomacy', text, { important: state.player >= 0 && by !== state.player, council: r.id });
+  log(state, 'diplomacy', text, { important: state.hotseat ? state.hotseat.humans.map((x) => x.k).filter((x) => x !== by) : state.player >= 0 && by !== state.player, council: r.id });
   return { res: r };
 }
 
@@ -154,7 +154,7 @@ export function tally(state, map, rules, r) {
   const W = councilOf(state), out = { yes: 0, no: 0, abstain: 0, veto: [], votes: {} };
   for (const c of state.countries) {
     if (!c.alive) continue;
-    const v = r.votes[c.idx] ?? (c.idx === state.player ? 'abstain' : aiVote(state, map, rules, c.idx, r));
+    const v = r.votes[c.idx] ?? (isHuman(state, c.idx) ? 'abstain' : aiVote(state, map, rules, c.idx, r));
     out.votes[c.idx] = v; out[v]++;
     if (v === 'no' && W.permanent.includes(c.idx)) out.veto.push(c.idx);
   }
@@ -250,11 +250,11 @@ export function monthlyCouncil(state, map, rules) {
     if (r.kind === 'ceasefire' && !state.wars.some((w) => w.id === r.war)) continue;
     if ((r.target >= 0 && !C[r.target]?.alive) || (r.a >= 0 && (!C[r.a]?.alive || !C[r.b]?.alive))) continue;
     const t = tally(state, map, rules, r);
-    if (t.passes) { apply(state, map, rules, r, t); if (r.by === state.player) bump(state, 'resolutions'); }
+    if (t.passes) { apply(state, map, rules, r, t); if (isHuman(state, r.by)) bump(state, 'resolutions', 1, r.by); }
     const how = t.passes ? 'passed' : t.veto.length ? `vetoed by ${t.veto.map((k) => C[k].name).join(', ')}` : 'failed';
-    const mine = state.player >= 0 && [r.target, r.a, r.b, r.by].includes(state.player);
-    const inWar = r.kind === 'ceasefire' && state.wars.find((w) => w.id === r.war && (w.attackers.includes(state.player) || w.defenders.includes(state.player)));
-    log(state, 'diplomacy', `${councilName(state, rules)}: ${describeRes(state, rules, r)} ${how} (${t.yes} yes, ${t.no} no, ${t.abstain} abstained).`, { important: mine || !!inWar });
+    const cw = r.kind === 'ceasefire' ? state.wars.find((w) => w.id === r.war) : null;
+    const imp = impFor(state, r.target, r.a, r.b, r.by, ...(cw ? [...cw.attackers, ...cw.defenders] : []));
+    log(state, 'diplomacy', `${councilName(state, rules)}: ${describeRes(state, rules, r)} ${how} (${t.yes} yes, ${t.no} no, ${t.abstain} abstained).`, { important: imp });
     (W.history ||= []).push({ id: r.id, key: resKey(r), day: state.day, text: describeRes(state, rules, r), how, yes: t.yes, no: t.no });
     if (W.history.length > 20) W.history.shift();
   }
@@ -267,7 +267,7 @@ export function monthlyCouncil(state, map, rules) {
   });
   for (const w of state.wars) if (w.ceasefire != null && w.ceasefire <= state.day) {
     delete w.ceasefire; touched = true;
-    log(state, 'war', `The ceasefire in the ${w.name} has ended; fighting may resume.`, { important: w.attackers.includes(state.player) || w.defenders.includes(state.player), war: w.id });
+    log(state, 'war', `The ceasefire in the ${w.name} has ended; fighting may resume.`, { important: impFor(state, ...w.attackers, ...w.defenders), war: w.id });
   }
   if (touched) touchRelations(state);
   aiProposals(state, map, rules);
@@ -280,7 +280,7 @@ function aiProposals(state, map, rules) {
   const K = rules.balance.council, W = councilOf(state), C = state.countries, A = K.ai;
   if (state.day - W.lastAi < A.everyDays || rand(state) > A.chance) return;
   const rank = state.prestige?.rank || [];
-  const byRank = C.filter((c) => c.alive && c.idx !== state.player && rank[c.idx] > 0).sort((a, b) => rank[a.idx] - rank[b.idx]);
+  const byRank = C.filter((c) => c.alive && !isHuman(state, c.idx) && rank[c.idx] > 0).sort((a, b) => rank[a.idx] - rank[b.idx]);
   const tryRes = (res, stake) => {
     for (const c of byRank.slice(0, 15)) {
       if (stake.includes(c.idx)) continue;

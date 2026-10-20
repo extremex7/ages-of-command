@@ -279,7 +279,8 @@ function enemyPowerAt(state, rules, c, p) {
 
 function planArmies(state, map, rules, c) {
   const enemies = enemiesOf(state, c.idx);
-  const mine = state.armies.filter((a) => a.owner === c.idx && !a.battle);
+  // armies sent against rebels (a.quell, unrest.js) stay on that duty
+  const mine = state.armies.filter((a) => a.owner === c.idx && !a.battle && !a.quell);
   if (!mine.length) return;
   if (enemies.size) {
     const threatProvs = new Set();

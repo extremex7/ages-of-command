@@ -5,6 +5,7 @@
 // the list of ids, so a changed tech file remaps by id). Everything a country's technologies
 // imply (unlocked goods, buildings, units and government types, the normalised effect
 // multipliers and the era) lives in c.tfx, which is derived and rebuilt on load.
+import { ageMult } from './ages.js';
 import { log, aiLog, refreshCountryCache } from './state.js';
 import { parseDate, civilFromDays } from './calendar.js';
 import { countryNeighbours } from './geo.js';
@@ -233,7 +234,8 @@ export function researchPoints(state, rules, c, parts = null) {
   // orbital stations and off-world settlements add research; network disruption cuts it
   const st = c.strat;
   const space = st ? (1 + 0.03 * st.stations + 0.06 * st.colonies) * (st.disrupted > 0 ? 0.8 : 1) : 1;
-  const mult = (c.tfx?.mult.research ?? 1) * space;
+  // a golden age speeds research, a dark age slows it (ages.js)
+  const mult = (c.tfx?.mult.research ?? 1) * space * ageMult(rules, c, 'research');
   const rp = Rb.rpScale * Math.sqrt(real) * edu * mult;
   if (parts) Object.assign(parts, { spend, real, edu, mult, rp });
   return rp;

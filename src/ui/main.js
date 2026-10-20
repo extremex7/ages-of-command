@@ -37,16 +37,16 @@ async function boot() {
   if (platform() === 'native' && (data.settings.windowMode !== 'windowed' || data.settings.windowSize)) applyWindow(data.settings);
   window.addEventListener('keydown', (e) => { if (e.key === 'F11') { e.preventDefault(); toggleFullscreen(data.settings); } });
   try {
-    const [world, seas, units, balance, goods, buildings, governments, technologies, evIndex, index] = await Promise.all([
+    const [world, seas, units, balance, goods, buildings, governments, technologies, evIndex, index, , society] = await Promise.all([
       json('data/map/world.json'), json('data/map/seas.json'), json('data/rules/units.json'), json('data/rules/balance.json'),
       json('data/rules/goods.json'), json('data/rules/buildings.json'), json('data/rules/governments.json'),
       json('data/rules/technologies.json'), json('data/events/index.json'), json('data/scenarios/index.json'),
-      loadFlagIndex(),
+      loadFlagIndex(), json('data/rules/society.json'),
     ]);
     const events = await Promise.all(evIndex.files.map((f) => json('data/events/' + f)));
     const t1 = performance.now();
     data.map = decodeMap(world, seas);
-    data.rules = makeRules(units, balance, goods, buildings, governments, events, technologies);
+    data.rules = makeRules(units, balance, goods, buildings, governments, events, technologies, society);
     data.builtin = index.scenarios;
     data.scenarios = [...index.scenarios, ...listScenarios()];
     data.timings.fetch = t1 - t0;

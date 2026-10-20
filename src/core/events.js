@@ -18,8 +18,9 @@ import { satCount, SAT_KINDS, SAT_TECH } from './strategic.js';
 import { computeLedgers } from './economy.js';
 
 const NUM = ['stability', 'legitimacy', 'approval', 'unemployment', 'inflation', 'foodSat', 'living', 'tax', 'civilShare',
-  'warMonths', 'warScore', 'provinces', 'avgDev', 'monthsToElection', 'treasuryMonths', 'year', 'warheads', 'satellites', 'worldNukes'];
-const BOOL = ['atWar', 'hasRival', 'rivalNeighbour', 'neighbourAtWar', 'independent', 'hasNukes'];
+  'warMonths', 'warScore', 'provinces', 'avgDev', 'monthsToElection', 'treasuryMonths', 'year', 'warheads', 'satellites', 'worldNukes',
+  'unrest', 'warExhaustion', 'faithShare', 'revolts'];
+const BOOL = ['atWar', 'hasRival', 'rivalNeighbour', 'neighbourAtWar', 'independent', 'hasNukes', 'goldenAge', 'darkAge'];
 // conditions naming countries (tags), technologies, ISO codes or events
 const TAGCOND = ['exists', 'notExists', 'atWarWith', 'notAtWarWith', 'warBetween', 'allied', 'subjectOf', 'strongerThan'];
 const OTHERCOND = ['hasTech', 'notTech', 'ownsAll', 'ownsAny', 'fired', 'notFired'];
@@ -115,6 +116,10 @@ export function eventContext(state, map, rules, c, warScores, warring = null) {
     atWar: n > 0, hasRival: c.rival >= 0, rivalNeighbour: c.rival >= 0 && nb.has(c.rival), neighbourAtWar: neighbour >= 0 && !enemiesOf(state, c.idx).has(neighbour),
     independent: !state.dip || overlordOf(state, c.idx) < 0, year: civilFromDays(state.day).y,
     warheads: c.strat?.warheads || 0, hasNukes: (c.strat?.warheads || 0) > 0, satellites: c.strat ? satCount(c) : 0, worldNukes: state.strategic?.detonations || 0,
+    // religion, unrest and ages (society.js): people-weighted unrest, share following the state religion
+    unrest: c.soc?.unrest ?? 0, warExhaustion: c.soc?.warEx ?? 0, faithShare: c.soc?.faith ?? 1,
+    revolts: state.society ? state.society.revolts.filter((r) => r.c === c.idx).length : 0,
+    goldenAge: c.soc?.age?.kind === 'golden', darkAge: c.soc?.age?.kind === 'dark',
     rival: c.rival, neighbour, state, map,
   };
 }
@@ -286,7 +291,8 @@ function eventLists(state, rules) {
   const key = `${state.scenarioId}|${state.settings.historicalEvents ?? 'historical'}`;
   let x = listCache.get(state);
   if (x && x.key === key && x.events === rules.events) return x;
-  const inGame = rules.events.filter((ev) => !ev.scenario || ev.scenario.includes(state.scenarioId));
+  // events marked "triggered" only fire when another event or the game queues them
+  const inGame = rules.events.filter((ev) => !ev.triggered && (!ev.scenario || ev.scenario.includes(state.scenarioId)));
   const hist = inGame.filter((ev) => ev.hist && !(state.settings.historicalEvents === 'off' && (ev.scenario || ev.tags)));
   const byTag = new Map();
   for (const c of state.countries) byTag.set(c.tag, hist.filter((ev) => !ev.tags || ev.tags.includes(c.tag)));

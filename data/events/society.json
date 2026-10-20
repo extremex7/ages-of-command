@@ -1,0 +1,52 @@
+{
+  "_doc": "Religion, unrest and ages (docs/RELIGION.md). golden_age and dark_age are queued by the game when an age begins (\"triggered\": they never fire on their own).",
+  "events": [
+    {
+      "id": "golden_age", "title": "A golden age", "triggered": true, "mtth": 0,
+      "text": "Peace at home, full granaries and a growing name abroad: chroniclers already speak of a golden age of {country}. How should the government make the most of it?",
+      "conditions": { "goldenAge": true },
+      "options": [
+        { "text": "Patronise scholars and inventors", "ai": 2, "effects": { "research": 0.25, "treasuryMonths": -0.5 } },
+        { "text": "Raise great monuments", "ai": 1, "effects": { "stability": 5, "legitimacy": 5, "treasuryMonths": -1 } },
+        { "text": "Let the people share in the wealth", "ai": 1, "effects": { "civilShare": 0.02, "modifier": { "name": "Golden age bounty", "months": 60, "effects": { "faction": { "socialists": 8, "liberals": 5 } } } } }
+      ]
+    },
+    {
+      "id": "dark_age", "title": "A time of troubles", "triggered": true, "mtth": 0,
+      "text": "Hunger, debt, war and disorder feed on each other, and many in {country} say the good years are gone for a generation. The government must choose where to look for strength.",
+      "conditions": { "darkAge": true },
+      "options": [
+        { "text": "Turn to the faith for comfort", "ai": 2, "effects": { "stability": 3, "support": { "clergy": 0.03 } } },
+        { "text": "Rule with a firm hand", "ai": 1, "effects": { "stability": 5, "modifier": { "name": "Emergency rule", "months": 36, "effects": { "liberty": -0.1, "faction": { "liberals": -10, "military": 6 } } } } },
+        { "text": "Spend what is left on relief", "ai": 1, "effects": { "treasuryMonths": -1, "civilShare": 0.03, "legitimacy": 4 } }
+      ]
+    },
+    {
+      "id": "religious_tensions", "title": "Religious tensions", "mtth": 30, "cooldownYears": 8,
+      "text": "Preachers of the state faith and leaders of the minorities in {country} trade insults; a riot in a market town leaves dozens dead.",
+      "conditions": { "faithShare": ["<", 0.75], "policy.religion": "state" },
+      "options": [
+        { "text": "Protect the minorities", "ai": 1, "effects": { "stability": 2, "modifier": { "name": "Minorities protected", "months": 24, "effects": { "faction": { "clergy": -12, "liberals": 6 } } } } },
+        { "text": "Side with the faithful", "ai": 2, "effects": { "stability": -4, "modifier": { "name": "Zeal of the faithful", "months": 24, "effects": { "faction": { "clergy": 10, "liberals": -8 } } } } }
+      ]
+    },
+    {
+      "id": "provincial_riots", "title": "Riots in the provinces", "mtth": 24, "cooldownYears": 5,
+      "text": "Tax collectors are chased out of villages and granaries are looted: unrest is spreading through the provinces of {country}.",
+      "conditions": { "unrest": [">", 30] },
+      "options": [
+        { "text": "Send in the troops", "ai": 2, "effects": { "stability": 2, "legitimacy": -4, "modifier": { "name": "Crackdown", "months": 18, "effects": { "faction": { "liberals": -10, "military": 4 } } } } },
+        { "text": "Cut taxes for a while", "ai": 1, "effects": { "tax": -0.03, "stability": 4 } }
+      ]
+    },
+    {
+      "id": "weary_of_war", "title": "Weary of war", "mtth": 18, "cooldownYears": 6,
+      "text": "Years of war have exhausted {country}: widows march in the capital and recruits desert on the way to the front.",
+      "conditions": { "warExhaustion": [">", 40], "atWar": true },
+      "options": [
+        { "text": "Promise peace soon", "ai": 2, "effects": { "stability": 3, "legitimacy": -3 } },
+        { "text": "Call for sacrifice", "ai": 1, "effects": { "stability": -3, "manpower": 0.05 } }
+      ]
+    }
+  ]
+}

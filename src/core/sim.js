@@ -24,6 +24,7 @@ import { monthlyCommanders } from './commanders.js';
 import { dailyPlans } from './plans.js';
 import { monthlyEspionage } from './espionage.js';
 import { monthlyCouncil } from './council.js';
+import { monthlySociety, dailySociety } from './society.js';
 
 export function tick(game) {
   const { state, map, rules } = game;
@@ -45,6 +46,7 @@ export function tick(game) {
   dailyStrategic(state, map, rules);
   processConstruction(state, map, rules);
   dailyEvents(state, map, rules);
+  dailySociety(state, map, rules);
   const t1 = typeof performance !== 'undefined' ? performance.now() : 0;
   aiTick(state, map, rules);
   aiDiplomacy(state, map, rules);
@@ -62,6 +64,7 @@ export function tick(game) {
     const warScores = currentWarScores(state, map, rules);
     monthlyGovernment(state, map, rules, warScores);
     monthlyCivilWar(state, map, rules, warScores);
+    monthlySociety(state, map, rules, warScores);
     monthlyDiplomacy(state, map, rules);
     monthlyEspionage(state, map, rules);
     monthlyCouncil(state, map, rules);

@@ -658,3 +658,20 @@ instead of expiring during a long round. Peace between two players is an offer t
 in their turn. Each player has their own summary; hotseat games earn no achievements, since the
 device's list belongs to one person. Single-player games and saves are unchanged (no save version
 change: `state.hotseat` is optional). 8 unit tests and a browser check.
+
+## Session 23: diplomacy deals
+
+Five kinds of peacetime deal that a comparison with Age of History II and III found missing
+(DIPLOMACY.md, Deals): loans with interest, repaid monthly, with defaults and repudiation;
+ultimatums for provinces, tribute or subjugation with a deadline; personal unions (a new treaty
+type) made by offer, as a peace term or by a dynastic event, with integration and breaking away;
+selling, buying and giving provinces and sending money; and funding another country's unrest or
+civil-war rebels. Unlike those games, every offer shows the other side's answer and its reasons
+before it is sent, a refusal or a betrayal leaves a casus belli that justifies war and that the
+war AI counts as a motive, and the AI uses all of it: it borrows when in debt from the
+friendliest lender at the lowest rate it accepts, forms dynastic unions, sells land when deep in
+debt and buys back lost land when rich, funds its rival's rebels, and now and then threatens a
+much weaker neighbour, asking for the largest tribute the target would pay. In 8-year AI runs of
+the Modern World there were 15 to 25 loans, 3 unions and 6 to 11 ultimatums (a few accepted);
+the benchmark stays within its run-to-run noise (4 to 6 ms a simulated day before and after). The new state is created lazily, so saves need no
+migration. 10 new unit tests and a browser check (tests/browser/deals.mjs).

@@ -8,14 +8,17 @@ import { aiLog, isHuman, humanControls } from './state.js';
 import { allied, atWar, isAtWar } from './relations.js';
 import { countryNeighbours } from './geo.js';
 import { opinion, evaluateTreaty, proposeTreaty, recentlyRefused, validateTreaty, recordOrder, findTreaty, treatiesOf, cancelTreaty,
-  overlordOf, TREATIES, improveRelations, canImprove, applyToBloc, canJoinBloc } from './diplomacy.js';
+  overlordOf, followsOf, TREATIES, improveRelations, canImprove, applyToBloc, canJoinBloc } from './diplomacy.js';
 import { toggleEmbargo } from './industry.js';
 import { warOdds } from './ai.js';
+import { expireDeals } from './deals.js';
+import { aiDeals, aiFollowerDeals } from './ai_deals.js';
 
 // Runs daily: each AI country has its own day in every round of aiEveryMonths months, so the
 // work is spread evenly instead of landing on the first of the month.
 export function aiDiplomacy(state, map, rules) {
   if (!state.dip) return;
+  expireDeals(state, map, rules);
   const D = rules.balance.diplomacy;
   const period = Math.round(D.aiEveryMonths * 30.44);
   let greats = null;
@@ -26,13 +29,15 @@ export function aiDiplomacy(state, map, rules) {
     const round = Math.floor(t / period);
     greats ||= greatPowers(state);
     chooseRival(state, map, rules, c);
-    if (overlordOf(state, c.idx) >= 0) continue; // subjects follow their overlord's foreign policy
+    // subjects and junior union partners follow their overlord's foreign policy
+    if (followsOf(state, c.idx) >= 0) { aiFollowerDeals(state, map, rules, c); continue; }
     reviewTreaties(state, map, rules, c);
     // new treaties are sought every other round (about twice a year), blocs about once a year
     const wanted = round % 2 ? -1 : seekTreaty(state, map, rules, c, greats);
     manageEmbargo(state, map, rules, c);
     if (round % 4 === 1) considerBloc(state, map, rules, c);
     spendInfluence(state, map, rules, c, wanted);
+    aiDeals(state, map, rules, c, greats, round); // loans, ultimatums, unions, land, rebels
   }
 }
 
@@ -112,7 +117,7 @@ function seekTreaty(state, map, rules, c, greats) {
   const wants = [];
   for (const p of cands) {
     const P = C[p];
-    if (p === k || p === R || !P.alive || !P.cache || overlordOf(state, p) >= 0 || atWar(state, k, p)) continue;
+    if (p === k || p === R || !P.alive || !P.cache || followsOf(state, p) >= 0 || atWar(state, k, p)) continue;
     const op = opinion(state, map, rules, k, p);
     const pp = P.cache.armyPower, nb = nbs[k].has(p);
     // a far-away power is only worth a defence pact when it borders the threat itself

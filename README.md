@@ -99,7 +99,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 167 unit/integration tests of the simulation (node:test)
+npm test                            # 177 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -117,6 +117,7 @@ node tests/browser/editor.mjs       # scenario editor: paint a new country, save
 node tests/browser/access.mjs       # colour-blind colours, text size, keyboard-only play
 node tests/browser/summary.mjs      # achievements and the game summary
 node tests/browser/hotseat.mjs      # hotseat: two players pick, plan, hand over, run a week; shared screen
+node tests/browser/deals.mjs        # diplomacy deals: loans, ultimatums, unions, rebel funding, offers to the player
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -166,7 +167,7 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — stack decision and system design
 - [docs/ECONOMY.md](docs/ECONOMY.md) — every economic rule and formula
-- [docs/DIPLOMACY.md](docs/DIPLOMACY.md) — opinion, treaties, blocs, peace terms, sanctions, the world council, AI diplomacy
+- [docs/DIPLOMACY.md](docs/DIPLOMACY.md) — opinion, treaties, blocs, peace terms, sanctions, the world council, deals (loans, ultimatums, personal unions, land sales, rebel support), AI diplomacy
 - [docs/GOVERNMENT.md](docs/GOVERNMENT.md) — government types, factions, elections, coups, policies, events
 - [docs/TECHNOLOGY.md](docs/TECHNOLOGY.md) — technology tree, research formulas, eras, unit and building gating
 - [docs/SCENARIOS.md](docs/SCENARIOS.md) — the historical scenarios, how they are built, historical events

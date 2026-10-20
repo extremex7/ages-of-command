@@ -9,9 +9,10 @@ import { countryNeighbours } from '../core/geo.js';
 import { warScore, makePeace, joinWar, separateScore, makeSeparatePeace } from '../core/war.js';
 import {
   TREATIES, PROPOSABLE, opinion, trust, evaluateTreaty, proposeTreaty, recordOrder, validateTreaty, treatiesOf, treatiesBetween, cancelTreaty, canCancel,
-  canImprove, improveRelations, acceptTreatyOffer, declineOffer, applyToBloc, leaveBloc, canJoinBloc, overlordOf, subjectsOf, treatyCount, addMod,
+  canImprove, improveRelations, acceptTreatyOffer, declineOffer, applyToBloc, leaveBloc, canJoinBloc, overlordOf, subjectsOf, treatyCount, addMod, seniorOf, juniorsOf,
 } from '../core/diplomacy.js';
 import { describeTerms } from '../core/ai.js';
+import { dealsSection, dealsTab } from './deals_ui.js';
 
 const sg = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Math.round(v));
 const opClass = (v) => (v >= 30 ? 'good' : v <= -30 ? 'bad' : v < 0 ? 'warn' : '');
@@ -46,6 +47,7 @@ function treatyLabel(s, t, me) {
     guarantee: t.a === me ? `Guaranteeing ${C[t.b].name}` : `Guaranteed by ${C[t.a].name}`,
     subject: t.a === me ? `Overlord of ${C[t.b].name}` : `Subject of ${C[t.a].name}`,
     reparations: t.a === me ? `Paying reparations to ${C[t.b].name}` : `Receiving reparations from ${C[t.a].name}`,
+    union: t.a === me ? `Personal union: ${C[t.b].name} is the junior partner` : `Personal union under ${C[t.a].name}`,
   }[t.type];
 }
 
@@ -64,6 +66,7 @@ export function diplomacyTab(cl) {
       h('span', { tip: `Treaties count against a limit of ${D.maxTreaties} (peace-treaty obligations do not).` }, 'Treaties'), h('span', `${treatyCount(s, me)} / ${D.maxTreaties}`),
       h('span', { tip: 'Provinces taken from you in peace treaties during the last ' + D.claimYears + ' years. Reclaiming them is cheaper in peace talks, and your opinion of their holder is lower.' }, 'Claims'), h('span', String(c.claims.length))));
     out.push(offersSection(cl));
+    out.push(dealsTab(cl));
   }
   out.push(warsSection(cl));
   out.push(councilSection(cl));
@@ -75,7 +78,7 @@ export function diplomacyTab(cl) {
       const early = s.day - t.start < D.minTreatyDays && !TREATIES[t.type].peaceOnly;
       return h('tr', h('td', { tip: TREATIES[t.type].tip }, treatyLabel(s, t, me)), h('td.muted', t.until >= 0 ? 'until ' + formatDate(t.until) : 'since ' + formatDate(t.start)),
         h('td', h('button', { disabled: !!why, tip: why || (early ? `Signed less than ${D.minTreatyDays} days ago: ending it now costs ${(D.breakReputation[t.type] || 0) / 2} reputation.` : 'End this treaty. The other side\'s opinion of you falls a little.'),
-          on: { click: () => done(cl, cancelTreaty(s, map, R, t, me), true) } }, t.type === 'subject' && t.a === me ? 'Release' : 'End')));
+          on: { click: () => done(cl, cancelTreaty(s, map, R, t, me), true) } }, (t.type === 'subject' || t.type === 'union') && t.a === me ? 'Release' : 'End')));
     })) : h('p.muted', 'No treaties. Select a country to propose one.'));
     out.push(blocsSection(cl));
     out.push(relationsTable(cl));
@@ -110,7 +113,7 @@ function offersSection(cl) {
       title = `${C[o.from].name}: ${war.name}`;
       const t = o.terms;
       desc = t.provinces.length ? `They demand ${t.provinces.length} province(s): ${t.provinces.slice(0, 5).map((p) => map.name[p]).join(', ')}${t.provinces.length > 5 ? '…' : ''}` : '';
-      if (t.reparations || t.subject || t.independence) desc += (desc ? '; ' : '') + describeTerms(s, { ...t, provinces: [] });
+      if (t.reparations || t.subject || t.independence || t.union) desc += (desc ? '; ' : '') + describeTerms(s, { ...t, provinces: [] });
       desc ||= 'White peace (no changes).';
       accept = () => { remove(o); makePeace(s, map, R, war, o.from, o.terms); return null; };
     }
@@ -203,6 +206,8 @@ export function relationsSection(cl, k) {
     'Their rival', c.rival >= 0 ? C[c.rival].name : 'None',
     ov >= 0 && 'Overlord', ov >= 0 && C[ov].name,
     subs.length > 0 && 'Subjects', subs.length > 0 && subs.map((x) => C[x].name).join(', '),
+    seniorOf(s, k) >= 0 && 'In personal union under', seniorOf(s, k) >= 0 && C[seniorOf(s, k)].name,
+    juniorsOf(s, k).length > 0 && 'Junior partners', juniorsOf(s, k).length > 0 && juniorsOf(s, k).map((x) => C[x].name).join(', '),
     'Reputation', h('span', { className: c.reputation < -10 ? 'bad' : '' }, sg(c.reputation)));
   if (me < 0 || me === k) return h('div', h('h4', 'Diplomacy'), info);
   const between = treatiesBetween(s, me, k);
@@ -234,7 +239,8 @@ export function relationsSection(cl, k) {
     h('div.row.wrap', { style: { marginTop: '0.4em' } },
       h('button', { disabled: !!why, tip: why || `Spend ${D.improveCost} influence: their opinion of you +${D.improveOpinion}, fading by ${D.improveDecay} a month (stacks up to +${D.improveOpinion * 3}).`, on: { click: () => done(cl, improveRelations(s, R, me, k), true) } }, `Improve relations (${D.improveCost})`),
       h('button', { tip: isRival ? 'Stop treating them as a rival.' : `Declare them your rival: your opinion of them ${D.rivalOpinion}, theirs of you ${D.rivalledByOpinion}. Wars against a rival do not cost reputation.`,
-        on: { click: () => { C[me].rival = isRival ? -1 : k; done(cl); } } }, isRival ? 'Drop rivalry' : 'Make rival')));
+        on: { click: () => { C[me].rival = isRival ? -1 : k; done(cl); } } }, isRival ? 'Drop rivalry' : 'Make rival')),
+    dealsSection(cl, k));
 }
 
 export function embargoAllowed(s, me, k) {

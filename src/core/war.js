@@ -2,7 +2,7 @@
 import { atWar, allied, touchRelations, warBetween, hasAccess, isAtWar } from './relations.js';
 import { log, refreshCountryCache, provinceGdp, aiLog, isHuman, humanControls, impFor, humanDefeated } from './state.js';
 import { overlordOf, subjectsOf, defendersOf, treatiesBetween, removeTreaty, breakTreatiesForWar, treatiesBrokenByWar, TREATIES,
-  opinion, addMod, addClaim, hasClaim, signTreaty, forgetCountry } from './diplomacy.js';
+  opinion, addMod, addClaim, hasClaim, signTreaty, forgetCountry, seniorOf, juniorsOf, casusBelli, unionProblem, formUnion, followsOf } from './diplomacy.js';
 import { recordPeace } from './record.js';
 
 export function canDeclareWar(state, map, a, b) {
@@ -13,6 +13,9 @@ export function canDeclareWar(state, map, a, b) {
   const o = state.dip ? overlordOf(state, a) : -1;
   if (o >= 0 && o !== b) return `You are a subject of ${C[o].name}; only a war of independence against it is possible`;
   if (state.dip && overlordOf(state, b) === a) return `${C[b].name} is your subject; release it first`;
+  const sr = state.dip ? seniorOf(state, a) : -1;
+  if (sr >= 0) return `You are in a personal union under ${C[sr].name}, which runs your foreign policy; break away first`;
+  if (state.dip && seniorOf(state, b) === a) return `${C[b].name} is your junior partner in a personal union; dissolve it first`;
   if (o !== b && allied(state, a, b)) return 'You are allied; leave the alliance first';
   const t = C[a].truces[b];
   if (t != null && t > state.day) return `Truce in force for ${t - state.day} more days`;
@@ -48,6 +51,8 @@ export function warConsequences(state, map, rules, a, b) {
     out.push(grave ? `Breaks your ${TREATIES[t.type].name.toLowerCase()}: reputation −${D.breakReputation[t.type]}, stability −${D.breakStability}, and every country thinks less of you.`
       : `Ends your ${TREATIES[t.type].name.toLowerCase()}.`);
   }
+  const cb = state.dip && casusBelli(state, a, b);
+  if (cb) out.push(`Justified: ${cb.why.toLowerCase()} (casus belli until ${Math.round((cb.until - state.day) / 30)} more months).`);
   if (!warJustified(state, a, b)) out.push(`Unprovoked war: reputation −${D.warDeclarationReputation}. (No claim on their land and they are not your rival.)`);
   const calls = state.dip.treaties.filter((t) => t.type === 'alliance' && (t.a === a || t.b === a)).map((t) => (t.a === a ? t.b : t.a)).filter((p) => !allied(state, p, b));
   if (calls.length) out.push(`Your allies will be called to arms: ${calls.map((k) => C[k].name).join(', ')}.`);
@@ -57,7 +62,7 @@ export function warConsequences(state, map, rules, a, b) {
 export function warJustified(state, a, b) {
   const C = state.countries;
   if (!state.dip) return true;
-  if (overlordOf(state, a) === b || C[a].rival === b) return true;
+  if (overlordOf(state, a) === b || C[a].rival === b || casusBelli(state, a, b)) return true;
   return C[a].claims.some((x) => state.prov.owner[x.p] === b);
 }
 
@@ -70,7 +75,7 @@ export function declareWar(state, map, rules, a, b) {
   if (state.dip) breakTreatiesForWar(state, map, rules, a, b);
   const defenders = warJoiners(state, a, b);
   const attackers = [a];
-  if (state.dip) for (const s of subjectsOf(state, a)) if (C[s].alive && !defenders.includes(s)) attackers.push(s);
+  if (state.dip) for (const s of [...subjectsOf(state, a), ...juniorsOf(state, a)]) if (C[s].alive && !defenders.includes(s)) attackers.push(s);
   const war = {
     id: state.nextId++, name: indep ? `${C[a].name} War of Independence` : `${C[a].name}–${C[b].name} War`, attackers, defenders,
     leaderA: a, leaderD: b, start: state.day, battleScore: 0, kind: indep ? 'independence' : 'war', justified,
@@ -128,6 +133,8 @@ export function joinWar(state, map, rules, war, k, side) {
   const other = side === 'A' ? war.defenders : war.attackers;
   if (other.some((x) => allied(state, x, k))) return 'You are allied to the other side';
   (side === 'A' ? war.attackers : war.defenders).push(k);
+  // junior partners of a personal union follow their senior partner into the war
+  if (state.dip) for (const j of juniorsOf(state, k)) if (C[j].alive && !war.attackers.includes(j) && !war.defenders.includes(j)) (side === 'A' ? war.attackers : war.defenders).push(j);
   touchRelations(state);
   clearTreatiesAcross(state, war);
   log(state, 'war', `${C[k].name} joined the ${war.name} on the side of ${C[side === 'A' ? war.leaderA : war.leaderD].name}.`, { important: impFor(state, k, ...war.attackers, ...war.defenders) });
@@ -181,6 +188,7 @@ export function termsCost(state, map, rules, war, from, terms) {
   if (terms.reparations) cost += PC.reparations;
   if (terms.subject) cost += PC.subject;
   if (terms.independence) cost += PC.independence;
+  if (terms.union) cost += rules.balance.deals?.unionPeaceCost ?? 50;
   return cost;
 }
 
@@ -204,9 +212,15 @@ export function validatePeace(state, map, rules, war, from, terms) {
     if (!state.dip) return 'Not available';
     if (terms.independence) return 'Cannot combine independence with subjugation';
     if (overlordOf(state, from) >= 0) return 'A subject cannot take subjects';
-    if (overlordOf(state, loser) >= 0 || subjectsOf(state, loser).length) return `${C[loser].name} already has an overlord or subjects`;
+    if (followsOf(state, loser) >= 0 || subjectsOf(state, loser).length || juniorsOf(state, loser).length) return `${C[loser].name} already has an overlord, a senior partner, subjects or junior partners`;
     const left = C[loser].cache.provinces - (terms.provinces || []).filter((p) => state.prov.owner[p] === loser).length;
     if (left > D.subjectMaxProvinces) return `${C[loser].name} is too large to become a subject (${left} provinces, max ${D.subjectMaxProvinces})`;
+  }
+  if (terms.union) {
+    if (!state.dip || !rules.balance.deals) return 'Not available';
+    if (terms.subject || terms.independence) return 'A personal union cannot be combined with subjugation or independence';
+    const why = unionProblem(state, map, rules, from, loser, true);
+    if (why) return why;
   }
   if (terms.independence && !(war.kind === 'independence' && from === war.leaderA && overlordOf(state, from) === war.leaderD)) return 'Only a subject fighting its overlord can win independence';
   return null;
@@ -222,7 +236,7 @@ export function evaluatePeace(state, map, rules, war, from, terms) {
   const cost = termsCost(state, map, rules, war, from, terms);
   const months = (state.day - war.start) / 30;
   const W = rules.balance.war;
-  if (!provinces.length && !terms.reparations && !terms.subject && !terms.independence) {
+  if (!provinces.length && !terms.reparations && !terms.subject && !terms.independence && !terms.union) {
     // white peace: accepted when the receiver is not clearly winning, or the war has dragged on
     const recvScore = -score;
     const willing = recvScore < 10 + Math.max(0, months - W.exhaustionDays / 30) * 2 || recvScore < 0;
@@ -268,10 +282,14 @@ export function makePeace(state, map, rules, war, from, terms) {
       for (const t of [...state.dip.treaties]) if (t.type === 'subject' && t.a === loser && t.b === from) removeTreaty(state, t);
       parts.push(`${C[from].name} wins its independence`);
     }
-    const gained = transferred.length || terms.reparations || terms.subject || terms.independence;
+    if (terms.union) {
+      formUnion(state, map, rules, from, loser, { quiet: true });
+      parts.push(`${C[loser].name} enters a personal union under ${C[from].name}`);
+    }
+    const gained = transferred.length || terms.reparations || terms.subject || terms.independence || terms.union;
     if (gained && C[from].govt) { C[from].govt.glory = Math.min(1, C[from].govt.glory + 0.4); C[loser].govt.glory = Math.max(-1, C[loser].govt.glory - 0.4); }
   }
-  recordPeace(state, war, from, !!(transferred.length || terms.reparations || terms.subject || terms.independence));
+  recordPeace(state, war, from, !!(transferred.length || terms.reparations || terms.subject || terms.independence || terms.union));
   endWar(state, map, rules, war);
   log(state, 'peace', parts.length ? `Peace: ${parts.join('; ')}.` : `White peace between ${C[war.leaderA].name} and ${C[war.leaderD].name}.`,
     { important: impFor(state, ...war.attackers, ...war.defenders) });
@@ -340,6 +358,8 @@ export function validateSeparatePeace(state, map, rules, war, c, terms) {
   if (c === war.leaderA || c === war.leaderD) return 'War leaders negotiate a full peace';
   const att = war.attackers.includes(c);
   if (!att && !war.defenders.includes(c)) return 'Not a participant';
+  const sr = state.dip ? seniorOf(state, c) : -1;
+  if (sr >= 0 && (att ? war.attackers : war.defenders).includes(sr)) return `${state.countries[sr].name}, your senior partner in a personal union, decides on peace`;
   const enemySide = att ? war.defenders : war.attackers;
   for (const p of terms.provinces || []) {
     if (state.prov.owner[p] !== c) return `${map.name[p]} is not yours to cede`;

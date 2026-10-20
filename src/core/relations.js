@@ -5,7 +5,7 @@ import { dmzBlock } from './council.js';
 const cache = new WeakMap();
 const HOSTILE = 1, ALLIED = 2, COBELLIGERENT = 4, ACCESS = 8;
 // treaty types that make two countries allies (mutual defence, shared access)
-export const ALLIANCE_TYPES = ['alliance', 'defensive', 'subject'];
+export const ALLIANCE_TYPES = ['alliance', 'defensive', 'subject', 'union'];
 
 function matrix(state) {
   let m = cache.get(state);

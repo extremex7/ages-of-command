@@ -305,7 +305,8 @@
       "guarantee": 15,
       "access": 5,
       "trade": 10,
-      "subject": -10
+      "subject": -10,
+      "union": 15
     },
     "blocOpinion": 20,
     "warOpinion": -80,
@@ -421,5 +422,23 @@
     "sanctionYears": 5, "sanctionOpinion": 10, "ceasefireDays": 365, "dmzYears": 10,
     "sanctionGoods": { "arms": ["munitions", "machinery", "electronics"], "energy": ["coal", "oil", "gas", "fuel", "uranium"] },
     "ai": { "everyDays": 90, "chance": 0.5, "ceasefireAfterDays": 540, "pariahReputation": -60 }
+  },
+  "deals": {
+    "_doc": "Peacetime deals (docs/DIPLOMACY.md, Deals). Loans: the principal is a multiple (loanAmountMonths) of the borrower's monthly revenue, at most loanMaxMonths outstanding and repayments at most loanMaxServiceShare of its revenue; repaid in equal monthly instalments over loanTermsMonths at one of loanRates a year. A lender keeps lenderReserveMonths of revenue in its treasury and wants lenderBaseRate plus a risk premium. A borrower pays while its debt after paying stays within loanPayDebtMonths of revenue; missedToDefault missed instalments in a row is a default (opinion, trust, reputation, and the lender gets a casus belli for defaultCbYears; repudiating on purpose costs repudiateReputation). Ultimatums cost demandInfluence and demandReputation, ask for up to demandMaxProvinces provinces, demandMoneyMonths of the target's revenue or subjugation, and wait demandDeadlineDays for an answer; a refusal gives a casus belli for demandCbYears, yielding costs the target yieldStability. Personal unions: the junior has at most unionMaxPowerShare of the senior's army and unionMaxProvinces provinces; integration needs unionIntegrateYears in the union, the junior's opinion of the senior at least unionIntegrateOpinion and unionIntegrateInfluence; the junior may break away when its opinion of the senior falls below unionBreakOpinion. Province prices are valued at saleValueYears of the province's tax. Gifts of money raise opinion by giftOpinionPerMonth per month of the recipient's revenue (at most giftOpinionMax). Rebel support costs rebelLevels of the target's monthly revenue a month; per level it lowers the target's stability by rebelStability a month, multiplies its civil-war chance by 1 + rebelChanceBoost, adds a rebel militia unit with rebelMilitiaChance a month in a civil war, and is found out with rebelDetect a month (plus rebelCounterDetect under counter-intelligence).",
+    "loanRates": [0.03, 0.06, 0.1], "loanTermsMonths": [24, 60, 120], "loanAmountMonths": [1, 3, 6, 12],
+    "loanMaxMonths": 12, "loanMaxServiceShare": 0.3, "lenderReserveMonths": 1, "lenderBaseRate": 0.04,
+    "loanPayDebtMonths": 6, "missedToDefault": 3, "loanOpinion": 10, "defaultOpinion": -50, "defaultTrust": -40,
+    "defaultReputation": 15, "repudiateReputation": 25, "defaultCbYears": 5,
+    "demandInfluence": 15, "demandReputation": 3, "demandMaxProvinces": 3, "demandMoneyMonths": [1, 3, 6],
+    "demandDeadlineDays": 30, "demandCbYears": 2, "demandCooldownDays": 365, "yieldStability": 5, "yieldOpinion": -30, "refuseOpinion": -15,
+    "unionMaxPowerShare": 0.35, "unionMaxProvinces": 30, "unionInfluence": 20, "unionPeaceCost": 50,
+    "unionIntegrateYears": 10, "unionIntegrateOpinion": 50, "unionIntegrateInfluence": 40, "unionBreakOpinion": 0,
+    "saleValueYears": 10, "salePriceSteps": [0.5, 0.75, 1, 1.25, 1.5, 2], "giftSteps": [0.1, 0.25, 0.5, 1],
+    "giftOpinionPerMonth": 15, "giftOpinionMax": 40, "landGiftOpinion": 25,
+    "rebelLevels": [0.03, 0.06, 0.12], "rebelStability": [0.5, 1, 2], "rebelChanceBoost": [1, 2, 3],
+    "rebelMilitiaChance": [0.2, 0.4, 0.7], "rebelDetect": [0.03, 0.05, 0.08], "rebelCounterDetect": 0.05,
+    "rebelOpinion": -40, "rebelTrust": -30, "rebelCbYears": 3, "rebelGratitude": 30,
+    "ai": { "loanChance": 0.5, "demandChance": 0.06, "demandPowerRatio": 3, "unionChance": 0.1, "integrateChance": 0.5,
+      "reserveMonths": 2, "saleDebtMonths": 6, "buyReserveMonths": 6, "rebelChance": 0.5 }
   }
 }

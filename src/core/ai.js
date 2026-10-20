@@ -6,7 +6,7 @@ import { atWar, allied, enemiesOf, friendly, isAtWar, canEnter } from './relatio
 import { recruit, canRecruit, orderMove, recruitCost, bestUnits, modernizeCost, modernizeArmy } from './military.js';
 import { declareWar, canDeclareWar, warScore, demandCost, evaluatePeace, makePeace, provinceValue, warJoiners, termsCost,
   separateScore, evaluateSeparatePeace, makeSeparatePeace, warJustified } from './war.js';
-import { opinion, treatiesBrokenByWar, overlordOf, subjectsOf, hasClaim, TREATIES } from './diplomacy.js';
+import { opinion, treatiesBrokenByWar, overlordOf, subjectsOf, hasClaim, TREATIES, juniorsOf, followsOf, casusBelli, unionProblem } from './diplomacy.js';
 import { govType } from './government.js';
 import { rand } from './rng.js';
 import { countryNeighbours } from './geo.js';
@@ -29,7 +29,7 @@ export function warOdds(state, a, t) {
   let theirs = 0;
   for (const d of def) theirs += pw(d) * (d === t ? 1 : 0.6);
   let mine = pw(a);
-  for (const s of subjectsOf(state, a)) if (!def.includes(s)) mine += pw(s);
+  for (const s of [...subjectsOf(state, a), ...juniorsOf(state, a)]) if (!def.includes(s)) mine += pw(s);
   for (const tr of state.dip.treaties) {
     if (tr.type !== 'alliance' || (tr.a !== a && tr.b !== a)) continue;
     const p = tr.a === a ? tr.b : tr.a;
@@ -217,7 +217,8 @@ function considerWar(state, map, rules, c) {
     const op = opinion(state, map, rules, c.idx, t);
     let claims = 0;
     for (const x of c.claims) if (state.prov.owner[x.p] === t) claims++;
-    const motive = Math.max(0, -op) / 100 + (c.rival === t ? 0.5 : 0) + Math.min(0.6, claims * 0.1) + (t === independence ? 0.6 : 0);
+    const cb = casusBelli(state, c.idx, t); // a refused ultimatum, a defaulted loan, funded rebels (deals.js)
+    const motive = Math.max(0, -op) / 100 + (c.rival === t ? 0.5 : 0) + Math.min(0.6, claims * 0.1) + (t === independence ? 0.6 : 0) + (cb ? 0.4 : 0);
     const broken = treatiesBrokenByWar(state, c.idx, t).filter((x) => x.type === 'nap' || x.type === 'guarantee');
     // the AI aggression setting lowers the grievance needed for war
     const need = (D.aiWarMotive + (broken.length ? 0.5 : 0) + (warJustified(state, c.idx, t) ? 0 : 0.1)) / Math.max(0.5, set.aiAggression ?? 1);
@@ -230,7 +231,7 @@ function considerWar(state, map, rules, c) {
     const nuke = nuclearDeterred(state, map, rules, c.idx, [t, ...odds.joiners]);
     if (nuke >= 0 && (!hasDeterrent(state, map, rules, c.idx) || motive < need + 1 || rand(state) > 0.2)) continue;
     const s = ratio * (0.5 + motive);
-    if (!best || s > best.s) best = { t, ratio, op, claims, motive, broken, odds, s };
+    if (!best || s > best.s) best = { t, ratio, op, claims, motive, broken, odds, s, cb };
   }
   if (!best) return;
   if (rand(state) > A.baseWarChance * aggr * T.warPropensity * (0.5 + best.motive)) return;
@@ -239,6 +240,7 @@ function considerWar(state, map, rules, c) {
   if (best.t === independence) why.push('fighting for independence');
   if (c.rival === best.t) why.push('rival');
   if (best.claims) why.push(`holds ${best.claims} of our former provinces`);
+  if (best.cb) why.push(`casus belli: ${best.cb.why.toLowerCase()}`);
   if (best.op < 0) why.push(`opinion ${Math.round(best.op)}`);
   if (best.broken.length) why.push(`breaking our ${best.broken.map((x) => TREATIES[x.type].name.toLowerCase()).join(', ')}`);
   aiLog(state, c.idx, `Declared war on ${C[best.t].name}: ${why.join(', ')}; strength ratio ${best.ratio.toFixed(1)} counting ${best.odds.joiners.length} countries that would join them; stability ${Math.round(c.stability)}.`);
@@ -376,6 +378,7 @@ export function describeTerms(state, terms) {
   if (terms.reparations) parts.push('reparations');
   if (terms.subject) parts.push('becomes a subject');
   if (terms.independence) parts.push('independence');
+  if (terms.union) parts.push('personal union');
   return parts.length ? parts.join(', ') : 'white peace';
 }
 
@@ -387,6 +390,10 @@ function peaceTerms(state, map, rules, war, side, leader, other, myScore, months
   if (myScore > 20) {
     const mySide = side === 'A' ? war.attackers : war.defenders;
     const theirSide = side === 'A' ? war.defenders : war.attackers;
+    // between two crowns, a small beaten enemy can be made a junior partner (deals.js)
+    const UC = rules.balance.deals?.unionPeaceCost;
+    if (UC != null && myScore >= UC + 5 && /monarchy/.test(C[leader].gov) && /monarchy/.test(C[other].gov) && war.kind === 'war'
+      && !unionProblem(state, map, rules, leader, other, true)) return { provinces: [], union: true, to: leader };
     // a small, beaten enemy leader becomes a subject instead of losing land
     if (myScore >= PC.subject + 5 && C[other].cache.provinces <= D.subjectMaxProvinces && C[other].cache.gdp < C[leader].cache.gdp * 0.3
       && overlordOf(state, leader) < 0 && overlordOf(state, other) < 0 && !subjectsOf(state, other).length && war.kind !== 'independence') {
@@ -414,7 +421,7 @@ function aiSeparatePeace(state, map, rules, war) {
   for (const c of [...war.attackers, ...war.defenders]) {
     if (c === war.leaderA || c === war.leaderD || (c === state.player && !C[c].automate)) continue;
     if (!state.wars.includes(war) || !(war.attackers.includes(c) || war.defenders.includes(c))) continue;
-    if (overlordOf(state, c) >= 0) continue; // subjects follow their overlord
+    if (followsOf(state, c) >= 0) continue; // subjects and junior partners follow their overlord
     const sc = separateScore(state, map, rules, war, c);
     const occupied = C[c].cache.provinces ? C[c].cache.occupied / C[c].cache.provinces : 0;
     if (sc > -25 && occupied < 0.35) continue;

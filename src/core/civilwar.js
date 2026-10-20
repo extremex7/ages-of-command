@@ -67,7 +67,8 @@ export function civilWarChance(state, rules, c) {
   if (state.wars.some((w) => w.kind === 'civil' && (w.attackers.includes(c.idx) || w.defenders.includes(c.idx)))) return 0;
   const { share } = disgruntled(rules, c);
   if (share < W.disgruntledShare) return 0;
-  return W.base * (W.stability - c.stability) / W.stability * Math.min(1, share * 2);
+  // foreign money for the rebels (deals.js) multiplies the chance
+  return W.base * (W.stability - c.stability) / W.stability * Math.min(1, share * 2) * (1 + (c.rebelFund || 0));
 }
 
 // Provinces the rebels take: a connected block grown from the owned province farthest (in

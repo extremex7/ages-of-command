@@ -18,6 +18,9 @@ export const TREATIES = {
   arms_control: { name: 'Arms control treaty', mutual: true, tip: 'Both nuclear powers cap their arsenals (see docs/STRATEGIC.md) and dismantle warheads above the cap.' },
   subject: { name: 'Subject', mutual: false, peaceOnly: true, tip: 'The subject follows its overlord into wars, cannot sign treaties and pays tribute.' },
   reparations: { name: 'Reparations', mutual: false, peaceOnly: true, tip: 'The payer transfers part of its tax revenue to the recipient each month.' },
+  // made by a diplomatic offer, a peace treaty or an event (src/core/deals.js); like the other
+  // peace-treaty obligations it does not count toward the treaty limit
+  union: { name: 'Personal union', mutual: false, peaceOnly: true, tip: 'One ruler for both crowns: the junior partner keeps its name and economy but follows the senior partner\'s foreign policy and joins its wars. It can be integrated after years of good relations, or break away when relations sour.' },
 };
 export const PROPOSABLE = ['alliance', 'defensive', 'nap', 'access', 'guarantee', 'trade', 'arms_control'];
 
@@ -104,19 +107,35 @@ export function subjectsOf(state, k) {
   return treatiesOf(state, k).filter((t) => t.type === 'subject' && t.a === k).map((t) => t.b);
 }
 
+// Personal unions: the senior partner is t.a, the junior t.b.
+export function seniorOf(state, k) {
+  for (const t of treatiesOf(state, k)) if (t.type === 'union' && t.b === k) return t.a;
+  return -1;
+}
+
+export function juniorsOf(state, k) {
+  return treatiesOf(state, k).filter((t) => t.type === 'union' && t.a === k).map((t) => t.b);
+}
+
+// The country whose foreign policy k follows: its overlord or its senior union partner, or -1.
+export function followsOf(state, k) {
+  const o = overlordOf(state, k);
+  return o >= 0 ? o : seniorOf(state, k);
+}
+
 // Treaties that count toward the limit (peace-treaty obligations do not).
 export function treatyCount(state, k) {
   return treatiesOf(state, k).filter((t) => !TREATIES[t.type].peaceOnly).length;
 }
 
 // Countries that join a war declared on `k`: guarantors, alliance and defensive-pact partners,
-// its overlord and its subjects.
+// its overlord and its subjects, and its personal-union partners.
 export function defendersOf(state, k) {
   const out = [];
   for (const t of treatiesOf(state, k)) {
     if (t.type === 'alliance' || t.type === 'defensive') out.push(t.a === k ? t.b : t.a);
     else if (t.type === 'guarantee' && t.b === k) out.push(t.a);
-    else if (t.type === 'subject') out.push(t.a === k ? t.b : t.a);
+    else if (t.type === 'subject' || t.type === 'union') out.push(t.a === k ? t.b : t.a);
   }
   return out;
 }
@@ -139,11 +158,14 @@ export function validateTreaty(state, map, rules, type, a, b) {
   if (!C[a]?.alive || !C[b]?.alive) return 'Country does not exist';
   if (atWar(state, a, b)) return 'You are at war';
   if (findTreaty(state, type, a, b)) return `${T.name} already in force`;
-  if (type === 'subject' && (overlordOf(state, b) >= 0 || subjectsOf(state, b).length)) return `${C[b].name} already has an overlord or subjects`;
-  if (type !== 'subject') {
+  if ((type === 'subject' || type === 'union') && (followsOf(state, b) >= 0 || subjectsOf(state, b).length || juniorsOf(state, b).length)) return `${C[b].name} already has an overlord, a senior partner, subjects or junior partners`;
+  if (type === 'union' && followsOf(state, a) >= 0) return `${C[a].name} follows the foreign policy of ${C[followsOf(state, a)].name}`;
+  if (type !== 'subject' && type !== 'union') {
     for (const k of [a, b]) {
       const o = overlordOf(state, k);
       if (o >= 0 && o !== (k === a ? b : a)) return `${C[k].name} is a subject of ${C[o].name} and cannot sign treaties`;
+      const s = seniorOf(state, k);
+      if (s >= 0 && s !== (k === a ? b : a)) return `${C[k].name} is in a personal union under ${C[s].name}, which runs its foreign policy`;
     }
   }
   if (!T.peaceOnly) {
@@ -192,7 +214,8 @@ export function signTreaty(state, map, rules, type, a, b, { until = -1, quiet = 
     const txt = TREATIES[type].mutual
       ? `${C[a].name} and ${C[b].name} signed a ${TREATIES[type].name.toLowerCase()}.`
       : { access: `${C[a].name} granted military access to ${C[b].name}.`, guarantee: `${C[a].name} guaranteed the independence of ${C[b].name}.`,
-        subject: `${C[b].name} became a subject of ${C[a].name}.`, reparations: `${C[a].name} must pay reparations to ${C[b].name}.` }[type];
+        subject: `${C[b].name} became a subject of ${C[a].name}.`, reparations: `${C[a].name} must pay reparations to ${C[b].name}.`,
+        union: `${C[a].name} and ${C[b].name} formed a personal union under the crown of ${C[a].name}.` }[type];
     log(state, 'diplomacy', txt, { important: a === state.player || b === state.player });
   }
   return t;
@@ -203,6 +226,7 @@ export function canCancel(state, rules, t, by) {
   if (by !== t.a && by !== t.b) return 'Not a party to this treaty';
   if (t.type === 'subject' && by === t.b) return 'Subjects can only break free by winning a war of independence';
   if (t.type === 'reparations' && by === t.a) return 'Reparations cannot be stopped by the payer';
+  if (t.type === 'union' && by === t.b) return 'A junior partner leaves a union by breaking away (when its opinion of the senior partner is low enough)';
   return null;
 }
 
@@ -216,7 +240,7 @@ export function cancelTreaty(state, map, rules, t, by) {
   if (early) C[by].reputation = clampRep(C[by].reputation - (D.breakReputation[t.type] || 0) / 2);
   if (!TREATIES[t.type].peaceOnly) addMod(state, other, by, early ? -20 : -10, D.modDecay, 'Ended a treaty with us');
   removeTreaty(state, t);
-  const what = t.type === 'subject' ? `${C[t.a].name} released ${C[t.b].name}.` : `${C[by].name} ended its ${TREATIES[t.type].name.toLowerCase()} with ${C[other].name}${early ? ' early (reputation lost)' : ''}.`;
+  const what = t.type === 'subject' ? `${C[t.a].name} released ${C[t.b].name}.` : t.type === 'union' ? `${C[t.a].name} dissolved its personal union with ${C[t.b].name}.` : `${C[by].name} ended its ${TREATIES[t.type].name.toLowerCase()} with ${C[other].name}${early ? ' early (reputation lost)' : ''}.`;
   log(state, 'diplomacy', what, { important: by === state.player || other === state.player });
   return null;
 }
@@ -531,6 +555,58 @@ export function leaveBloc(state, rules, bloc, k) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// casus belli: a temporary justification for war on one country (a refused ultimatum, a
+// defaulted loan, detected support for rebels). Stored lazily in state.dip.cbs as
+// { a, b, until, why }: a may declare war on b without the unprovoked-war penalty.
+
+export function addCasusBelli(state, a, b, days, why) {
+  if (a === b || a < 0 || b < 0) return;
+  const l = (state.dip.cbs ||= []);
+  const x = l.find((c) => c.a === a && c.b === b);
+  if (x) { x.until = Math.max(x.until, state.day + days); x.why = why; } else l.push({ a, b, until: state.day + days, why });
+}
+
+export function casusBelli(state, a, b) {
+  for (const x of state.dip?.cbs || []) if (x.a === a && x.b === b && x.until > state.day) return x;
+  return null;
+}
+
+export function casusBelliOf(state, a) {
+  return (state.dip?.cbs || []).filter((x) => x.a === a && x.until > state.day);
+}
+
+// Why `junior` cannot join `senior` in a personal union (null if it can): sizes, existing
+// overlords and partners. Shared by the diplomatic offer, peace terms (inPeace: the two are
+// still at war while the treaty is negotiated) and events.
+export function unionProblem(state, map, rules, senior, junior, inPeace = false) {
+  const C = state.countries, X = rules.balance.deals;
+  if (!X) return 'Personal unions are off';
+  if (senior === junior || !C[senior]?.alive || !C[junior]?.alive) return 'Choose another country';
+  if (!inPeace && atWar(state, senior, junior)) return 'You are at war';
+  if (findTreaty(state, 'union', senior, junior)) return 'Already in a personal union';
+  if (followsOf(state, junior) >= 0 || subjectsOf(state, junior).length || juniorsOf(state, junior).length) return `${C[junior].name} already has an overlord, a senior partner, subjects or junior partners`;
+  if (followsOf(state, senior) >= 0) return `${C[senior].name} follows the foreign policy of ${C[followsOf(state, senior)].name}`;
+  const S = C[senior], J = C[junior];
+  if (J.cache?.provinces > X.unionMaxProvinces) return `${J.name} is too large for a personal union (${J.cache.provinces} provinces, max ${X.unionMaxProvinces})`;
+  const share = unionStrengthShare(S, J);
+  if (share > X.unionMaxPowerShare) return `${J.name} is not much weaker than ${S.name} (${Math.round(share * 100)}% of its strength, max ${Math.round(X.unionMaxPowerShare * 100)}%)`;
+  return null;
+}
+
+// Junior's strength relative to the senior: the mean of the army and economy ratios.
+export function unionStrengthShare(S, J) {
+  const ra = (J.cache?.armyPower || 0) / Math.max(1, S.cache?.armyPower || 0), rg = (J.cache?.gdp || 0) / Math.max(1e-6, S.cache?.gdp || 0);
+  return (Math.min(3, ra) + Math.min(3, rg)) / 2;
+}
+
+// Forms the union: the junior leaves its own treaties (except with the senior) and defence blocs.
+export function formUnion(state, map, rules, senior, junior, { quiet = false } = {}) {
+  for (const t of [...treatiesOf(state, junior)]) if (!TREATIES[t.type].peaceOnly && t.a !== senior && t.b !== senior) removeTreaty(state, t);
+  for (const al of state.alliances) if (al.kind !== 'economic' && al.members.includes(junior)) al.members = al.members.filter((m) => m !== junior);
+  return signTreaty(state, map, rules, 'union', senior, junior, { quiet });
+}
+
+// ---------------------------------------------------------------------------------------------
 // claims (provinces lost in peace treaties) and monthly upkeep
 
 export function addClaim(state, k, p) {
@@ -585,6 +661,7 @@ export function forgetCountry(state, k) {
   state.dip.treaties = state.dip.treaties.filter((t) => t.a !== k && t.b !== k);
   state.dip.mods = state.dip.mods.filter((m) => m.a !== k && m.b !== k);
   state.dip.modVer = (state.dip.modVer || 0) + 1;
+  if (state.dip.cbs) state.dip.cbs = state.dip.cbs.filter((x) => x.a !== k && x.b !== k);
   for (const c of state.countries) if (c.rival === k) c.rival = -1;
   touchRelations(state);
 }

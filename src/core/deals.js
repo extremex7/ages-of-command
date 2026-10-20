@@ -6,6 +6,7 @@
 // counts as refused when its deadline passes.
 //
 // State (all created lazily, so older saves load unchanged): state.dip.loans, state.dip.support,
+// state.dip.demanded (day of the last ultimatum per pair),
 // state.dip.pending, state.dip.cbs (casus belli, diplomacy.js), c.rebelFund (derived monthly).
 // Numbers: balance.json → deals. See docs/DIPLOMACY.md (Deals).
 import { log, aiLog, refreshCountryCache, provinceGdp } from './state.js';
@@ -236,7 +237,7 @@ export function validateDemand(state, map, rules, from, to, d) {
   if (followsOf(state, to) === from) return `${C[to].name} already answers to you`;
   if (allied(state, from, to)) return 'Not against an ally';
   if ((state.dip.pending || []).some((o) => o.kind === 'demand' && o.from === from && o.to === to)) return 'An ultimatum is already waiting for an answer';
-  const last = state.dip.refused[`demand:${from}:${to}`];
+  const last = state.dip.demanded?.[`${from}:${to}`];
   if (last != null && state.day - last < X.demandCooldownDays) return `You made a demand of them ${state.day - last} days ago (wait ${X.demandCooldownDays})`;
   if (C[from].influence < X.demandInfluence) return `Needs ${X.demandInfluence} influence (you have ${Math.floor(C[from].influence)})`;
   if (!DEMAND_KINDS.includes(d?.kind)) return 'Choose a demand';
@@ -298,7 +299,7 @@ export function issueDemand(state, map, rules, from, to, d) {
   // the AI answers first (the answer reads the demand as it is now, before any influence is spent)
   const ev = playerDecides(state, to) ? null : evaluateDemand(state, map, rules, from, to, d);
   C[from].influence -= X.demandInfluence;
-  state.dip.refused[`demand:${from}:${to}`] = state.day; // one ultimatum to the same country a year
+  (state.dip.demanded ||= {})[`${from}:${to}`] = state.day; // one ultimatum to the same country a year (not in `refused`, which is cleared after 180 days)
   // a demand backed by claims, rivalry or a casus belli is not held against the demander
   const justified = C[from].rival === to || casusBelli(state, from, to) || C[from].claims.some((x) => state.prov.owner[x.p] === to);
   if (!justified) C[from].reputation = Math.max(-100, C[from].reputation - X.demandReputation);
@@ -345,7 +346,6 @@ function yieldDemand(state, map, rules, o) {
 
 function refuseDemand(state, map, rules, o) {
   const X = rules.balance.deals, C = state.countries, { from, to } = o;
-  state.dip.refused[`demand:${from}:${to}`] = state.day;
   addCasusBelli(state, from, to, X.demandCbYears * 365, 'Refused our ultimatum');
   addMod(state, to, from, X.refuseOpinion, rules.balance.diplomacy.modDecay, 'Threatened us');
   log(state, 'diplomacy', `${C[to].name} rejected the ultimatum of ${C[from].name} (${describeDemand(state, map, o)}). ${C[from].name} has a casus belli.`, { important: true });
@@ -765,4 +765,5 @@ export function monthlyDeals(state, map, rules) {
     }
   }
   if (state.dip.cbs) state.dip.cbs = state.dip.cbs.filter((x) => x.until > state.day && C[x.a]?.alive && C[x.b]?.alive);
+  if (state.dip.demanded) for (const k of Object.keys(state.dip.demanded)) if (state.day - state.dip.demanded[k] > X.demandCooldownDays) delete state.dip.demanded[k];
 }

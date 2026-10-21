@@ -8,6 +8,8 @@ import { transferShares } from './diplomacy.js';
 import { strategicUpkeep } from './strategic.js';
 import { intelUpkeep } from './espionage.js';
 import { advisorUpkeep } from './natfx.js';
+import { taxFactor } from './unrest.js';
+import { ageMult } from './ages.js';
 
 export function militaryUpkeep(state, c, rules, all = null) {
   if (all) return all[c.idx] * c.cache.priceLevel;
@@ -46,12 +48,14 @@ export function computeLedgers(state, map, rules) {
   const E = rules.balance.economy;
   const C = state.countries.length;
   const gdpOwned = new Float64Array(C), gdpControlled = new Float64Array(C), requisition = new Float64Array(C);
+  const soc = !!(state.society && rules.society);
   for (const i of map.ids) {
     const o = state.prov.owner[i];
     if (o < 0) continue;
     const g = provinceGdp(state, i, E) / 12;
     const ctl = state.prov.controller[i];
-    if (ctl === o) gdpControlled[o] += g;
+    // unrest cuts what a province pays; rebel-held land pays nothing (unrest.js)
+    if (ctl === o) gdpControlled[o] += soc ? g * taxFactor(state, rules, i) : g;
     else if (ctl >= 0) requisition[ctl] += g * 0.25 * 0.3; // occupiers extract a fraction
     gdpOwned[o] += g;
   }
@@ -121,6 +125,8 @@ export function monthlyEconomy(state, map, rules) {
     // government type, faction approval and legitimacy (see docs/GOVERNMENT.md)
     const gp = govStabilityParts(rules, c);
     if (gp) { c.govt.stabilityParts = gp; for (const k in gp) target += gp[k]; }
+    // religion, unrest, revolts, war exhaustion and golden or dark ages (society.js)
+    if (c.soc?.parts) for (const k in c.soc.parts) target += c.soc.parts[k];
     target = Math.max(5, Math.min(95, target));
     c.stability += (target - c.stability) * 0.08;
     // manpower regenerates toward the cap
@@ -135,13 +141,13 @@ export function monthlyEconomy(state, map, rules) {
     const o = state.prov.owner[i];
     if (o < 0 || state.prov.controller[i] !== o) continue;
     const tm = C[o].tfx?.mult;
-    const g = (P.growthYear / 12) * (tm ? tm.popGrowth : 1);
+    const g = (P.growthYear / 12) * (tm ? tm.popGrowth : 1) * ageMult(rules, C[o], 'growth');
     const ee = C[o].econ;
     if (!ee) { state.prov.pop[i] *= 1 + g; continue; }
     const fs = ee.foodSat;
     state.prov.pop[i] *= 1 + g * (2 * fs - 1) - (fs < 0.5 ? (0.5 - fs) * 0.01 : 0);
     const d = state.prov.dev[i];
-    if (d < 100) state.prov.dev[i] = Math.min(100, d + I.devGrowthMonth * ee.living * (C[o].civilShare / 0.75) * Math.max(0.2, 1.3 - d / 100) * (tm ? tm.devGrowth : 1));
+    if (d < 100) state.prov.dev[i] = Math.min(100, d + I.devGrowthMonth * ee.living * (C[o].civilShare / 0.75) * Math.max(0.2, 1.3 - d / 100) * (tm ? tm.devGrowth : 1) * ageMult(rules, C[o], 'growth'));
   }
   if (state.econ) recordHistory(state);
 }

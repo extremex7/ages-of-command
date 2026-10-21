@@ -10,7 +10,7 @@ export const ICONS = {
   // map modes
   political: 'flag', terrain: 'mountain-snow', population: 'users', development: 'trending-up', economy: 'coins',
   resources: 'gem', industry: 'factory', infrastructure: 'route', military: 'swords', diplomacy: 'handshake',
-  technology: 'flask-conical', naval: 'anchor', supply: 'package', government: 'landmark',
+  technology: 'flask-conical', naval: 'anchor', supply: 'package', government: 'landmark', religion: 'sparkles', unrest: 'flame',
   // sidebar tabs (some share the map-mode icons)
   country: 'flag', research: 'flask-conical', strategic: 'radiation', log: 'scroll-text', ai: 'bot',
   // buildings

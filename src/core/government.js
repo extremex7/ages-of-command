@@ -466,6 +466,8 @@ function aiPolicy(state, rules, c, warScores) {
   let best = null;
   const n = P.policyIds.length;
   for (const grp of [P.policyIds[(y * 2 + c.idx) % n], P.policyIds[(y * 2 + c.idx + 1) % n]]) {
+    // the religion policy is left alone for ten years after the religion AI chose it (unrest.js)
+    if (grp === 'religion' && state.day - (c.soc?.relPolicyDay ?? -1e9) < 3650) continue;
     for (const o of Object.keys(P.policies[grp].options)) {
       if (g.policies[grp] === o) continue;
       const saved = g.policies[grp];

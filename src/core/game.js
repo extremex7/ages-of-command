@@ -14,18 +14,22 @@ import { initStrategic } from './strategic.js';
 import { computePrestige } from './prestige.js';
 import { checkHotseat } from './hotseat.js';
 import { compileNations, initNations } from './nations.js';
+import { compileSociety } from './religion.js';
+import { initSociety, ensureSociety } from './society.js';
 
 // governments: data/rules/governments.json; events: list of data/events/*.json files;
 // technologies: data/rules/technologies.json; nations: { formables, traits, config } from
 // data/rules/formables.json, traits.json and nations.json (optional: without it there are no
-// traits, formable nations, advisors or missions)
-export function makeRules(units, balance, goods, buildings, governments, events = [], technologies = null, nations = null) {
+// traits, formable nations, advisors or missions); society: data/rules/society.json (religion,
+// unrest, revolts and ages; without it those systems are off)
+export function makeRules(units, balance, goods, buildings, governments, events = [], technologies = null, nations = null, society = null) {
   const politics = compilePolitics(governments);
   const rules = { units: {}, balance, econ: compileEconomy(goods, buildings), politics, events: compileEvents(events, politics) };
   for (const [k, v] of Object.entries(units)) if (!k.startsWith('_')) rules.units[k] = v;
   validateRules(rules);
   rules.tech = compileTech(technologies || { eras: [{ id: 'modern', name: 'Modern' }], fields: {}, techs: {} }, rules);
   rules.nations = nations ? compileNations(nations, rules) : null;
+  rules.society = compileSociety(society, rules.tech.idx);
   return rules;
 }
 
@@ -41,6 +45,7 @@ export function newGame({ map, scenario, rules, playerTag = null, seed, settings
   initGovernment(state, map, rules);
   initDiplomacy(state, map, rules, scenario);
   initNations(state, map, rules);
+  initSociety(state, map, rules, scenario);
   refreshCountryCache(state, map, rules);
   startScenarioWars(state, map, rules, scenario);
   for (const c of state.countries) c.manpower = Math.min(c.manpower, c.cache.maxManpower);
@@ -76,6 +81,8 @@ export function loadGame(text, { map, rules, scenario }) {
   checkHotseat(state);
   // saves from before national traits get them now (docs/NATIONS.md)
   initNations(state, map, rules);
+  // saves from before religion and unrest get them now (rule table, current year)
+  ensureSociety(state, map, rules);
   return { state, map, rules, scenario };
 }
 

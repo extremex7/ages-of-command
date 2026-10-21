@@ -2,6 +2,7 @@
 // Opinions are not stored: they are computed from the current state (governments, treaties,
 // wars, borders, rivalries, embargoes) plus a sparse list of decaying modifiers, so they always
 // explain themselves. Constants: balance.json → diplomacy. See docs/DIPLOMACY.md.
+import { religionOpinion } from './religion.js';
 import { log, logFor, humanControls, impFor } from './state.js';
 import { atWar, allied, touchRelations, enemiesOf, isAtWar, cobelligerent } from './relations.js';
 import { countryNeighbours } from './geo.js';
@@ -354,6 +355,7 @@ export function opinion(state, map, rules, a, b, parts = null) {
   let n = 0;
   for (const cl of A.claims) if (state.prov.owner[cl.p] === b) n++;
   if (n) add('Holds our former land', -Math.min(D.claimOpinionMax, -D.claimOpinion * n));
+  add('Religion', religionOpinion(state, rules, a, b));
   add('Reputation', B.reputation * D.reputationOpinion);
   for (const m of modsOf(state, a, b)) if (m.k === 'o') add(m.why, m.v);
   return Math.max(-100, Math.min(100, v));

@@ -78,7 +78,7 @@ programmes, cyber operations, satellites and space.
 | Right click | Move the selected armies (by land or sea); sail fleets to a sea zone or dock them in a friendly port; rebase wings to a province |
 | Drag, arrow keys | Pan · Mouse wheel, `+` `−` zoom |
 | `Space` · `1`–`5` | Pause/resume · game speed (1, 3, 8, 20 days/s, max) |
-| `P T O V G X K F R Y J Q S W` | Map modes: political, terrain, population, development, economy, resources, industry, infrastructure, military, diplomacy (opinion), government, technology (era), naval (sea control), supply |
+| `P T O V G X K F R Y J Q S W` · `6` `7` | Map modes: political, terrain, population, development, economy, resources, industry, infrastructure, military, diplomacy (opinion), government, technology (era), naval (sea control), supply · religion, unrest |
 | `N B E U A M Z D L I` | Tabs: nation, government, economy, industry, research, military, strategic, diplomacy, events, AI/performance |
 | `C` · `H` | Centre on your capital · show whole world |
 | `Ctrl+S` | Quick save · `Esc` clears selection / closes dialogs · `F11` full screen · `F2` next player (hotseat, shared screen) |
@@ -100,7 +100,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 203 unit/integration tests of the simulation (node:test)
+npm test                            # 218 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -121,6 +121,7 @@ node tests/browser/hotseat.mjs      # hotseat: two players pick, plan, hand over
 node tests/browser/deals.mjs        # diplomacy deals: loans, ultimatums, unions, rebel funding, offers to the player
 node tests/browser/nations.mjs      # traits, forming a nation, objectives and advisors
 node tests/browser/session23.mjs    # victory, capitulation, experience, bulk construction, colonies
+node tests/browser/society.mjs      # religion and unrest map modes, a revolt in the province panel, Suppress, the Government tab section
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -157,14 +158,14 @@ launcher/                  desktop launcher (Go; native window), Windows install
 android/                   Android app (one Java activity around the system WebView)
 data/map/                  generated world map (2,358 provinces), sea zones (seas.json) + stable id registry
 data/rules/                units.json, balance.json, goods.json, buildings.json, governments.json, technologies.json,
-                           formables.json, traits.json, nations.json — editable game rules
+                           formables.json, traits.json, nations.json, society.json — editable game rules
 data/events/               domestic, world, historical, strategic and future-scenario events + index.json
 data/scenarios/            scenario files + index.json
 tools/                     map/seas/scenario/economy pipeline, history/ scenario definitions + build_history.mjs,
                            forces/ starting-force tables + build_forces.mjs, dev server, benchmark, economy report
 tests/                     node:test suites; tests/browser/ Playwright end-to-end + benchmark
 docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOLOGY, SCENARIOS, NAVY_AIR, LOGISTICS,
-                           STRATEGIC, FEATURES (checklist), DEVLOG, PERFORMANCE, MODDING
+                           STRATEGIC, RELIGION, FEATURES (checklist), DEVLOG, PERFORMANCE, MODDING
 ```
 
 ## Documentation
@@ -182,6 +183,7 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 - [docs/STRATEGIC.md](docs/STRATEGIC.md) — nuclear weapons and deterrence, cyber, satellites, space
 - [docs/ACHIEVEMENTS.md](docs/ACHIEVEMENTS.md) — achievements and the game summary
 - [docs/NATIONS.md](docs/NATIONS.md) — formable nations, national traits, advisors and missions
+- [docs/RELIGION.md](docs/RELIGION.md) — religion, conversion, province unrest, local revolts, golden and dark ages
 - [docs/FEATURES.md](docs/FEATURES.md) — implemented / partial / planned checklist and the continuation plan
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — measured numbers and how to reproduce them
 - [docs/MODDING.md](docs/MODDING.md) — data formats for units, balance, goods, buildings, governments, events, sea zones, forces and scenarios

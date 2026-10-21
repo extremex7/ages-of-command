@@ -9,6 +9,7 @@ import { advisorsSection } from './nation_ui.js';
 import {
   govType, factionTargets, coupChance, revolutionChance, disgruntled, canSetPolicy, setPolicy, canReform, reformGovernment, monthsToElection,
 } from '../core/government.js';
+import { societySection } from './society_ui.js';
 
 const sg = (v, d = 0) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
 
@@ -89,6 +90,7 @@ export function governmentTab(cl) {
           on: { click: () => { const e = reformGovernment(s, R, k, to); if (e) cl.toast(e, true); refresh(); } } }, N.name);
       }))),
     advisorsSection(cl, k),
+    societySection(cl, k),
     h('h3', { style: { marginTop: '0.8em' } }, 'Active modifiers'),
     g.mods.length ? h('table.t.small', g.mods.map((m) => h('tr', h('td', { tip: effectsText(R, m.effects) }, m.name), h('td.muted', `until ${formatDate(m.until)}`)))) : h('p.muted', 'None.'),
     mine && s.pendingEvents.some((p) => p.c === k) && h('div', { style: { marginTop: '0.8em' } }, s.pendingEvents.filter((p) => p.c === k).map((p) => h('button.primary', { on: { click: () => cl.openEvent(p) } }, `Decide: ${p.title}`))));

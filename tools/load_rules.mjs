@@ -12,14 +12,14 @@ export function rawRules(overrides = {}) {
   return {
     units: readJson('data/rules/units.json'), balance: readJson('data/rules/balance.json'), goods: readJson('data/rules/goods.json'),
     buildings: readJson('data/rules/buildings.json'), governments: readJson('data/rules/governments.json'), events: ev,
-    technologies: readJson('data/rules/technologies.json'),
+    technologies: readJson('data/rules/technologies.json'), society: readJson('data/rules/society.json'),
     nations: { formables: readJson('data/rules/formables.json'), traits: readJson('data/rules/traits.json'), config: readJson('data/rules/nations.json') }, ...overrides,
   };
 }
 
 export function loadRules(overrides = {}) {
   const r = rawRules(overrides);
-  return makeRules(r.units, r.balance, r.goods, r.buildings, r.governments, r.events, r.technologies, r.nations);
+  return makeRules(r.units, r.balance, r.goods, r.buildings, r.governments, r.events, r.technologies, r.nations, r.society);
 }
 
 // The world map with its sea zones (data/map/world.json + data/map/seas.json).

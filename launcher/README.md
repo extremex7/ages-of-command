@@ -18,7 +18,10 @@ four things:
 3. **Keeps saves on disk** through a small store API that `src/ui/storage.js` uses when
    `/api/info` answers `{"app":"ages-of-command"}`:
    - `GET /api/store` returns every key and value (read once at start-up);
-   - `PUT`, `GET` and `DELETE /api/store/<key>` write, read and remove one key;
+   - `PUT`, `GET` and `DELETE /api/store/<key>` write, read and remove one key (`GET` of a key
+     that was never written answers 204 with no body). The game reads the slot list and saves
+     again with `GET` when it shows Load Game, so a save written by another window (the bot
+     window) is seen;
    - `POST /api/ping` is the page's heartbeat, sent every 5 s;
    - `POST /api/window` with `{"mode": "windowed" | "maximized" | "fullscreen", "width", "height"}`
      changes the native window (the Settings screen's window mode and size; 501 when the game is
@@ -45,7 +48,18 @@ folder (`%APPDATA%\AgesOfCommand`, `~/Library/Application Support/AgesOfCommand`
 `~/.config/AgesOfCommand`). The window's browser profile is a cache and goes to the user cache
 folder (`%LOCALAPPDATA%\AgesOfCommand\browser` on Windows) unless a data folder was chosen.
 
-Options: `-no-window` (only serve), `-browser` (browser window instead of the native one), `-port N`, `-data DIR`. On Windows the program is built as
+Options: `-no-window` (only serve), `-browser` (browser window instead of the native one), `-port N`, `-data DIR`,
+`-bot` (open the bot window, `bot.html`, instead of the game: the bot plays the player's country
+while they are away, see docs/BOT.md; a smaller window, 900×760; when the program is already
+running it opens the bot window onto that copy). The installer adds a Start menu shortcut
+"Ages of Command Bot" (`AgesOfCommand.exe --bot`) and the portable zip an `Ages of Command
+Bot.cmd`.
+
+Two windows can share one program: a second launch (the game while the bot runs, or the other
+way round) opens its window onto the running copy, and the program that serves keeps running
+after its own window closes until no page has pinged for 12 seconds, so the other window keeps
+working. Exit in the game does not close a bot window that the serving program shows. The log
+`launcher.log` is appended to (both copies write it) and started afresh past 1 MB. On Windows the program is built as
 a GUI program (no console window) and shows errors in a message box.
 
 ## Building
@@ -76,6 +90,13 @@ readme copied into every package, and `tools/make_icon.py` draws `launcher/icon/
 
 ## Testing
 
+- `node tests/browser/bot.mjs http://127.0.0.1:47110/ <data dir>` against a running launcher
+  (`AgesOfCommand -no-window -bot -data <dir>`) checks the bot window: it lists a save, plays it
+  a year in a Web Worker, stops, writes its slots to `<dir>/store` without touching the source
+  save, and a game window opened before the bot ran lists and loads the bot's save. The Linux
+  native window was checked under Xvfb with `-bot` (the bot window opens, plays and saves; a
+  second launch opens the game onto it; the game's Exit leaves the bot running).
+
 - `node tests/browser/desktop.mjs http://127.0.0.1:47110/ <data dir>` against a running
   launcher (`AgesOfCommand -no-window -data <dir>`) checks that the game boots, a quicksave lands
   in `<dir>/store` and not in browser storage, and that it is listed and loads after a reload.
@@ -86,6 +107,7 @@ readme copied into every package, and `tools/make_icon.py` draws `launcher/icon/
 - The Linux native window was checked under Xvfb: it opens the game in WebKitGTK, a new game
   can be started and played, and Ctrl+S writes the save to `~/.config/AgesOfCommand/store`. The
   browser fallback was checked with Chromium (the program stops when the window closes).
-- Not checked: the WebView2 window on a real Windows 10/11 PC, and macOS. The installer and
+- Not checked: the WebView2 window on a real Windows 10/11 PC (the game's or the bot's, including
+  how fast the bot runs while its window is minimised), and macOS. The installer and
   program are not code-signed, so Windows SmartScreen shows "Windows protected your PC" on first
   run (More info, then Run anyway) and macOS Gatekeeper asks for a right-click Open.

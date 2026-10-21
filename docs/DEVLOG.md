@@ -757,3 +757,40 @@ in Southeast Asia, the Ottoman Balkans). In the 2026 run 18 countries fell into 
 year 15, during a world food shortage (food satisfaction near 0.2), which comes from the economy,
 not from this system. Unit tests: tests/society.test.mjs (15); browser check:
 tests/browser/society.mjs.
+
+## Session 24: the bot (the computer plays your country while you are away)
+
+Asked for: a bot outside the game that plays the player's country while they are away and hands
+it back. Built as a separate window, not a game mode (docs/BOT.md).
+
+- **Core.** `src/core/automate.js`: `handToAI` / `handBack` around `c.automate` (the player's own
+  settings such as auto-manage economy are restored), and `settlePending`, which answers what was
+  waiting for the player as the AI would (events, treaty proposals, peace and separate-peace
+  offers, calls to arms, loans, ultimatums, unions, land sales, the civil-war choice). A per-country
+  `c.aiProfile` (`aiTemper` in ai.js) replaces the game's AI aggression and difficulty for that
+  country only and lets an automated human country start wars.
+- **Gaps closed for automated players** (found by checking every `isHuman` in the core): generals
+  were not hired, spies not used, world council votes abstained, and AI diplomacy sent treaty
+  offers to them without evaluating them first (so automated countries refused more treaties than
+  the same AI country). With that fixed, an automated country in a peaceful 2026 run makes exactly
+  the decisions the AI makes (13 of 16 15-year runs identical to the last digit). No achievements
+  while automated.
+- **Bot.** `src/bot/autoplay.js` (`Autoplay`: start, step, run in slices with a CPU share, save
+  without disturbing the run, stop, report), `src/bot/data.js`, a Web Worker runner and the
+  bot window (`bot.html`, `src/bot/page.js`). It writes "Bot – country date" every game year and on
+  stop, one slot per run, never the source save. `tools/autoplay.mjs` is the command line version.
+- **Desktop.** `--bot` opens the bot window (onto a running copy if there is one); the installer
+  adds "Ages of Command Bot" to the Start menu and the portable zip a .cmd. The program now keeps
+  serving after its window closes while another window still pings, the game's Exit does not close
+  a bot window shown by the serving program, `GET` of a missing store key answers 204, and
+  launcher.log is appended to. The game re-reads the slot list and saves from disk (`syncSlots`,
+  `readSave`) when Load Game opens and before writing the list, so the two windows do not
+  overwrite each other's slots.
+- **Measured** (`tools/bot_compare.mjs`, same country and seed, bot against the default AI):
+  30 years from 1444, 32 pairs: aggression 1.5 GDP ×1.05, provinces ×1.09, score ×1.03; aggression
+  1 ×1.01 / ×1.02 / ×1.00; aggression 2 worse; never starting wars ×0.92 / ×0.87 / ×0.98. 2026,
+  16 pairs: ×1.00. Rejected: spending more on research when the budget allowed (score ×0.956).
+- **Tests.** tests/bot.test.mjs (6), tests/browser/bot.mjs against the dev server and the Linux
+  launcher; the Linux native window was driven under Xvfb (bot window opens, plays, stops and
+  saves; a second launch opens the game onto it). Not tried: the WebView2 bot window on a real
+  Windows PC. Android has no bot.

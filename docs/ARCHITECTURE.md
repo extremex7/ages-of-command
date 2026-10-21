@@ -211,6 +211,18 @@ wrong array lengths, missing fields are rejected with a message; removed unit ty
 army locations are dropped; a larger newer map extends province arrays). Browser slots use
 localStorage with rotation of autosaves; export/import as files works without storage.
 
+## The bot (automated players)
+
+`c.automate` hands a human country to the AI: `humanControls(state, k)` is false, so every AI
+system runs it and nothing is queued for it. `src/core/automate.js` turns it on and off and
+answers whatever was already waiting (`settlePending`); a per-country `c.aiProfile`
+(`aiTemper` in ai.js) replaces the game's AI aggression and difficulty for that country only
+and lets it start wars. The bot (`src/bot/`, docs/BOT.md) uses this from a separate window
+(`bot.html`, the simulation in a Web Worker) or the command line (`tools/autoplay.mjs`): it
+loads a save, plays it in slices, and writes saves with the country handed back. On the desktop
+the game re-reads the slot list and saves from disk (`syncSlots`, `readSave` in storage.js),
+since the bot window writes the same store.
+
 ## Multiplayer
 
 **Hotseat** (`hotseat.js`, interface in `src/ui/hotseat_ui.js`): two to eight humans at one

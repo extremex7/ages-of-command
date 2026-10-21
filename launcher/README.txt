@@ -18,7 +18,15 @@ Where your saves are kept
   can be moved to a USB stick. Delete that folder to use the settings folder instead.
   launcher.log in the same place records what the launcher did, if something goes wrong.
 
+The bot
+  "Ages of Command Bot" in the Start menu (portable copy: "Ages of Command Bot.cmd"; any copy:
+  AgesOfCommand --bot) opens a small window where the computer plays your country while you
+  are away. Pick a save, how long, and how much of the computer to use. It never changes your
+  save: it writes "Bot - <country> <date>" every game year and when you stop it, with your
+  country back under your control. Load it in the game to carry on. See game/docs/BOT.md.
+
 Command line options
+  -bot         open the bot window instead of the game (next to the game if it is running)
   -no-window   only serve the game; open http://127.0.0.1:47110/ in any browser yourself
   -browser     use a browser window instead of the built-in one
   -port N      use another local port (default 47110; the next nine are tried if it is busy)

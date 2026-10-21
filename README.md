@@ -33,6 +33,15 @@ own window (Windows' built-in WebView2 engine; no browser needed). Saves are kep
 `%APPDATA%\AgesOfCommand`. Prefer no install? Unzip `AgesOfCommand-<version>-windows-portable.zip`
 and run `AgesOfCommand.exe`. Linux (native window too) and macOS packages work the same way.
 
+**The bot (play while you are away):** start **Ages of Command Bot** from the Start menu (or
+run `AgesOfCommand.exe --bot`; in the portable zip, `Ages of Command Bot.cmd`). Pick a save, how
+long to play and how much of the computer to use, and the computer plays your country, making
+every decision the way the computer opponents do at their strongest, while the window shows how
+it is going. It never touches your save: it writes its own, "Bot – \<country> \<date>", every
+game year and when you stop it, with your country back under your control. Load it in the game
+and carry on. Desktop app only (not Android). See [docs/BOT.md](docs/BOT.md); with Node.js
+there is also `node tools/autoplay.mjs --save <name> --years N`.
+
 **Android:** install `AgesOfCommand-<version>-android.apk` on the phone (allow installing from
 your file manager when asked). Drag to move the map, pinch to zoom, tap to select, press and hold
 to give an order. See [android/README.md](android/README.md).
@@ -100,7 +109,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 218 unit/integration tests of the simulation (node:test)
+npm test                            # 224 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -122,6 +131,8 @@ node tests/browser/deals.mjs        # diplomacy deals: loans, ultimatums, unions
 node tests/browser/nations.mjs      # traits, forming a nation, objectives and advisors
 node tests/browser/session23.mjs    # victory, capitulation, experience, bulk construction, colonies
 node tests/browser/society.mjs      # religion and unrest map modes, a revolt in the province panel, Suppress, the Government tab section
+node tests/browser/bot.mjs          # the bot window: plays a save for a year, stops, saves; the game lists and loads the bot's save
+node tools/bot_compare.mjs modern_2026 FRA,BRA 15 2 ai,bot   # the bot against the default AI (docs/BOT.md)
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```
@@ -147,13 +158,14 @@ working across map rebuilds.
 ## Project layout
 
 ```
-index.html, styles/        browser entry point and UI styles
+index.html, styles/        browser entry point and UI styles; bot.html, the bot window
 src/core/                  simulation (pure JS, no DOM): calendar, rng, mapdata, state, economy,
                            industry (production, market, construction), military, pathfind,
                            combat, naval, air, supply, strategic, war, relations, diplomacy,
                            government, events, technology, ai, ai_diplomacy, hotseat, sim (clock), save, rules
 src/map/                   Canvas 2D renderer, map modes, spatial index / picking
 src/ui/                    menus, HUD, panels, dialogs, save slots (browser storage, or disk in the desktop app)
+src/bot/                   the bot that plays the player's country while they are away (docs/BOT.md)
 launcher/                  desktop launcher (Go; native window), Windows installer script, icon
 android/                   Android app (one Java activity around the system WebView)
 data/map/                  generated world map (2,358 provinces), sea zones (seas.json) + stable id registry
@@ -165,7 +177,7 @@ tools/                     map/seas/scenario/economy pipeline, history/ scenario
                            forces/ starting-force tables + build_forces.mjs, dev server, benchmark, economy report
 tests/                     node:test suites; tests/browser/ Playwright end-to-end + benchmark
 docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOLOGY, SCENARIOS, NAVY_AIR, LOGISTICS,
-                           STRATEGIC, RELIGION, FEATURES (checklist), DEVLOG, PERFORMANCE, MODDING
+                           STRATEGIC, RELIGION, BOT, FEATURES (checklist), DEVLOG, PERFORMANCE, MODDING
 ```
 
 ## Documentation
@@ -184,6 +196,7 @@ docs/                      ARCHITECTURE, ECONOMY, DIPLOMACY, GOVERNMENT, TECHNOL
 - [docs/ACHIEVEMENTS.md](docs/ACHIEVEMENTS.md) — achievements and the game summary
 - [docs/NATIONS.md](docs/NATIONS.md) — formable nations, national traits, advisors and missions
 - [docs/RELIGION.md](docs/RELIGION.md) — religion, conversion, province unrest, local revolts, golden and dark ages
+- [docs/BOT.md](docs/BOT.md) — the bot that plays your country while you are away
 - [docs/FEATURES.md](docs/FEATURES.md) — implemented / partial / planned checklist and the continuation plan
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — measured numbers and how to reproduce them
 - [docs/MODDING.md](docs/MODDING.md) — data formats for units, balance, goods, buildings, governments, events, sea zones, forces and scenarios

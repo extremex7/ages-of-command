@@ -55,6 +55,9 @@ to one person, and the players of a hotseat game share the device. The summary s
 each of them: Menu → Summary in a player's turn shows theirs, and at the end of the game every
 player's headline is listed with a button for their summary.
 
+While the bot plays your country (docs/BOT.md) no achievements are earned: the months it plays
+are recorded in the summary, but achievements are for what you do yourself.
+
 | Achievement | How |
 | --- | --- |
 | On the world stage | Reach the top 25 of the world leaderboard (a silver star). |

@@ -23,6 +23,7 @@ import { commandSection, generalLine } from './command_ui.js';
 import { leavePlans } from '../core/plans.js';
 import { intelSection } from './intel_ui.js';
 import { sanctionsRow } from './council_ui.js';
+import { provinceSociety, countrySociety } from './society_ui.js';
 
 export const TABS = [
   { id: 'country', name: 'Nation', key: 'n', tip: 'Overview of the selected country, or yours, and your relations with it.' },
@@ -78,6 +79,7 @@ function countryTab(cl) {
       'Monthly balance', L ? signedMoney(L.net) : '—',
       'Tax rate', pct(c.tax),
       'Stability', Math.round(c.stability),
+      countrySociety(cl, k),
       g && 'Approval / legitimacy', g && `${Math.round(g.approvalAll)} / ${Math.round(g.legitimacy)}`,
       'Manpower', people(c.manpower),
       'Army', `${units} units in ${nArmies.length} armies`,
@@ -251,6 +253,7 @@ export function renderProvince(cl, el) {
       'Fortification', String(s.prov.fort[p]),
       'Coastal', map.coastal[p] ? 'Yes' : 'No',
       'Province ID', String(p)),
+    provinceSociety(cl, p),
     s.prov.siegeBy[p] >= 0 && h('div', h('div.warn', `Siege by ${C[s.prov.siegeBy[p]].name}: ${pct(s.prov.siege[p])} (base ${Math.round(siegeDays(s, R, p))} days for one unit)`), bar(s.prov.siege[p], 'var(--warn)')),
     battle && h('div.bad', `Battle in progress (day ${battle.days})`),
     nuclearButton(cl, p),

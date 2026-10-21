@@ -6,6 +6,7 @@ import { provinceGdp } from '../core/state.js';
 import { opinion, overlordOf } from '../core/diplomacy.js';
 import { zoneController, seaPresence } from '../core/naval.js';
 import { supplyView, SUPPLY_LEVEL } from '../core/supply.js';
+import { heldMask } from '../core/unrest.js';
 
 export const MAP_MODES = [
   { id: 'political', name: 'Political', key: 'p', tip: 'Country ownership. Stripes mark provinces occupied by another country.' },
@@ -22,6 +23,8 @@ export const MAP_MODES = [
   { id: 'naval', name: 'Naval', key: 's', tip: 'Sea control: who holds each sea zone with fleets at sea (yours, allies, enemies, others); contested zones are amber.' },
   { id: 'supply', name: 'Supply', key: 'w', tip: 'Supply level for your armies in each province (refreshed every few days). Below the attrition line armies lose men.' },
   { id: 'government', name: 'Government', key: 'j', tip: 'Form of government: democracies, autocracies, theocracies and military rule; darker = lower stability.' },
+  { id: 'religion', name: 'Religion', key: '6', tip: 'Religion of each province. Provinces that do not share their owner\'s state religion are drawn darker.' },
+  { id: 'unrest', name: 'Unrest', key: '7', tip: 'Unrest in each province, calm to revolt risk; provinces held by rebels are dark red.' },
 ];
 
 // Colours with a meaning (own side, enemy, good to bad), with substitutes for colour-blind
@@ -33,6 +36,7 @@ const NORMAL = {
   opBad: '#c4544a', opMid: '#e3ddd0', opGood: '#5a9a4a', dipWar: '#c4443a',
   supLow: '#b8443a', supHalf: '#e0c050', supFull: '#4f9a4a',
   devLow: '#7a3b3b', devMid: '#d8c46a', devHigh: '#3b7a5a',
+  calm: '#9cc48a', restless: '#e3c25a', revolt: '#c4443a', rebels: '#5a1414',
   seaOwn: '#3f78c4', seaAlly: '#7fa8d8', seaEnemy: '#c4443a', contested: '#d9a441', atWar: '#c97a6a',
 };
 export const PALETTES = {
@@ -43,6 +47,7 @@ export const PALETTES = {
     opBad: '#b35806', opMid: '#ece6d8', opGood: '#2166ac', dipWar: '#d55e00',
     supLow: '#d55e00', supHalf: '#f0e442', supFull: '#0072b2',
     devLow: '#b35806', devMid: '#ece6d8', devHigh: '#2166ac',
+    calm: '#56b4e9', restless: '#f0e442', revolt: '#d55e00', rebels: '#4a1f00',
     seaOwn: '#0072b2', seaAlly: '#56b4e9', seaEnemy: '#d55e00', contested: '#f0e442', atWar: '#e69f00' },
   blueyellow: { ...NORMAL,
     own: '#127a7a', ally: '#8fd0d0', enemy: '#d62728', siege: '#f4f4f4',
@@ -50,6 +55,7 @@ export const PALETTES = {
     opBad: '#c51b2b', opMid: '#eeeeee', opGood: '#127a7a', dipWar: '#d62728',
     supLow: '#c51b2b', supHalf: '#f0c8c8', supFull: '#127a7a',
     devLow: '#c51b2b', devMid: '#eeeeee', devHigh: '#127a7a',
+    calm: '#7fc8c8', restless: '#eeeeee', revolt: '#c51b2b', rebels: '#5a0a10',
     seaOwn: '#127a7a', seaAlly: '#8fd0d0', seaEnemy: '#d62728', contested: '#f4f4f4', atWar: '#e07070' },
 };
 let PAL = NORMAL;
@@ -100,10 +106,29 @@ export function provinceColors(mode, state, map, focus, rules) {
     });
   }
   const sup = mode === 'supply' && focus >= 0 && rules ? supplyView(state, map, rules, focus) : null;
+  // religion and unrest (society.js): one colour per religion, darker where it is not the owner's
+  const so = (mode === 'religion' || mode === 'unrest') && rules?.society ? state.society : null;
+  let relCol = null, relDim = null, stateRel = null, held = null;
+  if (so && mode === 'religion') {
+    relCol = rules.society.list.map((r) => r.color);
+    relDim = relCol.map((c) => ramp(0.38, c, '#202020'));
+    stateRel = C.map((c) => (c.soc ? rules.society.idx[c.soc.rel] ?? -1 : -1));
+  }
+  if (so && mode === 'unrest') held = heldMask(state);
   for (const i of map.ids) {
     const o = P.owner[i];
-    if (o < 0) { out[i] = '#555'; continue; }
+    if (o < 0 && !(relCol && so.rel[i] < relCol.length)) { out[i] = '#555'; continue; }
     switch (mode) {
+      case 'religion': {
+        const r = so ? so.rel[i] : 255;
+        out[i] = !so || r >= relCol.length ? '#555' : o < 0 ? ramp(0.55, relCol[r], '#555555') : r === stateRel[o] ? relCol[r] : relDim[r];
+        break;
+      }
+      case 'unrest': {
+        if (!so) { out[i] = '#cfcac0'; break; }
+        out[i] = held[i] ? PAL.rebels : ramp3(Math.min(1, so.unrest[i] / 60), PAL.calm, PAL.restless, PAL.revolt);
+        break;
+      }
       case 'naval': out[i] = ramp(0.6, C[o].color, '#d6d1c6'); break;
       case 'supply': {
         if (!sup) { out[i] = '#cfcac0'; break; }
@@ -186,7 +211,7 @@ function atWarAny(state, c) {
 }
 
 // The legend of a map mode, in the colours in use.
-export function modeLegend(mode) {
+export function modeLegend(mode, rules = null, state = null) {
   const L = {
     terrain: Object.entries(TERRAIN_COLORS),
     military: [['Your side', PAL.own], ['Allies / co-belligerents', PAL.ally], ['Enemy', PAL.enemy], ['Under siege', PAL.siege], ['Neutral', PAL.neutral]],
@@ -201,6 +226,14 @@ export function modeLegend(mode) {
     naval: [['Your sea control', PAL.seaOwn], ['Allied', PAL.seaAlly], ['Enemy', PAL.seaEnemy], ['Contested', PAL.contested], ['Other country', '#9a9a9a'], ['Open water', '#9fb7c6']],
     supply: [['Full', PAL.supFull], ['Half', PAL.supHalf], ['Low (attrition)', PAL.supLow], ['None', '#6a6a6a']],
     technology: [['Ancient', '#6a4a3a'], ['Industrial', '#c8b86a'], ['Future', '#4a8ab8']],
+    unrest: [['Calm', PAL.calm], ['Restless (20)', PAL.restless], ['Revolt risk (40+)', PAL.revolt], ['Held by rebels', PAL.rebels]],
   };
+  if (mode === 'religion' && rules?.society && state?.society) {
+    // only the religions found on the map now, most widespread first
+    const S = rules.society, n = new Float64Array(S.list.length);
+    const rel = state.society.rel;
+    for (let i = 0; i < rel.length; i++) if (rel[i] < n.length && state.prov.owner[i] >= 0) n[rel[i]] += state.prov.pop[i];
+    return S.list.filter((r) => n[r.i] > 0).sort((a, b) => n[b.i] - n[a.i]).map((r) => [r.name, r.color]).concat([['Darker: not the state religion', '#3a3a3a']]);
+  }
   return L[mode];
 }

@@ -628,3 +628,43 @@ all, so factories stopped for want of timber. Treasuries were too small to build
 farms. The builder now gives a country one level where the most was planned when a tenth of a
 level or more is left over, and every history scenario was rebuilt. After two years of AI play
 average stability is now 56 to 60 in every start (1444 58, Rome 58, 1815 57, 1861 58, 1914 57).
+
+## Session 23: religion, unrest and golden ages
+
+Three linked internal systems (RELIGION.md), all data-driven from `data/rules/society.json` and
+created lazily, so old saves load without a migration (SAVE_VERSION unchanged).
+
+- **Religion.** 13 religions in 8 families. Each province gets one from 196 ordered rules (year
+  range, modern country, names, lon/lat box, share), so 117 has Hellenic Rome and Jewish Judaea,
+  1444 Orthodox Balkans under a Sunni sultan and Sunni Iran, 1815 a split Germany and Shia Iran,
+  and 2026 a secular share in Western Europe and East Asia. State religions come from rules
+  (Protestant Britain from 1530, secular communist states 1917-1991) or the heartland's majority.
+  Other faiths add unrest and lower stability, scaled by the Religion policy, which now doubles as
+  the tolerance setting. Shared faith adds opinion. Provinces convert over about 70 years, faster
+  under a state religion and with civil spending. Changing the state religion is a costly
+  decision on the Government tab.
+- **Province unrest and revolts.** Unrest per province from stability, religion, conquest and
+  separatism, war exhaustion (new), taxes, hunger and civil spending; lowered by garrisons,
+  spending, tolerance and a Suppress action. Above 40, rebel bands may rise: they are not
+  countries but entries that besiege and hold provinces (no tax), fight armies that come for
+  them and, if left alone, win concessions or, as separatists, independence (a dormant nation is
+  released, the land rejoins a former owner, or a "Free X" country is formed). Civil wars still
+  handle whole-country collapse.
+- **Golden and dark ages.** Momentum from months of stability, prosperity and rising prestige
+  starts a 15-year golden age (research ×1.15, growth ×1.25, more stability, less unrest), at most
+  6% of countries at once; months of crisis start a dark age that lifts after a stable year. Both
+  are announced with an event.
+- **AI** sends armies against rebels (marked so the war AI leaves them), cracks down, switches to
+  tolerance when minorities are restless and adopts its people's faith when its own has almost
+  no followers.
+- **Interface.** Religion (6) and unrest (7) map modes with legends, rebel counters and
+  striped held provinces, province panel lines with a breakdown tooltip and Suppress, a Nation
+  tab line and a Government tab section.
+
+Measured (AI only, seed x): 25 years from 1444 gave 11 golden ages, 1 dark age and 2 revolts
+(one crushed); 15 years from 2026 gave 12 golden ages and no revolts. Revolts are rare because
+the AI keeps stability and garrisons up; they come from conquered land of another faith (Ming
+in Southeast Asia, the Ottoman Balkans). In the 2026 run 18 countries fell into a dark age in
+year 15, during a world food shortage (food satisfaction near 0.2), which comes from the economy,
+not from this system. Unit tests: tests/society.test.mjs (15); browser check:
+tests/browser/society.mjs.

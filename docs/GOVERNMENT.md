@@ -108,6 +108,11 @@ The war ends when:
 Neither side accepts an ordinary peace for the first 3 years. When the player's country splits,
 the game pauses and asks whether to keep leading the government or to take over the rebels.
 
+Smaller, local trouble is handled separately: province unrest, rebel bands that hold a few
+provinces, and separatists who break away with only the land they hold. See
+[RELIGION.md](RELIGION.md), which also covers religion (the Religion policy is the tolerance
+setting), war exhaustion and golden and dark ages, all of which feed the stability target.
+
 ## Policies and reforms
 
 Five policy groups, three options each: conscription (volunteer, limited, mass), press (free,

@@ -194,6 +194,11 @@ See [NAVY_AIR.md](NAVY_AIR.md), [LOGISTICS.md](LOGISTICS.md) and [STRATEGIC.md](
 | Colour-blind map colours, larger text, keyboard-only play | ✅ |
 | Screen reader support | ⬜ The map is a canvas; clickable rows are labelled as buttons |
 | Achievements and the game summary | ✅ 24 achievements (ACHIEVEMENTS.md), kept on the device; Menu → Summary and the end of a game show the rank history, start against now and the deeds |
+| Religion | ✅ 13 religions in 8 families (data/rules/society.json), seeded per province by era and place for every start date; state religions; unrest and stability from other faiths, opinion from shared faith; conversion (faster with a state religion policy and civil spending); changing the state religion on the Government tab; the Religion policy is the tolerance setting; religion map mode (key 6) with legend (RELIGION.md) |
+| Province unrest and local revolts | ✅ Unrest 0-100 per province from stability, religion, conquest and separatism, war exhaustion, taxes, hunger and civil spending; lowered by garrisons, spending and a Suppress action; rebel bands besiege and hold provinces, fight armies, win concessions or (separatists) independence by releasing a dormant nation, rejoining a former owner or forming a new country; unrest map mode (key 7), rebel counters, province panel lines. Complements civil wars |
+| War exhaustion | ✅ Grows at war (faster when occupied or losing), fades in peace; adds unrest, lowers stability |
+| Golden and dark ages | ✅ Momentum from months of stability, prosperity and rising prestige (or crisis); time-limited research, growth, stability and unrest effects; announced with an event; at most 6% of countries in a golden age at once |
+| AI: revolts, tolerance and religion | ✅ Sends armies against rebels and cracks down; switches to tolerance when minorities are restless; adopts its people's faith when the state faith has almost none |
 
 ## Known limitations
 

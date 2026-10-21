@@ -78,6 +78,28 @@ Effects (policies, event modifiers) may use: `stability`, `legitimacy`, `taxEff`
 `manpower`, `construction`, `coupRisk` (multipliers), `liberty`, and `faction: { id: approval }`.
 Unknown keys are rejected on load with the file and field named.
 
+## Religion, unrest and ages — `data/rules/society.json`
+
+Read at start-up and checked (`compileSociety` in `src/core/religion.js`; errors are listed as
+"Invalid rules"). Sections:
+
+- `families`: `{ id: { name } }`, the groups of faiths (same family: less unrest, some opinion).
+- `religions`: `{ id: { name, family, color: "#rrggbb", tech? } }`. `tech` is a technology id
+  needed to adopt it as the state religion. At most 254 religions. Renaming or reordering is
+  safe for saves (they are remapped by id).
+- `provinceRules`: an ordered list; for each province the last matching rule wins. Fields: `rel`
+  (religion id), `from` / `to` (years, `to` exclusive), `iso` (modern countries), `names`
+  (province names), `box` (`[lonMin, latMin, lonMax, latMax]`), `share` (0-1: only that fraction
+  of the matching provinces, chosen by a fixed hash). Provinces no rule matches have no religion.
+- `stateRules`: the same, matched by `scenario` (ids) and `tags`, or by `capitalIso` (the modern
+  country of the capital) with `from` / `to`. A country no rule matches takes the majority faith
+  of its heartland.
+- `religion`, `unrest`, `revolts`, `ages`: every number of the systems in
+  [RELIGION.md](RELIGION.md); each section's `_doc` says what each number does.
+
+A scenario may override seeding with `"religion": { "states": { "TAG": "sunni" }, "provinces": {
+"orthodox": [province ids] } }`.
+
 ## Events — `data/events/*.json` + `index.json`
 
 `index.json` lists the files, in order: `{ "files": ["domestic.json", "world.json", "history_1914.json", …] }`. Each file is `{ "events": [ … ] }`:
@@ -110,6 +132,11 @@ Unknown keys are rejected on load with the file and field named.
   `historical`, conditions such as `exists`, `atWarWith`, `warBetween`, `hasTech`, `ownsAny`,
   `fired`, `year`, and effects such as `war`, `annex`, `transfer`, `release`, `government`,
   `treaty`, `techs` and `trigger`. The full list and how they fire: [SCENARIOS.md](SCENARIOS.md).
+- Religion and unrest (Session 23) conditions: `unrest` (people-weighted average), `warExhaustion`,
+  `faithShare` (share following the state religion, 0-1), `revolts` (number), and the booleans
+  `goldenAge`, `darkAge`. An event with `"triggered": true` never fires at random or as a
+  historical event, only when queued by the game (the `golden_age` and `dark_age` events) or by
+  another event's `trigger` effect.
 - Milestone 6 conditions: `warheads`, `satellites`, `worldNukes` (numbers) and `hasNukes`
   (boolean); effects: `warheads`, `satellites`, `cyber`, `stations`, `colonies` (deltas; see
   [STRATEGIC.md](STRATEGIC.md)). `treaty` accepts `arms_control`.

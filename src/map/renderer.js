@@ -7,6 +7,7 @@ import { provinceColors, zoneColors } from './modes.js';
 import { projectLonLat } from '../core/mapdata.js';
 import { hex } from './modes.js';
 import { friendly } from '../core/relations.js';
+import { heldMask } from '../core/unrest.js';
 
 const OCEAN = '#9fb7c6', OCEAN_DARK = '#1d2833';
 
@@ -203,6 +204,16 @@ export class MapRenderer {
         ctx.fill(this.path(i, lod));
         ctx.restore();
       }
+      // provinces held by local rebels (src/core/unrest.js): dark red stripes
+      const held = state.society?.revolts?.length ? heldMask(state) : null;
+      if (held) for (const i of vis) {
+        if (!held[i]) continue;
+        ctx.save();
+        ctx.clip(this.path(i, lod), 'evenodd');
+        ctx.fillStyle = this.stripes('#5a0f0f', c.z);
+        ctx.fill(this.path(i, lod));
+        ctx.restore();
+      }
     }
     if (c.z >= this.profile.provinceBorders * 0.5) {
       ctx.strokeStyle = this.dark ? 'rgba(0,0,0,0.35)' : 'rgba(40,40,40,0.28)';
@@ -310,6 +321,7 @@ export class MapRenderer {
     this.drawLabels(state, view);
     if (state.plans?.length) this.drawPlans(state, view);
     this.drawArmies(state, view);
+    if (state.society?.revolts?.length) this.drawRebels(state, view);
     this.stats.frameMs = performance.now() - t0;
     return needBase;
   }
@@ -480,6 +492,27 @@ export class MapRenderer {
     }
     this.drawFleets(state, view);
     this.drawWings(state, view);
+  }
+
+  // Rebel bands: a dark red counter with a raised fist mark and the unit count, under the
+  // province's army counters. It has no hit box: a click falls through to the province below,
+  // whose panel shows the revolt.
+  drawRebels(state, view) {
+    const ctx = this.ctx, map = this.map, small = this.cam.z < 0.6;
+    for (const r of state.society.revolts) {
+      if (small && r.c !== state.player && r.c !== view.selectedCountry) continue;
+      const [sx, sy0] = this.worldToScreen(map.x[r.p], map.y[r.p]);
+      if (sx < -30 || sy0 < -20 || sx > this.vw + 30 || sy0 > this.vh + 20) continue;
+      const label = String(Math.max(1, Math.round(r.units))), sy = sy0 + 9;
+      const w = small ? 12 : 24 + label.length * 5, h = small ? 8 : 13, x = sx - w / 2, y = sy - h / 2;
+      ctx.fillStyle = '#6b1414'; ctx.strokeStyle = '#f2c9a0'; ctx.lineWidth = 1.2;
+      roundRect(ctx, x, y, w, h, 2); ctx.fill(); ctx.stroke();
+      if (!small) {
+        ctx.fillStyle = '#f2c9a0'; ctx.fillRect(x + 3, y + 3, 4, h - 6);
+        ctx.fillStyle = '#fff'; ctx.font = '600 10px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(label, sx + 3, sy);
+      }
+    }
   }
 
   // Fleets: a hull shape with the ship count, at sea in their zone or beside their port.

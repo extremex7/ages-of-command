@@ -133,7 +133,7 @@ export class Client {
     mount(this.modesEl, MAP_MODES.map((m) => h('button' + (cur === m.id ? '.on' : ''),
       { tip: `${m.name} map\n${m.tip}\nShortcut: ${m.key.toUpperCase()}`, 'aria-label': m.name, on: { click: () => this.setMapMode(m.id) } }, icon(m.id))),
     h('span.mode-name', MAP_MODES.find((m) => m.id === cur)?.name || ''));
-    const L = modeLegend(this.renderer?.mode);
+    const L = modeLegend(this.renderer?.mode, this.game?.rules, this.state);
     if (L) {
       this.legendEl.style.display = '';
       mount(this.legendEl, L.map(([n, c]) => h('div', h('i', { style: { background: c } }), n)));

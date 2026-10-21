@@ -4,6 +4,7 @@ import { log, refreshCountryCache, provinceGdp, aiLog, isHuman, humanControls, i
 import { overlordOf, subjectsOf, defendersOf, treatiesBetween, removeTreaty, breakTreatiesForWar, treatiesBrokenByWar, TREATIES,
   opinion, addMod, addClaim, hasClaim, signTreaty, forgetCountry, seniorOf, juniorsOf, casusBelli, unionProblem, formUnion, followsOf } from './diplomacy.js';
 import { recordPeace } from './record.js';
+import { warExpertise } from './experience.js';
 
 export function canDeclareWar(state, map, a, b) {
   const C = state.countries;
@@ -289,7 +290,9 @@ export function makePeace(state, map, rules, war, from, terms) {
     const gained = transferred.length || terms.reparations || terms.subject || terms.independence || terms.union;
     if (gained && C[from].govt) { C[from].govt.glory = Math.min(1, C[from].govt.glory + 0.4); C[loser].govt.glory = Math.max(-1, C[loser].govt.glory - 0.4); }
   }
-  recordPeace(state, war, from, !!(transferred.length || terms.reparations || terms.subject || terms.independence || terms.union));
+  const won = !!(transferred.length || terms.reparations || terms.subject || terms.independence || terms.union);
+  recordPeace(state, war, from, won);
+  if (won) warExpertise(state, rules, fromAtt ? war.attackers : war.defenders, fromAtt ? war.defenders : war.attackers, (state.day - war.start) / 365);
   endWar(state, map, rules, war);
   log(state, 'peace', parts.length ? `Peace: ${parts.join('; ')}.` : `White peace between ${C[war.leaderA].name} and ${C[war.leaderD].name}.`,
     { important: impFor(state, ...war.attackers, ...war.defenders) });

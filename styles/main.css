@@ -268,3 +268,15 @@ table.lb th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
 .hotseat-cover { position: absolute; inset: 0; z-index: 35; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 30%, #2c3440, #14171b); }
 .hotseat-cover h2 { margin: 0.3em 0; }
 .hs-news { max-height: 50vh; overflow: auto; }
+
+/* Session 23: victory, bulk construction, colonies */
+.score-stat { cursor: pointer; }
+.victory-setup .row { flex-wrap: wrap; gap: 0.35em; margin-bottom: 0.3em; align-items: center; }
+.victory-table td { vertical-align: top; }
+.victory-table .bar { min-width: 6em; }
+.bulk select { width: 100%; }
+.bulk .row { flex-wrap: wrap; gap: 0.3em; margin: 0.3em 0; }
+.bulk-go { margin: 0.3em 0; }
+.auto-econ { margin-top: 0.6em; align-items: center; gap: 0.3em; }
+.colony .kv { margin: 0.3em 0; }
+.colonise-btn { margin-top: 0.3em; display: inline-flex; align-items: center; gap: 0.3em; }

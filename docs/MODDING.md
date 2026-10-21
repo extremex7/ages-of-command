@@ -46,7 +46,10 @@ rules ([GOVERNMENT.md](GOVERNMENT.md)), the generals, their traits and battle pl
 ([MILITARY.md](MILITARY.md)), spy networks ([ESPIONAGE.md](ESPIONAGE.md)), the world council
 and the peacetime deals (loans, ultimatums, personal unions, province and money deals, rebel
 support; [DIPLOMACY.md](DIPLOMACY.md), Deals; every key is described in its `_doc`); without them
-those features are off. `diplomacy.treatyOpinion.union` is the opinion a personal union adds. A trait is
+those features are off. The sections `experience`,
+`capitulation` and `colonisation` tune army experience and national expertise, capitulation and
+colonies ([MILITARY.md](MILITARY.md), [ECONOMY.md](ECONOMY.md)); a missing section or value takes
+the default in code (`src/core/experience.js`, `capitulation.js`, `colonies.js`). `diplomacy.treatyOpinion.union` is the opinion a personal union adds. A trait is
 `{ name, text, attack?, defense?, speed?, orgRecovery?, orgLoss?, siege?, supply?, terrain?, role? }`.
 
 ## Goods — `data/rules/goods.json`

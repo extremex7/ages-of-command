@@ -12,6 +12,7 @@ import { satCover } from './strategic.js';
 import { generalFx, battleExperience } from './commanders.js';
 import { planBonus } from './plans.js';
 import { bump } from './record.js';
+import { battleExperience as forceExperience, expMult, expertiseMult } from './experience.js';
 
 function sideOf(battle, owner, state) {
   if (battle.att.some((id) => { const a = armyById(state, id); return a && friendly(state, a.owner, owner); })) return 'att';
@@ -85,7 +86,7 @@ export function sideStats(state, ids, role, terrain, rules, p) {
     // technology, reconnaissance satellites, and supply (see docs/LOGISTICS.md)
     // the general: skill, attack/defence and terrain traits, a logistician's supply; a prepared plan
     const gx = generalFx(rules, a), sup = 1 - (1 - (a.supply ?? 1)) * (1 - gx.supply);
-    const tech = (co.tfx?.mult.combat ?? 1) * (co.strat ? 1 + 0.04 * satCover(co, 'recon', rules) : 1)
+    const tech = (co.tfx?.mult.combat ?? 1) * expertiseMult(co) * (co.strat ? 1 + 0.04 * satCover(co, 'recon', rules) : 1)
       * (1 - B.supplyWeight + B.supplyWeight * sup)
       * (role === 'att' ? gx.attack * (1 + planBonus(state, rules, a)) : gx.defense) * (gx.terrain?.[terrain] ?? 1);
     let usesMun = 0;
@@ -96,7 +97,7 @@ export function sideStats(state, ids, role, terrain, rules, p) {
       const m = (u.munitions ?? 1) > 0 ? mun : 1;
       if (m !== 1 || (u.munitions ?? 1) > 0) usesMun += k * (u.munitions ?? 1);
       const base = role === 'att' ? u.attack * (u.terrain[terrain] ?? 1) : u.defense;
-      dmg += k * a.str * base * (0.35 + 0.65 * a.org) * (1 + a.exp * 0.25) * m * (u.fuel ? fuel : 1) * tech;
+      dmg += k * a.str * base * (0.35 + 0.65 * a.org) * expMult(rules, a) * m * (u.fuel ? fuel : 1) * tech;
       tough += k * u.toughness;
     }
     supply += (usesMun > 0 ? mun : 1) * n;
@@ -161,7 +162,10 @@ function endBattle(state, map, rules, b, winner) {
   const losers = lose.map((id) => armyById(state, id)).filter(Boolean);
   const C = state.countries;
   let surrendered = 0;
-  for (const a of winners) { a.battle = 0; a.exp = Math.min(1, a.exp + 0.05); }
+  for (const a of winners) a.battle = 0;
+  // experience for every army that fought, more for the winners (docs/MILITARY.md)
+  forceExperience(state, rules, winners, true, b.days);
+  forceExperience(state, rules, losers, false, b.days);
   if (rules.balance.commanders) battleExperience(state, rules, winners, losers, TERRAINS[map.terrain[b.prov]], (a) => (b.att.includes(a.id) ? 'att' : 'def'));
   for (const a of losers) {
     a.battle = 0; a.path = []; a.prog = 0;

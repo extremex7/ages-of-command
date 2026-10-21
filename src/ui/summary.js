@@ -49,6 +49,21 @@ function change(a, b, fmt) {
 export function summaryDialog(cl, { ended = false, k = cl.state.player } = {}) {
   const s = cl.state, S = summary(s, k);
   if (!S) return null;
+  const body = summaryBody(cl, S, ended);
+  const w = openDialog(cl,
+    h('div.row.spread', h('h3', icon('summary'), ended ? ' The end of your story' : ' Your story so far'), h('button', { on: { click: () => w.remove() } }, 'Close')),
+    ...body,
+    ended && h('div.row', { style: { marginTop: '0.8em' } },
+      h('button', { on: { click: () => w.remove() } }, 'Keep watching'),
+      h('button.primary', { on: { click: () => { w.remove(); cl.opts.onExit(); } } }, 'Main menu')));
+  w.firstChild.classList.add('wide');
+  return w;
+}
+
+// The summary's contents (flag line, headline, rank chart, start against now, deeds,
+// achievements), shared by the summary and the victory screen.
+export function summaryBody(cl, S, ended = false) {
+  const s = cl.state;
   const c = s.countries[S.k], R = cl.game.rules;
   const eraName = (i) => R.tech?.eras[i]?.name ?? '–';
   const govName = (g) => R.politics?.types[g]?.name ?? g;
@@ -72,8 +87,7 @@ export function summaryDialog(cl, { ended = false, k = cl.state.player } = {}) {
     `Best rank: #${S.best.rank} (${formatDate(S.best.day)})`,
   ].filter(Boolean);
   const points = [...S.hist, ...(S.to ? [{ day: s.day, rank: S.to }] : [])];
-  const w = openDialog(cl,
-    h('div.row.spread', h('h3', icon('summary'), ended ? ' The end of your story' : ' Your story so far'), h('button', { on: { click: () => w.remove() } }, 'Close')),
+  return [
     h('div.row', flagCanvas(c, true), h('div', h('b', c.name), h('div.muted', `${formatDate(S.start.day)} – ${formatDate(s.day)} · ${s.scenarioName}`))),
     h('p.headline', S.headline),
     rankChart(points),
@@ -84,11 +98,7 @@ export function summaryDialog(cl, { ended = false, k = cl.state.player } = {}) {
     s.hotseat ? h('p.muted', 'Hotseat games earn no achievements.') : S.cheated ? h('p.muted', 'Cheats were used in this game, so it earns no achievements.') : null,
     S.achievements.length ? h('div.ach-list', S.achievements.map((a) => achRow(a, formatDate(a.day)))) : h('p.muted', 'None yet. The main menu lists them all.'),
     S.earlier.length ? h('p.muted.small', `Before this, you led ${S.earlier.map((e) => s.countries.find((x) => x.tag === e.tag)?.name ?? e.tag).join(', ')}.`) : null,
-    ended && h('div.row', { style: { marginTop: '0.8em' } },
-      h('button', { on: { click: () => w.remove() } }, 'Keep watching'),
-      h('button.primary', { on: { click: () => { w.remove(); cl.opts.onExit(); } } }, 'Main menu')));
-  w.firstChild.classList.add('wide');
-  return w;
+  ];
 }
 
 function achRow(a, when) {

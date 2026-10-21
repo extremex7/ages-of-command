@@ -464,7 +464,7 @@ export function aiEconomy(state, map, rules) {
   const month = Math.floor((state.day - state.startDay) / 30.44);
   for (const c of state.countries) {
     if (!c.alive || !c.econ || !c.ledger) continue;
-    if (humanControls(state, c.idx)) continue;
+    if (humanControls(state, c.idx) && !c.autoEconomy) continue; // autoEconomy: the player's "auto-manage economy"
     if ((c.idx + month) % 2) continue;
     aiBuild(state, map, rules, c);
   }
@@ -472,7 +472,7 @@ export function aiEconomy(state, map, rules) {
 
 // A new input (need 0) counts as covered when the country has some or the world market has a
 // surplus to import; nobody supplying it at all (gas before the first gas field) is missing.
-function inputAvailability(e, b, coming, W) {
+export function inputAvailability(e, b, coming, W) {
   let f = 1, worst = -1;
   for (const [g] of b.inp) {
     const have = e.prod[g] + e.imp[g] + (coming ? coming[g] : 0);
@@ -485,24 +485,31 @@ function inputAvailability(e, b, coming, W) {
 function bestSite(state, map, rules, c, b) { return bestSiteEff(state, map, rules, c, b).site; }
 
 function bestSiteEff(state, map, rules, c, b) {
-  const X = rules.econ, P = state.prov, fert = fertilityMap(map);
-  const B = X.buildings[b];
   let best = -1, bestScore = 0, bestEff = 0;
   for (const i of countryProvinces(state, map, c.idx)) {
-    if (P.controller[i] !== c.idx) continue;
-    const L = state.econ.bld[i * X.B + b], sz = levelSize(state, rules, i);
-    if (L >= levelCap(B, sz)) continue;
-    if (B.dep >= 0 && L >= depositCap(state.econ.dep[i * X.R + B.dep], sz)) continue;
-    if (B.minDev && P.dev[i] < B.minDev) continue;
-    if (B.fertility && fert[i] < 0.25) continue;
-    const lab = provinceLabour(state, rules, i);
-    const labF = Math.min(1, lab.avail / (lab.need + B.workers * sz));
-    if (labF < 0.6) continue;
-    const eff = labF * infraEff(P.infra[i], rules) * buildingEff(B, devEff(P.dev[i], rules), fert[i], B.site ? siteMap(map, B.site)[i] : 1);
-    const score = eff / (1 + 0.04 * L);
-    if (score > bestScore) { bestScore = score; best = i; bestEff = eff; }
+    const r = siteScore(state, map, rules, c.idx, b, i);
+    if (r && r.score > bestScore) { bestScore = r.score; best = i; bestEff = r.eff; }
   }
   return { site: best, eff: bestEff };
+}
+
+// How good province i is for a new level of building b ({ score, eff }), or null where the AI
+// would not build it (occupied, maxed out, no deposit left, too few workers). `extra` = levels
+// already queued there. Shared with the player's bulk construction tools (bulk.js).
+export function siteScore(state, map, rules, k, b, i, extra = 0) {
+  const X = rules.econ, P = state.prov, fert = fertilityMap(map);
+  const B = X.buildings[b];
+  if (P.controller[i] !== k) return null;
+  const L = state.econ.bld[i * X.B + b] + extra, sz = levelSize(state, rules, i);
+  if (L >= levelCap(B, sz)) return null;
+  if (B.dep >= 0 && L >= depositCap(state.econ.dep[i * X.R + B.dep], sz)) return null;
+  if (B.minDev && P.dev[i] < B.minDev) return null;
+  if (B.fertility && fert[i] < 0.25) return null;
+  const lab = provinceLabour(state, rules, i);
+  const labF = Math.min(1, lab.avail / (lab.need + B.workers * sz * (1 + extra)));
+  if (labF < 0.6) return null;
+  const eff = labF * infraEff(P.infra[i], rules) * buildingEff(B, devEff(P.dev[i], rules), fert[i], B.site ? siteMap(map, B.site)[i] : 1);
+  return { score: eff / (1 + 0.04 * L), eff };
 }
 
 const provCache = new WeakMap();
@@ -520,7 +527,7 @@ function countryProvinces(state, map, k) {
 // Producers of good g this country can build, best first: monthly value of a new level at its
 // best site (output at world prices minus inputs, a short input counted at twice its price) per
 // unit of building cost. Picks hydro or wind over coal where the sites are good, for example.
-function rankProducers(state, map, rules, c, g) {
+export function rankProducers(state, map, rules, c, g) {
   const X = rules.econ, prices = state.econ.prices, e = c.econ;
   if (X.producers[g].length < 2) return X.producers[g];
   const scored = [];
@@ -546,7 +553,7 @@ function rankProducers(state, map, rules, c, g) {
 // World need minus world production per good, world production, and unused deposit levels per resource (world
 // total and per country), computed once a day.
 const worldCache = new WeakMap();
-function worldGaps(state, rules) {
+export function worldGaps(state, rules) {
   const X = rules.econ;
   const w = worldCache.get(state);
   if (w && w.day === state.day) return w;

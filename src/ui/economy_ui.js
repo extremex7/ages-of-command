@@ -10,6 +10,7 @@ import {
   popDemand, milDemand, constructionSlots, canBuild, startProject, cancelProject, projectCost,
   efficiencyBreakdown, provinceLabour, levelSize, toggleEmbargo, tradePartners, fertilityMap, siteMap,
 } from '../core/industry.js';
+import { bulkSection } from './bulk_ui.js';
 
 function bar(v, color = '') {
   return h('div.bar', h('i', { style: { width: Math.max(0, Math.min(100, v * 100)) + '%', background: color } }));
@@ -151,6 +152,7 @@ export function industryTab(cl) {
       h('div.row', { style: { gap: '0.4em' } }, h('div', { style: { flex: 1 } }, bar(1 - p.left / p.days, n < slots ? '' : 'var(--line)')),
         h('span.muted', n < slots ? `${p.left}d left` : 'queued'),
         mine && h('button', { tip: `Cancel: refunds ${pct(R.balance.industry.cancelRefund)} of ${money(p.paid)}`, on: { click: (ev) => { ev.stopPropagation(); cancelProject(s, R, p.id); refresh(cl); } } }, '×')))) : h('p.muted', 'Nothing under construction.'),
+    mine && bulkSection(cl),
     h('h3', { style: { marginTop: '0.8em' } }, 'Buildings'),
     levels.length ? h('table.t.small', levels.map(({ b, n, prov }) => h('tr', { tip: `${b.name}: makes ${b.out.map(([g, a]) => `${a} ${X.goods[g].name.toLowerCase()}`).join(', ')}${b.inp.length ? ' from ' + b.inp.map(([g, a]) => `${a} ${X.goods[g].name.toLowerCase()}`).join(', ') : ''} per full-size level and month at 100% efficiency; ${b.workers.toLocaleString()} workers per full-size level. Levels in small or poor provinces are smaller (see a province's level size).` },
       h('td', b.name), h('td.n', `${n} levels`), h('td.n.muted', `${prov} prov.`)))) : h('p.muted', 'No industry.'),

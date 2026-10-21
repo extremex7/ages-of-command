@@ -132,8 +132,11 @@ export function summary(state, k = state.player) {
   else if (to < from) headline = `${c.name} rose from #${from} to #${to}${span}${st ? `, earning a ${st.name.toLowerCase()}` : ''}.`;
   else if (to > from) headline = `${c.name} fell from #${from} to #${to}${span}.`;
   else headline = `${c.name} held its place at #${to}${span}.`;
+  // a victory condition was met (victory.js): the headline leads with it
+  const V = state.victory?.won || null;
+  if (V) headline = (V.k === R.k ? `${c.name} won ${V.id === 'economy' ? 'an' : 'a'} ${V.name.toLowerCase()} victory in ${civilFromDays(V.day).y}. ` : `${state.countries[V.k].name} won ${V.id === 'economy' ? 'an' : 'a'} ${V.name.toLowerCase()} victory in ${civilFromDays(V.day).y}. `) + headline;
   return {
-    k: R.k, headline, years, from, to, best: R.best, start: R.start, now, n: R.n, hist: R.hist, cheated: !!state.cheated,
+    k: R.k, headline, victory: V, years, from, to, best: R.best, start: R.start, now, n: R.n, hist: R.hist, cheated: !!state.cheated,
     achievements: ACHIEVEMENTS.filter((a) => R.ach[a.id] != null).map((a) => ({ ...a, day: R.ach[a.id] })),
     total: ACHIEVEMENTS.length, earlier: R.earlier,
   };

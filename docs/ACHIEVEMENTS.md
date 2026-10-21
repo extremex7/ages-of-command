@@ -1,7 +1,8 @@
 # Achievements and the game summary
 
 Code: `src/core/record.js` (the record and the achievement tests), `src/ui/summary.js`
-(the summary dialog and the achievements list).
+(the summary dialog and the achievements list), `src/core/victory.js` and `src/ui/victory_ui.js`
+(victory conditions, the score and the victory screen).
 
 ## The record
 
@@ -26,6 +27,24 @@ Menu → **Summary** at any time, and on its own when the game ends (your countr
   economy, population, provinces, technologies, era and government;
 - battles and wars won and lost, coups, council resolutions and the best rank reached;
 - the achievements earned in this game.
+
+## Victory conditions
+
+Chosen at New Game; any number of them may be on, and with none the game is a sandbox. The first
+country to meet one wins:
+
+- **Conquest**: own 25%, 50%, 75% or all of the world's provinces (counting your subjects' land).
+- **Economy**: be the largest economy with 25% to 50% of world GDP for 5, 10 or 20 years in a row.
+- **Technology**: be the first to know every technology of a chosen era (the last era by default).
+- **Score**: have the best score (prestige) on 1 January of a chosen year (100 years after the start by default).
+
+The capitulation threshold (off, 40%, 60% or 80%) is set in the same place ([MILITARY.md](MILITARY.md)).
+
+They are checked monthly. Your score is in the top bar, with your progress towards each
+condition in its tooltip; click it for every condition, your progress and who is closest. When a
+country wins, the game pauses on the victory screen (or the news of another country's victory)
+with the summary below. **Continue playing** goes on with no further victories; the summary
+headline then starts with the victory.
 
 ## Achievements
 

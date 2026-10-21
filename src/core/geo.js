@@ -27,3 +27,18 @@ export function countryNeighbours(state, map) {
 export function neighbours(state, map, a, b) {
   return countryNeighbours(state, map).sets[a]?.has(b) || false;
 }
+
+// Each country's provinces (owned), cached per map version; also the unowned land ([-1] slot).
+const provCache = new WeakMap();
+function provinceLists(state, map) {
+  const ver = state.mapVersion || 0;
+  let c = provCache.get(state);
+  if (!c || c.ver !== ver || c.n !== state.countries.length) {
+    c = { ver, n: state.countries.length, lists: state.countries.map(() => []), free: [] };
+    for (const i of map.ids) { const o = state.prov.owner[i]; if (o >= 0) c.lists[o].push(i); else c.free.push(i); }
+    provCache.set(state, c);
+  }
+  return c;
+}
+export function provincesOf(state, map, k) { return provinceLists(state, map).lists[k] || []; }
+export function unownedProvinces(state, map) { return provinceLists(state, map).free; }

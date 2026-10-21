@@ -698,3 +698,23 @@ at 36% of its base price), so the industry bonus skips them; and the new AI log 
 declarations out of the 300-line AI log in the aggressive-AI test, so completed AI objectives are
 no longer logged. None of the new systems draws from the game's random stream (`hashRand`), so
 existing seeded tests and replays keep their rolls. Cost: about 2 ms a game month.
+
+## Session 23: victory, capitulation, experience, colonies and bulk building
+
+Victory conditions are chosen at New Game (conquest, economic share held for some years, a
+technology era, best score at an end date, or none for a sandbox). The score sits in the top bar;
+the victory screen reuses the summary and offers Continue playing. Capitulation: a country with
+most of its provinces and its capital occupied (60% by default, set at New Game) gives up after a
+month on automatic terms (claims and occupied land, or vassalage for a small country, and
+reparations); a non-leader leaves the war alone. Armies and fleets gain experience in battle,
+diluted by recruits and reinforcements, and countries gain military expertise from won wars that
+fades in peace. Colonists can settle unowned land from a neighbouring province or by sea; the AI
+colonises too, but armies still cannot enter unowned land. The Industry tab has bulk
+construction (a region, the whole country or provinces painted on the map, with a cost preview),
+"build where most needed" from the AI's site ranking, and an auto-managed economy.
+
+In 10-year AI runs Height of Rome founded 9 colonies and 1444 about 20; capitulations happened in
+both (Buyeo, Champa, the Marathas). The colonisation AI costs about 2 ms more per month in 1444
+(2.94 against 2.72 ms per simulated day over 5 years); the modern start is unchanged. The new
+random draws shifted the 1815 run enough that the AI made peace before the Treaty of Sugauli
+event, so that test now uses another seed.

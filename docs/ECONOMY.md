@@ -216,6 +216,54 @@ Construction is paid up front from the treasury when a project starts.
 - **Cancelling** refunds 50% of the cost.
 - **Capture.** Buildings stay with the province when it changes hands.
 
+## Bulk construction (`src/core/bulk.js`, Industry tab)
+
+- **One building in many provinces.** Pick a building (or infrastructure) and where: the
+  provinces painted on the map, the region of the selected province (the present-day country it
+  lies in, `map.iso`), or the whole country. **Paint** turns the map into a brush: dragging adds
+  your provinces to the set (highlighted) instead of panning, **Erase** removes them, Esc stops.
+  The preview lists the eligible provinces (those where the project is possible; provinces with
+  no deposit, too little development or a maxed building are skipped), how many can start now and
+  for how much, and the cost of all of them. Costs run the stockpile down project by project, so
+  goods that run out are priced at the 1.5× premium. Sites are taken best first, ranked as the AI
+  ranks them (`ai.js siteScore`: workforce, infrastructure, development, farmland or sun and wind,
+  levels already there or queued); infrastructure goes first where the most industry is. The
+  queue limit (30) and the treasury cap how many start; every project is an ordinary
+  `startProject`, so slots, goods and refunds work as usual.
+- **Build where most needed.** The three largest shortfalls (need, padded like the AI's, minus
+  production minus what is being built), each with the building the AI would choose (following a
+  missing input up the chain, or the producer itself if the input cannot be built anywhere) and
+  the best sites for enough levels to close the gap (up to 6), with the total cost. One click
+  queues them.
+- **Auto-manage economy.** A tick box: the AI's construction (below) and colonisation then run
+  for the player's country too (`c.autoEconomy`), keeping the AI's reserve. Taxes, spending, the
+  army, war and diplomacy stay with the player.
+
+## Colonies (`src/core/colonies.js`)
+
+Unowned provinces (most of the world in Height of Rome and Rise of Empires, less in 1815 and
+1861) stay closed to armies. They are settled with a colonist project from the province panel
+(**Send colonists**), numbers in `balance.colonisation`:
+
+- **From where.** The most populous province of yours next to it (land, strait or sea lane), or
+  else your most populous port on a sea zone within reach of its coast. Reach in sea zones: 0
+  (the same zone) without technology, 1 with Sailing, 2 with the Magnetic Compass, 6 with Ocean
+  Navigation, 12 with Steamships (`seaReach`).
+- **Settlers.** 5,000 people leave the source province, which needs at least four times that.
+- **Cost and time.** 0.4 B × (0.5 + √area / 300) × price level, ×1.5 by sea; 270 days, ×1.5 by
+  sea and +5% per sea zone.
+- **Chance.** 70%, +15% by land, −5% to −20% for hills, forests, mountains, deserts and tundra,
+  −3% per sea zone, between 20% and 95%. A failed colony loses the settlers and the money.
+- **Limits.** At most 2 colonies at a time, +1 for every four eras.
+- **The new province** belongs to you with the settlers as its population and half the source's
+  development (at least 1); it grows like any other. If someone else settles it first, your
+  settlers turn back and half the cost is refunded; recalling them refunds half too.
+- **AI.** Every 4 months each AI country at peace with a balanced budget looks at the unowned land
+  in reach, scores the dozen best by farmland and size, then takes the one with the best farmland,
+  deposits and size for its chance and cost, keeping a month of revenue in the bank. In a 10-year
+  Height of Rome run 9 colonies were founded, in Rise of Empires 20. The modern scenarios have no
+  unowned land, and the check stops at once there.
+
 ## AI
 
 Every other month each AI country:

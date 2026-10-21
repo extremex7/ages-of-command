@@ -8,6 +8,7 @@ import { commissionShip, laneOpen, hostileSea, linkOpen } from './naval.js';
 import { commissionWing, canBase } from './air.js';
 import { satCover } from './strategic.js';
 import { generalFx } from './commanders.js';
+import { dilute } from './experience.js';
 
 // Slowest unit's speed, times the country's movement technology; armies with fuel-using units
 // (armour) slow down when the country is short of fuel.
@@ -88,6 +89,7 @@ export function modernizeArmy(state, rules, id) {
   c.treasury -= m.money; c.manpower -= m.men;
   for (const [t, to, k] of m.plan) { delete a.units[t]; a.units[to] = (a.units[to] || 0) + k; }
   a.org = Math.min(a.org, 0.3);
+  dilute(a, unitCount(a) - m.units * 0.5, unitCount(a)); // retraining on new equipment costs half the converted units' experience
   return null;
 }
 
@@ -147,6 +149,7 @@ export function processRecruitment(state, map, rules) {
     let army = state.armies.find((a) => a.owner === r.owner && a.loc === r.prov && !a.path.length && !a.battle && !(a.sea >= 0));
     if (army) {
       const n = unitCount(army);
+      dilute(army, army.str * n, army.str * n + 1); // recruits have no experience
       army.str = (army.str * n + 1) / (n + 1);
       army.org = (army.org * n + 0.6) / (n + 1);
       army.units[r.type] = (army.units[r.type] || 0) + 1;
@@ -336,7 +339,9 @@ export function monthlyMilitary(state, map, rules) {
     const want = Math.min(R.reinforceMonth, 1 - a.str) * men;
     const got = Math.min(want, c.manpower);
     c.manpower -= got;
+    const s0 = a.str;
     a.str += got / men;
+    dilute(a, s0, a.str); // replacements are green
   }
 }
 
@@ -366,6 +371,7 @@ export function mergeArmies(state, ids) {
   let n0 = unitCount(base);
   for (const a of list.slice(1)) {
     const n1 = unitCount(a);
+    base.exp = ((base.exp || 0) * base.str * n0 + (a.exp || 0) * a.str * n1) / Math.max(1e-9, base.str * n0 + a.str * n1);
     base.str = (base.str * n0 + a.str * n1) / (n0 + n1);
     base.org = (base.org * n0 + a.org * n1) / (n0 + n1);
     for (const t in a.units) base.units[t] = (base.units[t] || 0) + a.units[t];
@@ -390,7 +396,7 @@ export function splitArmy(state, id) {
   for (const t in a.units) { half[t] = Math.floor(a.units[t] / 2); a.units[t] -= half[t]; }
   if (!unitCount({ units: half })) { for (const t in a.units) if (a.units[t] > 1 || (a.units[t] === 1 && unitCount(a) > 1)) { a.units[t]--; half[t] = 1; break; } }
   const b = newArmy(state, a.owner, a.loc, half);
-  b.str = a.str; b.org = a.org;
+  b.str = a.str; b.org = a.org; b.exp = a.exp;
   state.armies.push(b);
   return null;
 }

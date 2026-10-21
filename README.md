@@ -100,7 +100,7 @@ the desktop and Android apps.
 ## Test
 
 ```bash
-npm test                            # 187 unit/integration tests of the simulation (node:test)
+npm test                            # 203 unit/integration tests of the simulation (node:test)
 npm run bench                       # reproducible 10-year simulation benchmark (seed bench-1)
 node tools/bench.mjs 10 1 great_war_1914   # the same for a historical scenario
 node tools/smoke.mjs 365 cold_war_1962     # one year of AI play with a summary
@@ -120,6 +120,7 @@ node tests/browser/summary.mjs      # achievements and the game summary
 node tests/browser/hotseat.mjs      # hotseat: two players pick, plan, hand over, run a week; shared screen
 node tests/browser/deals.mjs        # diplomacy deals: loans, ultimatums, unions, rebel funding, offers to the player
 node tests/browser/nations.mjs      # traits, forming a nation, objectives and advisors
+node tests/browser/session23.mjs    # victory, capitulation, experience, bulk construction, colonies
 node tests/browser/bench.mjs        # FPS / memory / sim speed per performance profile
 CPU_THROTTLE=4 node tests/browser/bench.mjs   # same, emulating a 4x slower CPU
 ```

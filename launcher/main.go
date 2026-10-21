@@ -2,7 +2,11 @@
 // the game's files from the folder next to it, keeps settings and saves as files in the player's
 // data folder, and opens the game in a window of its own: a native window with the system's web
 // engine (WebView2 on Windows, WebKitGTK on Linux), else Edge, Chrome, Chromium or Brave in app
-// mode, else the default browser. It exits when the game window is closed.
+// mode, else the default browser. It exits when the game window is closed (and no other window
+// still uses it).
+//
+// With -bot it opens the bot window instead (bot.html: the bot plays the player's country while
+// they are away, see docs/BOT.md), onto the running copy when there is one.
 //
 // Build: see launcher/README.md (tools/build_desktop.sh builds every platform and the installer).
 package main
@@ -50,12 +54,27 @@ func setWindowControl(f func(mode string, width, height int), close func()) {
 	windowMu.Unlock()
 }
 
+// winOpts describes a window to open: the page, title and size, and whether the page may
+// control the native window (the game's window mode setting and Exit button; the bot window
+// leaves that to the game).
+type winOpts struct {
+	page          string
+	title         string
+	width, height int
+	minW, minH    int
+	control       bool
+}
+
+var gameWin = winOpts{page: "", title: "Ages of Command", width: 1366, height: 800, minW: 960, minH: 600, control: true}
+var botWin = winOpts{page: "bot.html", title: "Ages of Command Bot", width: 900, height: 760, minW: 520, minH: 420}
+
 type server struct {
 	gameDir  string
 	storeDir string
 	mu       sync.Mutex
 	lastPing time.Time
 	pinged   bool
+	botOpen  bool // this program's own window is the bot window and it is open
 }
 
 func main() {
@@ -63,7 +82,12 @@ func main() {
 	noWindow := flag.Bool("no-window", false, "only serve; open http://127.0.0.1:<port>/ yourself")
 	browserFlag := flag.Bool("browser", false, "use a browser window instead of the native one")
 	dataFlag := flag.String("data", "", "folder for settings, saves and logs (default: the user's config folder)")
+	botFlag := flag.Bool("bot", false, "open the bot window: the bot plays your country while you are away")
 	flag.Parse()
+	win := gameWin
+	if *botFlag {
+		win = botWin
+	}
 
 	// Saves go to -data, else a "userdata" folder next to the program (portable copies), else the
 	// user's config folder. The browser profile is a cache and goes to the cache folder by default.
@@ -92,7 +116,13 @@ func main() {
 	if err := os.MkdirAll(storeDir, 0o755); err != nil {
 		fatal("Cannot create the data folder %s: %v", dataDir, err)
 	}
-	if f, err := os.OpenFile(filepath.Join(dataDir, "launcher.log"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644); err == nil {
+	// appended to, not truncated: a second copy (another window, or the bot window) shares the log;
+	// it is started afresh once it passes 1 MB
+	logPath := filepath.Join(dataDir, "launcher.log")
+	if st, err := os.Stat(logPath); err == nil && st.Size() > 1<<20 {
+		os.Remove(logPath)
+	}
+	if f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644); err == nil {
 		log.SetOutput(io.MultiWriter(f, os.Stderr))
 	}
 	log.Printf("Ages of Command launcher %s (%s/%s)", version, runtime.GOOS, runtime.GOARCH)
@@ -109,8 +139,8 @@ func main() {
 	if running != "" {
 		// already running: just open another window onto it
 		log.Printf("already running at %s", running)
-		if !*noWindow && (*browserFlag || !nativeWindow(running, browserDir, icon)) {
-			openWindow(running, browserDir)
+		if !*noWindow && (*browserFlag || !nativeWindow(running+win.page, browserDir, icon, win)) {
+			openWindow(running+win.page, browserDir, win)
 		}
 		return
 	}
@@ -124,16 +154,25 @@ func main() {
 		}
 	}()
 	if *noWindow {
-		fmt.Printf("Ages of Command running at %s (Ctrl+C to stop)\n", url)
+		fmt.Printf("Ages of Command running at %s%s (Ctrl+C to stop)\n", url, win.page)
 		select {}
 	}
-	if !*browserFlag && nativeWindow(url, browserDir, icon) {
+	s.mu.Lock()
+	s.botOpen = *botFlag
+	s.mu.Unlock()
+	if !*browserFlag && nativeWindow(url+win.page, browserDir, icon, win) {
+		s.mu.Lock()
+		s.botOpen = false
+		s.mu.Unlock()
+		// another window (the game next to the bot, or the bot next to the game) may still use
+		// this program's server: keep serving until its pings stop too
+		s.waitForPings(12 * time.Second)
 		log.Printf("exiting: window closed")
 		return
 	}
 	done := make(chan string, 2)
 	go func() {
-		if proc := openWindow(url, browserDir); proc != nil {
+		if proc := openWindow(url+win.page, browserDir, win); proc != nil {
 			proc.Wait()
 			// Some browsers hand the window to an already-running process and exit at once, so
 			// only quit if the page has also stopped pinging; otherwise the watchdog decides.
@@ -222,9 +261,17 @@ func (s *server) routes(port int) http.Handler {
 		windowMu.Lock()
 		closeWindow := windowClose
 		windowMu.Unlock()
+		s.mu.Lock()
+		botOpen := s.botOpen
+		s.mu.Unlock()
 		w.WriteHeader(http.StatusNoContent)
 		if closeWindow != nil {
 			closeWindow() // the program ends when the window has closed
+			return
+		}
+		if botOpen {
+			// the game's Exit in a window of another copy: the bot window here keeps running
+			log.Printf("quit from the game ignored: the bot window is open")
 			return
 		}
 		// a browser window cannot be closed from here: stop serving, the page says so
@@ -379,9 +426,29 @@ func (s *server) storeOne(w http.ResponseWriter, r *http.Request) {
 		os.Remove(path)
 		w.WriteHeader(http.StatusNoContent)
 	case http.MethodGet:
+		// a key that was never written answers 204 (not 404, which browsers log as an error)
+		if st, err := os.Stat(path); err != nil || st.IsDir() {
+			w.Header().Set("Cache-Control", "no-store")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
 		http.ServeFile(w, r, path)
 	default:
 		http.Error(w, "method", http.StatusMethodNotAllowed)
+	}
+}
+
+// waitForPings returns once no page has pinged for `quiet` (pages ping every 5 s).
+func (s *server) waitForPings(quiet time.Duration) {
+	for {
+		s.mu.Lock()
+		last := s.lastPing
+		s.mu.Unlock()
+		if time.Since(last) > quiet {
+			return
+		}
+		time.Sleep(time.Second)
 	}
 }
 
@@ -414,10 +481,10 @@ func writeJSON(w http.ResponseWriter, v any) {
 // openWindow starts a Chromium-family browser in app mode with its own profile (so the game gets
 // a plain window and its own storage), returning the process to wait on; or opens the default
 // browser and returns nil.
-func openWindow(url, profile string) *exec.Cmd {
+func openWindow(url, profile string, o winOpts) *exec.Cmd {
 	if b := findBrowser(); b != "" {
 		args := []string{"--app=" + url, "--user-data-dir=" + profile, "--no-first-run",
-			"--no-default-browser-check", "--disable-features=Translate", "--window-size=1366,800"}
+			"--no-default-browser-check", "--disable-features=Translate", fmt.Sprintf("--window-size=%d,%d", o.width, o.height)}
 		cmd := exec.Command(b, args...)
 		if err := cmd.Start(); err == nil {
 			log.Printf("opened %s", b)

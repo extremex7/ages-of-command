@@ -319,7 +319,7 @@ function fire(state, map, rules, c, ev, ctx) {
   else resolveEvent(state, map, rules, pend, aiChoice(state, ev));
 }
 
-function aiChoice(state, ev) {
+export function aiChoice(state, ev) {
   const hist = (state.settings.historicalEvents ?? 'historical') === 'historical';
   const w = ev.options.map((o) => (o.ai ?? 1) * (hist && o.historical ? 6 : 1));
   let x = rand(state) * w.reduce((a, b) => a + b, 0);

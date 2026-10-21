@@ -22,7 +22,7 @@ rm -rf "$OUT"; mkdir -p "$STAGE"
 game() {
   local d=$1/game
   mkdir -p "$d/docs"
-  cp index.html "$d/"
+  cp index.html bot.html "$d/"
   cp -r src styles data "$d/"
   cp docs/*.md README.md "$d/docs/"
   find "$d" -name '__pycache__' -prune -exec rm -rf {} +
@@ -51,6 +51,8 @@ else
 fi
 P=$STAGE/portable/AgesOfCommand; mkdir -p "$P/userdata"
 cp -r "$W/." "$P/"
+# the portable copy has no Start menu: a file to start the bot window (docs/BOT.md)
+printf '@echo off\r\nstart "" "%%~dp0AgesOfCommand.exe" --bot\r\n' > "$P/Ages of Command Bot.cmd"
 (cd "$STAGE/portable" && zip -qr9 "$OUT/AgesOfCommand-$V-windows-portable.zip" AgesOfCommand)
 
 # --- Linux

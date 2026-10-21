@@ -10,7 +10,7 @@
 // League becomes the UN) are permanent members and can veto. A resolution passes with more yes than no votes and no veto. Countries may
 // also impose arms or energy sanctions on their own (c.econ.sanctions).
 // Numbers: balance.json → council. See docs/DIPLOMACY.md (World council).
-import { log, aiLog, isHuman, impFor } from './state.js';
+import { log, aiLog, isHuman, humanControls, impFor } from './state.js';
 import { rand } from './rng.js';
 import { touchRelations, allied, atWar } from './relations.js';
 import { opinion, addMod } from './diplomacy.js';
@@ -149,12 +149,13 @@ export function aiVote(state, map, rules, k, r) {
   return s > 10 ? 'yes' : s < -25 ? 'no' : 'abstain';
 }
 
-// Tally: every alive country's vote (the player's as cast, abstaining otherwise).
+// Tally: every alive country's vote (the player's as cast, abstaining otherwise; an automated
+// player's country votes as the AI would).
 export function tally(state, map, rules, r) {
   const W = councilOf(state), out = { yes: 0, no: 0, abstain: 0, veto: [], votes: {} };
   for (const c of state.countries) {
     if (!c.alive) continue;
-    const v = r.votes[c.idx] ?? (isHuman(state, c.idx) ? 'abstain' : aiVote(state, map, rules, c.idx, r));
+    const v = r.votes[c.idx] ?? (humanControls(state, c.idx) ? 'abstain' : aiVote(state, map, rules, c.idx, r));
     out.votes[c.idx] = v; out[v]++;
     if (v === 'no' && W.permanent.includes(c.idx)) out.veto.push(c.idx);
   }

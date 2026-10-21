@@ -4,7 +4,7 @@
 // spend network strength: steal technology, sabotage industry, fund the opposition, or stage a
 // coup that installs a friendly government and can make a small country a puppet (subject).
 // Numbers: balance.json → espionage. See docs/ESPIONAGE.md.
-import { log, aiLog, logFor, isHuman, impFor } from './state.js';
+import { log, aiLog, logFor, isHuman, humanControls, impFor } from './state.js';
 import { rand } from './rng.js';
 import { addMod, signTreaty, overlordOf, subjectsOf, validateTreaty } from './diplomacy.js';
 import { changeGovernment, govType } from './government.js';
@@ -142,7 +142,7 @@ export function monthlyEspionage(state, map, rules) {
     s.building = s.building.filter((t) => state.countries[t]?.alive);
     for (const t of s.building) s.nets[t] = Math.min(100, (s.nets[t] || 0) + E.growth * (1 - counterOf(state, rules, t)));
   }
-  for (const c of state.countries) if (c.alive && !isHuman(state, c.idx) && c.ledger) aiSpies(state, map, rules, c);
+  for (const c of state.countries) if (c.alive && !humanControls(state, c.idx) && c.ledger) aiSpies(state, map, rules, c);
 }
 
 // AI: spy on its rival (and enemies at war), steal technology from those ahead, unsettle

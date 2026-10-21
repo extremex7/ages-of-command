@@ -47,7 +47,7 @@ static void aoc_set_window(int mode, int w, int h) {
 	idle_add(aoc_apply, NULL);
 }
 
-static int aoc_window(const char *url, const char *title, const char *icon) {
+static int aoc_window(const char *url, const char *title, const char *icon, int width, int height) {
 	if (!dlopen("libgtk-3.so.0", RTLD_NOW | RTLD_GLOBAL)) return 0;
 	if (!dlopen("libwebkit2gtk-4.1.so.0", RTLD_NOW | RTLD_GLOBAL) &&
 	    !dlopen("libwebkit2gtk-4.0.so.37", RTLD_NOW | RTLD_GLOBAL)) return 0;
@@ -69,7 +69,7 @@ static int aoc_window(const char *url, const char *title, const char *icon) {
 	if (!gtk_init_check(NULL, NULL)) return 0; // no display
 	void *win = gtk_window_new(0);
 	set_title(win, title);
-	set_size(win, 1366, 800);
+	set_size(win, width, height);
 	if (icon && icon[0]) set_icon(win, icon, NULL);
 	void *view = web_view_new();
 	container_add(win, view);
@@ -92,18 +92,20 @@ import (
 
 // nativeWindow shows the game in a GTK window with WebKitGTK, blocking until it is closed.
 // Returns false, without showing anything, when GTK, WebKitGTK or a display is missing.
-func nativeWindow(url, profile, iconPath string) bool {
-	cu, ct, ci := C.CString(url), C.CString("Ages of Command"), C.CString(iconPath)
+func nativeWindow(url, profile, iconPath string, o winOpts) bool {
+	cu, ct, ci := C.CString(url), C.CString(o.title), C.CString(iconPath)
 	defer C.free(unsafe.Pointer(cu))
 	defer C.free(unsafe.Pointer(ct))
 	defer C.free(unsafe.Pointer(ci))
-	setWindowControl(func(mode string, width, height int) {
-		m := map[string]C.int{"windowed": 0, "maximized": 1, "fullscreen": 2}[mode]
-		C.aoc_set_window(m, C.int(width), C.int(height))
-	}, func() { C.aoc_close() })
-	defer setWindowControl(nil, nil)
+	if o.control {
+		setWindowControl(func(mode string, width, height int) {
+			m := map[string]C.int{"windowed": 0, "maximized": 1, "fullscreen": 2}[mode]
+			C.aoc_set_window(m, C.int(width), C.int(height))
+		}, func() { C.aoc_close() })
+		defer setWindowControl(nil, nil)
+	}
 	log.Printf("opening a WebKitGTK window")
-	if C.aoc_window(cu, ct, ci) == 0 {
+	if C.aoc_window(cu, ct, ci, C.int(o.width), C.int(o.height)) == 0 {
 		setWindowControl(nil, nil)
 		log.Printf("GTK or WebKitGTK is not available")
 		return false

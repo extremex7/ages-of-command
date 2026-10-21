@@ -13,12 +13,12 @@ import (
 // nativeWindow shows the game in a window of its own using WebView2, the Edge web engine built
 // into Windows 10 and 11. It blocks until the window is closed and returns false, without
 // showing anything, when WebView2 is not installed (the caller then falls back to a browser).
-func nativeWindow(url, profile, iconPath string) bool {
+func nativeWindow(url, profile, iconPath string, o winOpts) bool {
 	w := webview2.NewWithOptions(webview2.WebViewOptions{
 		DataPath:  profile,
 		AutoFocus: true,
 		WindowOptions: webview2.WindowOptions{
-			Title: "Ages of Command", Width: 1366, Height: 800, Center: true, IconId: 1,
+			Title: o.title, Width: uint(o.width), Height: uint(o.height), Center: true, IconId: 1,
 		},
 	})
 	if w == nil {
@@ -26,13 +26,15 @@ func nativeWindow(url, profile, iconPath string) bool {
 		return false
 	}
 	defer w.Destroy()
-	w.SetSize(960, 600, webview2.HintMin)
+	w.SetSize(o.minW, o.minH, webview2.HintMin)
 	hwnd := uintptr(w.Window())
 	ws := &winState{}
-	setWindowControl(func(mode string, width, height int) {
-		w.Dispatch(func() { ws.apply(hwnd, mode, width, height) })
-	}, func() { w.Dispatch(w.Terminate) })
-	defer setWindowControl(nil, nil)
+	if o.control {
+		setWindowControl(func(mode string, width, height int) {
+			w.Dispatch(func() { ws.apply(hwnd, mode, width, height) })
+		}, func() { w.Dispatch(w.Terminate) })
+		defer setWindowControl(nil, nil)
+	}
 	w.Navigate(url)
 	log.Printf("opened a WebView2 window")
 	w.Run()

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ages of Command Bot</title>
+  <link rel="icon" type="image/png" href="styles/icon.png">
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    .bot-table { border-collapse: collapse; width: 100%; margin: 0.8em 0; }
+    .bot-table th, .bot-table td { text-align: left; padding: 0.25em 0.6em; border-bottom: 1px solid var(--line); }
+    .bot-table th { color: var(--muted); font-weight: normal; }
+    .screen { place-items: start center; padding: 1em 0; }
+  </style>
+</head>
+<body>
+  <!-- The bot window: plays the player's country while they are away (docs/BOT.md). -->
+  <div id="app"><div class="boot">Loading…</div></div>
+  <script type="module" src="src/bot/page.js"></script>
+</body>
+</html>

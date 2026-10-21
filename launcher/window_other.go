@@ -4,4 +4,4 @@ package main
 
 // nativeWindow is not available on this platform (macOS, or Linux built without cgo): the
 // launcher uses a browser window instead.
-func nativeWindow(url, profile, iconPath string) bool { return false }
+func nativeWindow(url, profile, iconPath string, o winOpts) bool { return false }

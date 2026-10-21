@@ -9,12 +9,10 @@ import { rand } from './rng.js';
 import { atWar, isAtWar, allied } from './relations.js';
 import { countryNeighbours } from './geo.js';
 import { opinion, seniorOf, juniorsOf, followsOf } from './diplomacy.js';
-import { warOdds } from './ai.js';
+import { warOdds, aiTemper } from './ai.js';
 import { revenueOf, evaluateLoan, proposeLoan, validateLoan, debtService, canIntegrate, integrateUnion, evaluateUnion, proposeUnion, canBreakUnion, breakUnion,
   rebelSide, supportOf, setSupport, validateSupport, provinceWorth, tradableProvinces, evaluateSale, proposeSale, demandableProvinces, validateDemand,
   issueDemand, describeDemand, evaluateDemand, pendingFor, fmtMoney, topReasons } from './deals.js';
-
-const DIFFICULTY = { easy: 0.6, normal: 1, hard: 1.3 };
 
 // Offers the AI sends the player wait in the Diplomacy tab; it never stacks more than a few.
 function playerBusy(state, k) {
@@ -145,9 +143,9 @@ function tradeLand(state, map, rules, c, nb) {
 // Rarely: a demand on a much weaker neighbour it has a quarrel with. A refusal is a casus belli,
 // which the war AI counts as a motive.
 function ultimatum(state, map, rules, c, nb) {
-  const X = rules.balance.deals, A = X.ai, C = state.countries, k = c.idx, set = state.settings;
+  const X = rules.balance.deals, A = X.ai, C = state.countries, k = c.idx;
   if (isAtWar(state, k) || c.stability < 35 || c.influence < X.demandInfluence) return;
-  const aggr = c.aggression * (set.aiAggression ?? 1) * (DIFFICULTY[set.difficulty] || 1);
+  const { aggr } = aiTemper(state, c);
   if (aggr <= 0 || rand(state) > A.demandChance * aggr) return;
   let best = null;
   for (const t of nb) {

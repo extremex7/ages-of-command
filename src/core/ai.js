@@ -42,6 +42,16 @@ export function warOdds(state, a, t) {
 const DIFFICULTY = { easy: 0.6, normal: 1, hard: 1.3 };
 const AIR_WEIGHT = 0.15;
 
+// How warlike the AI is for country c: { aggression (the game's AI aggression setting),
+// aggr (that × the country's own aggression × the difficulty) }. A bot playing a human country
+// (src/bot/autoplay.js) sets c.aiProfile = { aggression, difficulty, war }, which replaces the
+// game's settings for that country only; without it every country uses the game's settings.
+export function aiTemper(state, c) {
+  const p = c.aiProfile, set = state.settings;
+  const aggression = p?.aggression ?? set.aiAggression ?? 1;
+  return { aggression, aggr: c.aggression * aggression * (DIFFICULTY[p?.difficulty ?? set.difficulty] || 1) };
+}
+
 export function aiTick(state, map, rules) {
   const every = rules.balance.ai.thinkEveryDays;
   for (const c of state.countries) {
@@ -55,7 +65,8 @@ export function aiTick(state, map, rules) {
 function think(state, map, rules, c) {
   manageBudget(state, rules, c);
   manageRecruitment(state, map, rules, c);
-  if (!isHuman(state, c.idx)) considerWar(state, map, rules, c);
+  // an automated human country only starts wars when its bot profile allows it
+  if (!isHuman(state, c.idx) || c.aiProfile?.war) considerWar(state, map, rules, c);
   planArmies(state, map, rules, c);
   aiFleets(state, map, rules, c);
   if ((state.day + c.idx) % 28 < rules.balance.ai.thinkEveryDays) { aiWings(state, map, rules, c); aiDepots(state, map, rules, c); }
@@ -202,8 +213,7 @@ function considerWar(state, map, rules, c) {
   if ((Math.floor(state.day / rules.balance.ai.thinkEveryDays) + c.idx) % 4) return;
   if (isAtWar(state, c.idx)) return;
   if (state.day - state.startDay < 60) return;
-  const set = state.settings;
-  const aggr = c.aggression * (set.aiAggression ?? 1) * (DIFFICULTY[set.difficulty] || 1);
+  const { aggression, aggr } = aiTemper(state, c);
   if (aggr <= 0) return;
   if (c.stability < 35) return;
   const A = rules.balance.ai, D = rules.balance.diplomacy;
@@ -223,7 +233,7 @@ function considerWar(state, map, rules, c) {
     const motive = Math.max(0, -op) / 100 + (c.rival === t ? 0.5 : 0) + Math.min(0.6, claims * 0.1) + (t === independence ? 0.6 : 0) + (cb ? 0.4 : 0) + mission;
     const broken = treatiesBrokenByWar(state, c.idx, t).filter((x) => x.type === 'nap' || x.type === 'guarantee');
     // the AI aggression setting lowers the grievance needed for war
-    const need = (D.aiWarMotive + (broken.length ? 0.5 : 0) + (warJustified(state, c.idx, t) ? 0 : 0.1)) / Math.max(0.5, set.aiAggression ?? 1);
+    const need = (D.aiWarMotive + (broken.length ? 0.5 : 0) + (warJustified(state, c.idx, t) ? 0 : 0.1)) / Math.max(0.5, aggression);
     if (motive < need) continue;
     const odds = warOdds(state, c.idx, t);
     const ratio = odds.mine / odds.theirs;

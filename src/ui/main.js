@@ -3,7 +3,7 @@ import { h, mount } from './dom.js';
 import { decodeMap, makeRules, newGame, loadGame } from '../core/game.js';
 import { validateScenario } from '../core/rules.js';
 import { formatDate, parseDate } from '../core/calendar.js';
-import { loadSettings, listSlots, readSave, deleteSave, initStorage, isDesktop, listScenarios, readScenario, deleteScenario } from './storage.js';
+import { loadSettings, listSlots, syncSlots, readSave, deleteSave, initStorage, isDesktop, listScenarios, readScenario, deleteScenario } from './storage.js';
 import { editorGame } from './editor.js';
 import { achievementsScreen } from './summary.js';
 import { startEdit, cloneScenario, slug } from '../core/scenario_edit.js';
@@ -75,12 +75,15 @@ async function getScenario(id) {
 
 export function mainMenu() {
   setMood('menu');
+  const loadBtn = h('button', { on: { click: loadScreen }, disabled: !listSlots().length }, icon('load'), 'Load Game');
+  // the desktop app: the bot window may have saved since the game started
+  syncSlots().then((l) => { loadBtn.disabled = !l.length; }, () => {});
   mount(app, h('div.screen', h('div.menu-card',
     h('div.title', 'AGES OF COMMAND'),
     h('div.subtitle', 'A grand strategy sandbox — prototype build'),
     h('div.menu-buttons',
       h('button.primary', { on: { click: newGameScreen } }, icon('new_game'), 'New Game'),
-      h('button', { on: { click: loadScreen }, disabled: !listSlots().length }, icon('load'), 'Load Game'),
+      loadBtn,
       h('button', { on: { click: () => editorScreen() } }, icon('editor'), 'Scenario Editor'),
       h('button', { on: { click: () => achievementsScreen(app, mainMenu) } }, icon('achievements'), 'Achievements'),
       h('button', { on: { click: settingsScreen } }, icon('settings'), 'Settings'),
@@ -170,14 +173,16 @@ function victorySettings(V) {
   return { conquest: V.conquest ? V.conquestShare : 0, economy: V.economy ? V.economyShare : 0, economyYears: V.economyYears, tech: V.tech ? V.techEra : '', scoreYear: V.score ? V.scoreYear : 0 };
 }
 
-function loadScreen() {
-  const slots = listSlots();
+async function loadScreen() {
+  // read the list from disk again (desktop app): a save the bot window made since the game
+  // started is listed, and nothing here writes back a stale list
+  const slots = await syncSlots();
   const list = h('div.list');
   const render = () => mount(list, listSlots().map((s) => h('div.item.row.spread',
     h('div', h('b', s.name), h('div.muted', `${s.country || 'Observer'} · ${s.date || ''} · ${s.scenario || ''} · ${Math.round((s.size || 0) / 1024)} KB`)),
     h('div.row',
       h('button.primary', { on: { click: () => loadSlot(s.name) } }, 'Load'),
-      h('button.danger', { on: { click: () => { deleteSave(s.name); render(); } } }, 'Delete')))));
+      h('button.danger', { on: { click: async () => { await deleteSave(s.name); render(); } } }, 'Delete')))));
   render();
   const file = h('input', { type: 'file', accept: '.json,.aoc3', on: { change: async (e) => {
     const f = e.target.files[0];

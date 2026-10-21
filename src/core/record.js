@@ -98,7 +98,8 @@ export function monthlyRecord(state, rules, month) {
     return [];
   }
   if (state.player < 0 || !state.countries[state.player].alive) return [];
-  return recordMonth(state, recordOf(state), month, !state.cheated);
+  // no achievements while the AI runs the player's country (a bot, src/bot/autoplay.js)
+  return recordMonth(state, recordOf(state), month, !state.cheated && !state.countries[state.player].automate);
 }
 
 function recordMonth(state, R, month, achievements) {

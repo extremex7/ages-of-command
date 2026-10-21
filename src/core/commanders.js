@@ -6,7 +6,7 @@
 //
 // A general leading an army is stored on it (a.gen); unassigned generals wait in the
 // country's pool (c.generals).
-import { log, logFor, isHuman } from './state.js';
+import { log, logFor, isHuman, humanControls } from './state.js';
 import { rand } from './rng.js';
 
 const randInt = (state, lo, hi) => lo + Math.floor(rand(state) * (hi - lo + 1));
@@ -186,7 +186,7 @@ export function monthlyCommanders(state, map, rules) {
         c.generals.sort((x, y) => y.skill - x.skill);
         a.gen = c.generals.shift();
       } else if (first) a.gen = newGeneral(state, map, rules, c);
-      else if (!isHuman(state, k) && c.ledger && c.treasury > hireCost(rules, c) + Math.max(0, c.ledger.revenue) * K.aiReserveMonths
+      else if (!humanControls(state, k) && c.ledger && c.treasury > hireCost(rules, c) + Math.max(0, c.ledger.revenue) * K.aiReserveMonths
         && generalCount(state, k) < maxGenerals(state, rules, k)) {
         c.treasury -= hireCost(rules, c);
         a.gen = newGeneral(state, map, rules, c);

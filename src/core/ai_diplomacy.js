@@ -4,7 +4,7 @@
 // the rival's enemies, pacts with strong neighbours, guarantees for small friends, trade with big
 // markets); embargo a hated rival; join a defence bloc when outmatched; spend influence on the
 // partner it most wants. Every decision is written to the AI log with its reason.
-import { aiLog, isHuman, humanControls } from './state.js';
+import { aiLog, humanControls } from './state.js';
 import { allied, atWar, isAtWar } from './relations.js';
 import { countryNeighbours } from './geo.js';
 import { opinion, evaluateTreaty, proposeTreaty, recentlyRefused, validateTreaty, recordOrder, findTreaty, treatiesOf, cancelTreaty,
@@ -142,7 +142,7 @@ function seekTreaty(state, map, rules, c, greats) {
     if (findTreaty(state, w.type, a, b) || validateTreaty(state, map, rules, w.type, a, b)) continue;
     if (recentlyRefused(state, rules, w.type, k, w.p)) { if (wanted < 0) wanted = w.p; continue; }
     if (humanControls(state, w.p) && state.offers.filter((o) => o.kind === 'treaty' && o.to === w.p).length >= 2) continue;
-    if (w.type !== 'guarantee' && !isHuman(state, w.p)) {
+    if (w.type !== 'guarantee' && !humanControls(state, w.p)) {
       const ev = evaluateTreaty(state, map, rules, w.type, k, w.p);
       if (!ev.accept) { if (wanted < 0 && ev.score > -25) wanted = w.p; continue; }
     }

@@ -53,6 +53,8 @@ Section "${APP} (required)" SecGame
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   CreateDirectory "$SMPROGRAMS\${APP}"
   CreateShortcut "$SMPROGRAMS\${APP}\${APP}.lnk" "$INSTDIR\${EXE}" "" "$INSTDIR\${EXE}" 0
+  ; the bot plays the player's country while they are away (docs/BOT.md)
+  CreateShortcut "$SMPROGRAMS\${APP}\${APP} Bot.lnk" "$INSTDIR\${EXE}" "--bot" "$INSTDIR\${EXE}" 0
   CreateShortcut "$SMPROGRAMS\${APP}\Uninstall ${APP}.lnk" "$INSTDIR\Uninstall.exe"
   WriteRegStr HKCU "Software\AgesOfCommand" "InstallDir" "$INSTDIR"
   WriteRegStr HKCU "${UNINST_KEY}" "DisplayName" "${APP}"
